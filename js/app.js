@@ -134,7 +134,7 @@ async function showProfiles() {
     S.state.zoo.name = $('#zn').value.trim() || Z.defaultZooName(name);
     await save(true);
     rememberProfile(id);
-    showHome();
+    startScreen();
   });
 }
 
@@ -148,7 +148,74 @@ async function openProfile(id) {
   S.id = id;
   S.state = migrate(st);
   rememberProfile(id);
-  showHome();
+  startScreen();
+}
+
+// Første gang: vis introen, ellers direkte til zoo'en
+const startScreen = () => (S.state.zoo.introSeen ? showHome() : showIntroTour());
+
+// ================= Intro: sådan spiller du =================
+
+function showIntroTour(done = showHome) {
+  const st = S.state, zname = Z.zooName(st);
+  const someBabies = FACTS.slice(0, 6).map((f, i) => `<span class="baby" style="--st:${i}"><span>${Z.BABIES[f.key].emoji}</span></span>`).join('');
+  const pages = [
+    {
+      art: '<div class="tour-art">🦒🐘🦁🐧🦓</div>',
+      title: `Velkommen til ${esc(zname)}!`,
+      body: say('bodil', `Zoo'en har været lukket hele vinteren, og jeg har brug for en ny zoo-leder. Det er dig, ${esc(st.name)}!`),
+    },
+    {
+      art: `<div class="tour-icons">${AREAS.map((a) => `<span style="--ac:${a.color}">${a.icon}</span>`).join('')}</div>`,
+      title: 'Målet: den store åbningsdag',
+      body: say('bodil', `Zoo'en har ${AREAS.length} områder. Hvert område bliver bedre, når du bliver god til noget matematik – så flytter der nye dyr ind og kommer flere gæster. Når alle ${AREAS.length} områder har fået en ⭐, holder vi åbningsfest!`),
+    },
+    {
+      art: `<ol class="plan">
+        <li><span class="n">1</span><div><div class="t">🍼 Morgenrunde i Babyhuset</div><div class="d">Giv ungerne flaske – gangetabellen</div></div></li>
+        <li><span class="n">2</span><div><div class="t">🦒 Dagens opgave</div><div class="d">Hjælp Nora, Liv eller Yasmin med en opgave i zoo'en</div></div></li>
+        <li><span class="n">3</span><div><div class="t">🧭 Runde i zoo'en</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div></li>
+      </ol>`,
+      title: 'Sådan går en dag',
+      body: say('nora', 'Det tager cirka 15 minutter. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
+    },
+    {
+      art: `<div class="tour-babies">${someBabies}</div>`,
+      title: 'Ungerne i Babyhuset',
+      body: say('nora', `Hvert gangestykke er en dyreunge. Når du husker gangestykket – også dagen efter – vokser ungen, til den er voksen. Kan du få alle ${FACTS.length} unger voksne?`),
+    },
+    {
+      art: '<div class="tour-art">🦜</div>',
+      title: 'Bare rolig!',
+      body: say('kaj', 'Regner du forkert, sker der ikke noget. Du får en forklaring, og opgaven kommer igen senere. Og går en division ikke op, så er resten MIN!'),
+    },
+  ];
+  let i = 0;
+  const finish = () => { st.zoo.introSeen = true; save(); done(); };
+  const render = () => {
+    const p = pages[i], last = i === pages.length - 1;
+    view(`
+      <div class="card sheet tour stack">
+        <div class="spread"><span class="kicker">Sådan spiller du · ${i + 1}/${pages.length}</span><button class="link small" id="skip">Spring over</button></div>
+        <div class="tour-visual">${p.art}</div>
+        <h1 class="center">${p.title}</h1>
+        ${p.body}
+        <div class="tour-dots">${pages.map((_, j) => `<i class="${j === i ? 'on' : ''}"></i>`).join('')}</div>
+        <div class="row" style="justify-content:center">
+          ${i ? '<button class="btn ghost big" id="prev">←</button>' : ''}
+          <button class="btn big" id="next">${last ? 'Åbn porten!' : 'Næste'}</button>
+        </div>
+      </div>`, (e) => {
+      if (e.key === 'Enter' || e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft' && i) { i--; render(); }
+      else if (e.key === 'Escape') finish();
+    });
+    on('#next', 'click', next);
+    on('#prev', 'click', () => { i--; render(); });
+    on('#skip', 'click', finish);
+  };
+  const next = () => { sfx('tap'); if (i === pages.length - 1) finish(); else { i++; render(); } };
+  render();
 }
 
 // ================= Forsiden: zoo'en =================
@@ -165,6 +232,7 @@ function showHome() {
   const open = levels.filter((l) => l >= 1).length;
   const msg = Z.homeMessage(st);
   const sugg = E.suggestAreas(st, 3);
+  const doneToday = st.sessions.some((s) => s.date === today() && s.mode !== 'practice');
 
   const taskCard = (id, i) => {
     const a = areaOf(id), z = Z.ZONES[id], t = Z.taskFor(id), cur = E.currentSkill(st, id);
@@ -200,7 +268,10 @@ function showHome() {
       ${zooGate(zname, { animals: peek, festive: stars === AREAS.length })}
       <div class="hero-bar">
         <span class="me-chip"><span class="avatar">${meAvatar(st.name)}</span>${esc(st.name)}</span>
-        <button class="icon-btn" id="snd" aria-label="Lyd til/fra">${st.settings.sound ? '🔊' : '🔇'}</button>
+        <div class="row" style="gap:8px">
+          <button class="icon-btn" id="help" aria-label="Sådan spiller du">?</button>
+          <button class="icon-btn" id="snd" aria-label="Lyd til/fra">${st.settings.sound ? '🔊' : '🔇'}</button>
+        </div>
       </div>
     </section>
     <div class="stats">
@@ -212,16 +283,34 @@ function showHome() {
 
     <section class="today">${say(msg.who, msg.text)}</section>
 
-    <div class="section-title"><h2>Dagens opgaver</h2><span class="muted small">Vælg én</span></div>
+    <section class="card goal">
+      <div class="goal-ic">🎯</div>
+      <div style="flex:1;min-width:220px">
+        <div class="head" style="font-size:1.1rem;margin:0">Målet: giv alle ${AREAS.length} områder en ⭐</div>
+        <div class="muted small" style="font-weight:700">Så holder ${esc(zname)} den store åbningsdag. Du bliver bedre i matematik – og zoo'en vokser.</div>
+        <div class="goal-bar"><i style="width:${(100 * levels.reduce((s, l) => s + Math.min(l, 3), 0)) / (3 * AREAS.length)}%"></i></div>
+      </div>
+      <div class="goal-num"><b>${stars}</b>/${AREAS.length} ⭐</div>
+    </section>
+
+    <div class="section-title">
+      <div><span class="start-here">${doneToday ? '✓ Klaret i dag' : 'Start her'}</span><h2>Dagens træning</h2></div>
+      <span class="muted small">Vælg én opgave</span>
+    </div>
+    <p class="section-help">${doneToday
+      ? 'Du har allerede passet zoo\'en i dag – flot! Du må gerne tage en opgave mere.'
+      : 'Hver træning har tre dele: <b>🍼 morgenrunde</b> i Babyhuset → <b>dagens opgave</b> → <b>🧭 runde i zoo\'en</b>. Ca. 15 minutter.'}</p>
     <div class="tasks">${sugg.map(taskCard).join('')}</div>
 
     <div class="section-title"><h2>🍼 Babyhuset</h2><button class="link" id="book">Dyrebogen →</button></div>
+    <p class="section-help">Hvert gangestykke er en dyreunge. Ungerne vokser, når du husker deres gangestykke i morgenrunden – også dagen efter. 🍼 = vil have flaske i dag.</p>
     <section class="card nursery">
       <div class="babies">${nursery}</div>
       ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
     </section>
 
     <div class="section-title"><h2>Zoo-kortet</h2><span class="muted small">${open} af ${AREAS.length} områder er åbne</span></div>
+    <p class="section-help">Her ser du, hvordan zoo'en vokser: 🚧 kommer snart → 🌱 åben → 💚 populær → ⭐ stjerne → 🌟 guld. Tryk på et område for at øve noget bestemt.</p>
     <div class="zoo-map">${AREAS.map(tile).join('')}</div>
 
     <div class="footer-links">
@@ -233,6 +322,7 @@ function showHome() {
   on('.area', 'click', (e) => { sfx('tap'); showPlace(e.currentTarget.dataset.place); });
   on('#book', 'click', showBook);
   on('#sprint', 'click', startSprint);
+  on('#help', 'click', () => showIntroTour());
   on('#snd', 'click', () => {
     st.settings.sound = !st.settings.sound;
     setSound(st.settings.sound);
@@ -919,11 +1009,11 @@ function showParent() {
   if (last) {
     try {
       const st = await loadState(last);
-      if (st) { S.id = last; S.state = migrate(st); return showHome(); }
+      if (st) { S.id = last; S.state = migrate(st); return startScreen(); }
     } catch { /* fald tilbage til profilvalg */ }
   }
   showProfiles();
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, show: { home: showHome, book: showBook, profiles: showProfiles } };
+window.__mo = { S, E, Z, show: { home: showHome, book: showBook, profiles: showProfiles, tour: showIntroTour } };

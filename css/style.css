@@ -411,3 +411,24 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Intro og forside-vejledning ---------- */
+.tour { max-width: 640px; }
+.tour-visual { min-height: 150px; display: grid; place-items: center; padding: 10px 0; }
+.tour-art { font-size: 3.6rem; letter-spacing: 6px; line-height: 1.2; text-align: center; }
+.tour-icons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.tour-icons span { width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center; font-size: 1.9rem; background: color-mix(in srgb, var(--ac) 18%, var(--card)); }
+.tour-babies { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.tour .plan { width: 100%; }
+.tour-dots { display: flex; gap: 8px; justify-content: center; }
+.tour-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); transition: width .2s; }
+.tour-dots i.on { width: 26px; border-radius: 99px; background: var(--primary); }
+
+.goal { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 14px; padding: 18px 20px; }
+.goal-ic { width: 52px; height: 52px; border-radius: 16px; background: var(--lav-soft); display: grid; place-items: center; font-size: 1.7rem; flex: none; }
+.goal-bar { height: 10px; border-radius: 99px; background: var(--line-2); overflow: hidden; margin-top: 10px; }
+.goal-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #ffc94d); }
+.goal-num { font: 600 1.1rem var(--font-head); color: var(--ink-2); white-space: nowrap; }
+.goal-num b { font-size: 1.8rem; color: var(--ink); }
+.start-here { display: inline-block; font: 600 .74rem var(--font-head); text-transform: uppercase; letter-spacing: .8px; color: #fff; background: var(--coral); padding: 3px 10px; border-radius: 99px; margin-bottom: 6px; }
+.section-help { margin: -4px 2px 14px; color: var(--ink-2); font-size: .92rem; font-weight: 600; max-width: 760px; }
