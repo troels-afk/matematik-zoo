@@ -1,0 +1,1263 @@
+// Pensum for 4. klasse – struktureret efter KonteXt+ 4 / Fælles Mål.
+// Hvert område har en stige af færdigheder. Hver færdighed har en intro og en generator gen(level)
+// der returnerer en opgave:
+//   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
+// level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
+
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js';
+import * as V from './visuals.js';
+
+const pow10 = (p) => 10 ** p;
+const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
+const PLACE_N = ['enere', 'tiere', 'hundreder', 'tusinder', 'titusinder'];
+const digitsOf = (n) => String(n).split('').reverse().map(Number); // index = position
+
+function randDigits(len) {
+  return ri(10 ** (len - 1), 10 ** len - 1);
+}
+
+// Opdel et tal i positioner, fx 347 -> [300, 40, 7] (nuller springes over)
+function splitPlaces(n) {
+  return digitsOf(n).map((d, p) => d * pow10(p)).reverse().filter((x) => x > 0);
+}
+
+// ---------- A. Tal og talsystem ----------
+
+const positionssystem = {
+  id: 'positionssystem',
+  name: 'Cifrenes værdi',
+  desc: 'Hvad et ciffer er værd, alt efter hvor det står',
+  intro: {
+    text: 'Et ciffer er mere værd, jo længere til venstre det står. I 4.732 er 7-tallet <b>700</b> værd, fordi det står på hundredernes plads.',
+    visual: () => V.placeValue(4732),
+  },
+  gen(level) {
+    const len = level + 2;
+    if (chance(0.6)) {
+      let n, p, d;
+      do {
+        n = randDigits(len);
+        p = ri(0, len - 1);
+        d = digitsOf(n)[p];
+      } while (d === 0 || digitsOf(n).filter((x) => x === d).length > 1);
+      return {
+        prompt: `Hvad er cifferet <b>${d}</b> værd i tallet <b>${fmt(n)}</b>?`,
+        input: 'number',
+        answer: d * pow10(p),
+        explain: `${d}-tallet står på ${PLACE[p]} plads, så det er <b>${fmt(d * pow10(p))}</b> værd.`,
+        explainVisual: V.placeValue(n),
+      };
+    }
+    const n = randDigits(len);
+    const ds = digitsOf(n);
+    let parts = ds.map((d, p) => ({ d, p })).reverse();
+    if (level === 3) parts = shuffle(parts);
+    const txt = parts.map(({ d, p }) => `${d} ${PLACE_N[p]}`);
+    const sentence = txt.slice(0, -1).join(', ') + ' og ' + txt[txt.length - 1];
+    return {
+      prompt: `Skriv tallet: <b>${sentence}</b>`,
+      input: 'number',
+      answer: n,
+      explain: `Sæt hvert ciffer på sin plads: <b>${fmt(n)}</b>.`,
+      explainVisual: V.placeValue(n),
+    };
+  },
+};
+
+const afrunding = {
+  id: 'afrunding',
+  name: 'Afrunding',
+  desc: 'Afrund til nærmeste tier, hundrede og tusind',
+  intro: {
+    text: 'Når vi afrunder, finder vi det runde tal, der ligger <b>tættest på</b>. 47 ligger mellem 40 og 50 – tættest på 50. Ligger tallet præcis midt imellem, runder vi <b>op</b>.',
+    visual: () => numberLineRound(47, 10),
+  },
+  gen(level) {
+    const step = [10, 100, 1000][level - 1];
+    const ranges = [[11, 999], [101, 9999], [1001, 99999]];
+    let n;
+    do n = ri(...ranges[level - 1]); while (n % step === 0);
+    const lo = Math.floor(n / step) * step, hi = lo + step;
+    const ans = Math.round(n / step) * step;
+    const word = { 10: 'tier', 100: 'hundrede', 1000: 'tusind' }[step];
+    const half = n - lo === step / 2;
+    return {
+      prompt: chance(0.5)
+        ? `Afrund <b>${fmt(n)}</b> til nærmeste hele ${word}.`
+        : `I år så <b>${fmt(n)}</b> gæster sæl-showet. Bodil vil have tallet afrundet til nærmeste hele ${word}.`,
+      input: 'number',
+      answer: ans,
+      explain: half
+        ? `${fmt(n)} ligger præcis midt mellem ${fmt(lo)} og ${fmt(hi)} – så runder vi op til <b>${fmt(hi)}</b>.`
+        : `${fmt(n)} ligger mellem ${fmt(lo)} og ${fmt(hi)}. Det er tættest på <b>${fmt(ans)}</b>.`,
+      explainVisual: numberLineRound(n, step),
+    };
+  },
+};
+
+function numberLineRound(n, step) {
+  const lo = Math.floor(n / step) * step, hi = lo + step;
+  return V.numberLine({
+    min: lo, max: hi, div: 10,
+    labels: (i, v) => (i === 0 || i === 10 || i === 5 ? fmt(v) : null),
+    mark: n, markText: fmt(n),
+  });
+}
+
+const sammenlign = {
+  id: 'sammenlign',
+  name: 'Sammenlign tal',
+  desc: 'Find det største og mindste tal',
+  intro: {
+    text: 'Sammenlign cifrene <b>fra venstre</b>. Først tusinderne, så hundrederne, så tierne … Det første sted, hvor de er forskellige, afgør hvilket tal der er størst. 4.<b>7</b>12 er større end 4.<b>2</b>98.',
+  },
+  gen(level) {
+    let nums;
+    if (level === 1) {
+      nums = new Set();
+      while (nums.size < 3) nums.add(randDigits(3));
+      nums = [...nums];
+    } else if (level === 2) {
+      // samme fire cifre i forskellig rækkefølge
+      let digits;
+      do digits = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 4); while (digits.filter((d) => d > 0).length < 3);
+      const set = new Set();
+      let guard = 0;
+      while (set.size < 4 && guard++ < 200) {
+        const p = shuffle(digits);
+        if (p[0] !== 0) set.add(Number(p.join('')));
+      }
+      nums = [...set];
+    } else {
+      const prefix = ri(10, 99);
+      const set = new Set();
+      while (set.size < 4) set.add(prefix * 1000 + ri(0, 999));
+      nums = [...set];
+    }
+    const big = chance(0.5);
+    const target = big ? Math.max(...nums) : Math.min(...nums);
+    const sorted = [...nums].sort((a, b) => b - a).map(fmt).join(' &gt; ');
+    return {
+      prompt: `Billetlugen har talt gæster på forskellige dage. Hvilket besøgstal er <b>${big ? 'størst' : 'mindst'}</b>?`,
+      input: 'choice',
+      choices: shuffle(nums).map(fmt),
+      answer: fmt(target),
+      explain: `Sammenlign fra venstre. Rækkefølgen er: ${sorted}. Så <b>${fmt(target)}</b> er ${big ? 'størst' : 'mindst'}.`,
+    };
+  },
+};
+
+const plusminus = {
+  id: 'plusminus',
+  name: 'Plus og minus',
+  desc: 'Læg sammen og træk fra med store tal',
+  intro: {
+    text: 'Læg <b>hundreder, tiere og enere</b> sammen hver for sig:<br>347 + 285 = (300+200) + (40+80) + (7+5) = 500 + 120 + 12 = <b>632</b>.<br>Ved minus kan du trække fra i bidder: 632 − 285 = 632 − 200 − 80 − 5 = <b>347</b>.',
+  },
+  gen(level) {
+    const ranges = [[15, 89], [120, 899], [1200, 8999]];
+    const [lo, hi] = ranges[level - 1];
+    let a = ri(lo, hi), b = ri(lo, hi);
+    const add = chance(0.5);
+    if (!add && a < b) [a, b] = [b, a];
+    if (!add && a === b) a += ri(1, 9);
+    const ans = add ? a + b : a - b;
+    let explain;
+    if (add) {
+      const pa = digitsOf(a), pb = digitsOf(b);
+      const steps = [];
+      for (let p = Math.max(pa.length, pb.length) - 1; p >= 0; p--) {
+        const x = (pa[p] || 0) * pow10(p), y = (pb[p] || 0) * pow10(p);
+        if (x || y) steps.push({ x, y });
+      }
+      explain = `Læg hver position sammen: ${steps.map((s) => `${fmt(s.x)}+${fmt(s.y)}`).join(', ')} = ${steps.map((s) => fmt(s.x + s.y)).join(' + ')} = <b>${fmt(ans)}</b>.`;
+    } else {
+      let cur = a;
+      const chain = [fmt(a)];
+      for (const part of splitPlaces(b)) { cur -= part; chain.push(`− ${fmt(part)} = ${fmt(cur)}`); }
+      explain = `Træk fra i bidder: ${chain.join(' ')}. Svaret er <b>${fmt(ans)}</b>.`;
+    }
+    let prompt = `<span class="big-expr">${fmt(a)} ${add ? '+' : '−'} ${fmt(b)}</span>`;
+    if (chance(0.35)) {
+      prompt = add
+        ? pick([
+          `Om formiddagen kom der ${fmt(a)} gæster i zoo'en, og om eftermiddagen kom der ${fmt(b)}. Hvor mange gæster kom der i alt?`,
+          `Zoo'en har ${fmt(a)} kg hø på lageret og får leveret ${fmt(b)} kg mere. Hvor meget hø er der nu?`,
+        ])
+        : pick([
+          `Zoo'en har ${fmt(a)} kg foder på lageret. Dyrene spiser ${fmt(b)} kg. Hvor mange kg er der tilbage?`,
+          `Der blev solgt ${fmt(a)} billetter i juli og ${fmt(b)} i juni. Hvor mange flere billetter blev der solgt i juli?`,
+        ]);
+    }
+    return { prompt, input: 'number', answer: ans, explain };
+  },
+};
+
+// ---------- B. Gange ----------
+
+const gange10 = {
+  id: 'gange10',
+  name: 'Gange med 10, 100 og runde tal',
+  desc: '10 × 34, 30 × 7, 40 × 60',
+  intro: {
+    text: 'Når man ganger med 10, bliver hvert ciffer <b>10 gange mere værd</b> og rykker én plads til venstre. 3 tiere bliver til 3 hundreder, og 4 enere bliver til 4 tiere. Enernes plads bliver tom, så der skriver vi 0: 34 × 10 = <b>340</b>.<br>30 × 7: 30 er 3 tiere. 3 tiere × 7 = 21 tiere = <b>210</b>.',
+    visual: () => V.placeShift(34, 10),
+  },
+  gen(level) {
+    let a, b;
+    if (level === 1) { a = ri(2, 99); b = pick([10, 100]); }
+    else if (level === 2) { a = ri(2, 9) * 10; b = ri(2, 9); }
+    else if (chance(0.5)) { a = ri(2, 9) * 100; b = ri(2, 9); }
+    else { a = ri(2, 9) * 10; b = ri(2, 9) * 10; }
+    const ans = a * b;
+    const strip = (x) => { let z = 0; while (x % 10 === 0) { x /= 10; z++; } return [x, z]; };
+    const [sa, za] = strip(a), [sb, zb] = strip(b);
+    const zeros = za + zb;
+    const UNIT = { 1: 'tiere', 2: 'hundreder', 3: 'tusinder' };
+    let explain;
+    if (level === 1) {
+      explain = `Ganger man med ${b}, bliver hvert ciffer ${b} gange mere værd og rykker ${b === 100 ? 'to pladser' : 'én plads'} til venstre: ${a} × ${b} = <b>${fmt(ans)}</b>.`;
+    } else if (za && zb) {
+      explain = `Regn ${sa} × ${sb} = ${sa * sb}. ${a} er ${sa} ${UNIT[za]} og ${b} er ${sb} ${UNIT[zb]} – tiere gange tiere giver hundreder: ${sa * sb} ${UNIT[zeros]} = <b>${fmt(ans)}</b>.`;
+    } else {
+      const [big, s, z, other] = za ? [a, sa, za, b] : [b, sb, zb, a];
+      explain = `${big} er ${s} ${UNIT[z]}. ${s} ${UNIT[z]} × ${other} = ${s * other} ${UNIT[z]} = <b>${fmt(ans)}</b>.`;
+    }
+    if (chance(0.5)) [a, b] = [b, a];
+    return { prompt: `<span class="big-expr">${fmt(a)} × ${fmt(b)}</span>`, input: 'number', answer: ans, explain };
+  },
+};
+
+const gangeflercifret = {
+  id: 'gangeflercifret',
+  name: 'Gange med flercifrede tal',
+  desc: '47 × 6 ved at dele tallet op',
+  intro: {
+    text: 'Del det store tal op i tiere og enere, og gang hver del for sig:<br>47 × 6 = 40×6 + 7×6 = 240 + 42 = <b>282</b>.',
+    visual: () => V.areaSplit([40, 7], 6),
+  },
+  gen(level) {
+    let a, b;
+    if (level === 1) { a = ri(1, 4) * 10 + ri(1, 3); b = ri(2, 3); }
+    else if (level === 2) { a = ri(12, 99); b = ri(3, 9); }
+    else { a = ri(102, 999); b = ri(3, 9); }
+    const parts = splitPlaces(a);
+    const ans = a * b;
+    return {
+      prompt: `<span class="big-expr">${a} × ${b}</span>`,
+      input: 'number',
+      answer: ans,
+      explain: `Del ${a} op: ${parts.map((p) => `${p}×${b}`).join(' + ')} = ${parts.map((p) => fmt(p * b)).join(' + ')} = <b>${fmt(ans)}</b>.`,
+      explainVisual: V.areaSplit(parts, b),
+    };
+  },
+};
+
+const gangetekst = {
+  id: 'gangetekst',
+  name: 'Tekstopgaver med gange',
+  desc: 'Find gangestykket i historien',
+  intro: {
+    text: 'Kig efter <b>lige store grupper</b>: "5 poser med 8 i hver" er 5 × 8. Spørg dig selv: hvor mange grupper, og hvor mange i hver?',
+    visual: () => V.dotArray(5, 8),
+  },
+  gen(level) {
+    let a, b;
+    if (level === 1) { a = ri(2, 10); b = ri(2, 10); }
+    else if (level === 2) { a = ri(11, 30); b = ri(3, 9); }
+    else { a = ri(12, 99); b = ri(4, 9); }
+    if (level === 3 && chance(0.5)) {
+      let price, n;
+      do { price = ri(12, 95); n = ri(3, 9); } while (price * n >= 500);
+      const change = 500 - price * n;
+      return {
+        prompt: `En familie køber ${n} billetter til zoo'en til ${price} kr. stykket og betaler med en 500-kr.-seddel. Hvor mange penge får de tilbage?`,
+        input: 'number', answer: change, unit: 'kr.',
+        explain: `Først prisen: ${n} × ${price} = ${price * n} kr. Så pengene tilbage: 500 − ${price * n} = <b>${change} kr.</b>`,
+      };
+    }
+    const stories = [
+      [`Hver af de ${b} giraffer spiser ${a} kg blade om dagen. Hvor mange kg blade skal der bestilles?`, 'kg'],
+      [`En børnebillet til zoo'en koster ${a} kr. Hvad koster ${b} børnebilletter?`, 'kr.'],
+      [`Der er ${b} pingviner, og hver får ${a} fisk. Hvor mange fisk skal der bruges?`, 'fisk'],
+      [`Aberne spiser ${a} bananer om dagen. Hvor mange bananer spiser de på ${b} dage?`, 'bananer'],
+      [`Ved sæl-showet er der ${b} rækker med ${a} pladser i hver. Hvor mange pladser er der?`, 'pladser'],
+    ];
+    const [prompt, unit] = pick(stories);
+    return {
+      prompt, input: 'number', answer: a * b, unit,
+      explain: `Det er ${b} grupper med ${a} i hver: ${b} × ${a} = <b>${fmt(a * b)}</b> ${unit}.`,
+    };
+  },
+};
+
+// ---------- C. Division ----------
+
+const divtabel = {
+  id: 'divtabel',
+  name: 'Division med tabellerne',
+  desc: '56 : 7 – gange baglæns',
+  intro: {
+    text: 'Division er gange baglæns. For at regne 24 : 6 spørger du: <b>6 gange hvad giver 24?</b> 6 × 4 = 24, så 24 : 6 = <b>4</b>.',
+    visual: () => V.groups(24, 6),
+  },
+  gen(level) {
+    const d = pick([[2, 5, 10], [3, 4, 2, 5], [6, 7, 8, 9]][level - 1]);
+    const q = ri(level === 1 ? 2 : 3, 10), a = d * q;
+    return {
+      prompt: `<span class="big-expr">${a} : ${d}</span>`,
+      input: 'number', answer: q,
+      explain: `Tænk: ${d} × ? = ${a}. Da ${d} × ${q} = ${a}, er ${a} : ${d} = <b>${q}</b>.`,
+      explainVisual: a <= 60 ? V.groups(a, d) : null,
+    };
+  },
+};
+
+const divrest = {
+  id: 'divrest',
+  name: 'Division med rest',
+  desc: '23 : 4 = 5 rest 3',
+  intro: {
+    text: 'Nogle gange går det ikke op. 23 : 4: Hvor mange hele 4-taller er der i 23? 4 × 5 = 20, og så er der <b>3 tilbage</b>. Svaret er <b>5 rest 3</b>.<br>Resten skal altid være mindre end det, man deler med.',
+  },
+  gen(level) {
+    const [dr, qr] = [[[2, 5], [2, 6]], [[3, 6], [3, 9]], [[6, 9], [4, 10]]][level - 1];
+    const d = ri(...dr), q = ri(...qr), r = ri(1, d - 1), a = d * q + r;
+    return {
+      prompt: `<span class="big-expr">${a} : ${d}</span>`,
+      input: 'qr', answer: [q, r],
+      explain: `${d} × ${q} = ${d * q}. Der er ${a} − ${d * q} = ${r} tilbage. Så ${a} : ${d} = <b>${q} rest ${r}</b>.`,
+    };
+  },
+};
+
+const divflercifret = {
+  id: 'divflercifret',
+  name: 'Division med store tal',
+  desc: '84 : 4, 456 : 3',
+  intro: {
+    text: 'Del tallet op i bidder, der er lette at dele:<br>72 : 4 → 72 = 40 + 32. 40 : 4 = 10 og 32 : 4 = 8. I alt <b>18</b>.',
+  },
+  gen(level) {
+    let d, q;
+    if (level === 1) {
+      d = ri(2, 4);
+      const t = ri(1, Math.floor(9 / d)), o = ri(1, Math.floor(9 / d));
+      q = t * 10 + o;
+    } else if (level === 2) {
+      d = ri(3, 6); q = ri(11, Math.floor(99 / d));
+    } else {
+      d = ri(3, 9); q = ri(Math.max(20, Math.ceil(100 / d)), Math.floor(999 / d));
+    }
+    const a = d * q;
+    const big = d * 10 * Math.floor(q / 10), rest = a - big;
+    const explain = rest === 0
+      ? `${a} : ${d} = <b>${q}</b>, fordi ${d} × ${q} = ${a}.`
+      : `Del op: ${a} = ${big} + ${rest}. ${big} : ${d} = ${big / d} og ${rest} : ${d} = ${rest / d}. I alt <b>${q}</b>.`;
+    return { prompt: `<span class="big-expr">${a} : ${d}</span>`, input: 'number', answer: q, explain };
+  },
+};
+
+const divtekst = {
+  id: 'divtekst',
+  name: 'Tekstopgaver med division',
+  desc: 'Del ligeligt og lav grupper',
+  intro: {
+    text: 'Division bruges når noget skal <b>deles ligeligt</b> eller <b>deles i grupper</b>. Pas på med resten: Skal 25 personer køre i biler med 4 pladser, skal der bruges <b>7</b> biler – ellers er der én, der ikke kommer med!',
+  },
+  gen(level) {
+    if (level === 1) {
+      const d = ri(2, 6), q = ri(2, 10), a = d * q;
+      return {
+        prompt: `${a} bananer skal deles ligeligt mellem ${d} aber. Hvor mange bananer får hver abe?`,
+        input: 'number', answer: q, unit: 'bananer',
+        explain: `${a} : ${d} = <b>${q}</b>, fordi ${d} × ${q} = ${a}.`,
+      };
+    }
+    if (level === 2) {
+      const d = ri(3, 9), q = ri(3, 10), a = d * q;
+      return {
+        prompt: `${a} børn på skoletur i zoo'en skal deles i grupper med ${d} i hver. Hvor mange grupper bliver der?`,
+        input: 'number', answer: q, unit: 'grupper',
+        explain: `${a} : ${d} = <b>${q}</b> grupper.`,
+      };
+    }
+    const d = ri(3, 8), q = ri(3, 9), r = ri(1, d - 1), a = d * q + r;
+    if (chance(0.5)) {
+      return {
+        prompt: `${a} gæster skal køre med zoo-toget. Hver vogn har plads til ${d}. Hvor mange vogne skal der <b>mindst</b> bruges?`,
+        input: 'number', answer: q + 1, unit: 'vogne',
+        explain: `${a} : ${d} = ${q} rest ${r}. ${q} vogne er fyldt, men ${r} ${r === 1 ? 'gæst' : 'gæster'} mangler plads – så der skal bruges <b>${q + 1}</b> vogne.`,
+      };
+    }
+    return {
+      prompt: `${a} fisk skal fordeles i spande med ${d} i hver. Hvor mange fisk er der tilbage, når alle fyldte spande er klar? (Kaj får resten!)`,
+      input: 'number', answer: r, unit: 'fisk',
+      explain: `${a} : ${d} = ${q} rest ${r}. Der bliver <b>${r}</b> fisk tilbage – til Kaj.`,
+    };
+  },
+};
+
+// ---------- D. Brøker ----------
+
+const brokfigur = {
+  id: 'brokfigur',
+  name: 'Brøker i figurer',
+  desc: 'Hvor stor en del er farvet?',
+  intro: {
+    text: `En brøk fortæller, hvor mange dele ud af en helhed. <b>Nævneren</b> (nederst) er hvor mange lige store dele, helheden er delt i. <b>Tælleren</b> (øverst) er hvor mange dele vi taler om. Her er ${frac(3, 4)} farvet.`,
+    visual: () => V.fractionCircle(4, 3),
+  },
+  gen(level) {
+    const n = pick([[2, 3, 4], [5, 6, 8], [6, 8, 10, 12]][level - 1]);
+    const k = ri(1, n - 1);
+    const vis = level === 3 || chance(0.5) ? V.fractionBar(n, k) : V.fractionCircle(n, k);
+    return {
+      prompt: 'Hvor stor en del af figuren er farvet? Skriv som brøk.',
+      visual: vis, input: 'fraction', answer: [k, n],
+      explain: `Figuren er delt i ${n} lige store dele, og ${k} er farvet. Det er <b>${frac(k, n)}</b>.`,
+    };
+  },
+};
+
+const broktallinje = {
+  id: 'broktallinje',
+  name: 'Brøker på tallinjen',
+  desc: 'Find brøken, pilen peger på',
+  intro: {
+    text: `Stykket fra 0 til 1 kan deles i lige store dele. Er det delt i 4, er hvert stykke ${frac(1, 4)}. Pilen står på det 3. stykke – altså ${frac(3, 4)}.`,
+    visual: () => fracLine(4, 3, 1, '?'),
+  },
+  gen(level) {
+    let n, k, units = 1;
+    if (level === 1) { n = pick([2, 3, 4]); k = ri(1, n - 1); }
+    else if (level === 2) { n = pick([5, 6, 8, 10]); k = ri(1, n - 1); }
+    else { units = 2; n = pick([2, 3, 4]); do k = ri(1, 2 * n - 1); while (k === n); }
+    return {
+      prompt: 'Hvilken brøk peger pilen på?',
+      visual: fracLine(n, k, units), input: 'fraction', answer: [k, n],
+      explain: `Hver hele er delt i ${n} lige store dele, så hvert stykke er ${frac(1, n)}. Pilen står ${k} stykker fra 0: <b>${frac(k, n)}</b>${k > n ? ' – det er mere end 1 hel' : ''}.`,
+    };
+  },
+};
+
+function fracLine(n, k, units = 1, markText = '?') {
+  return V.numberLine({
+    min: 0, max: units, div: n * units,
+    labels: (i) => (i % n === 0 ? String(i / n) : null),
+    mark: k / n, markText,
+  });
+}
+
+const broksammenlign = {
+  id: 'broksammenlign',
+  name: 'Sammenlign brøker',
+  desc: 'Hvilken brøk er størst?',
+  intro: {
+    text: `<b>Samme nævner:</b> flest dele vinder – ${frac(3, 5)} &gt; ${frac(2, 5)}.<br><b>Samme tæller:</b> jo flere stykker kagen deles i, jo <i>mindre</i> er hvert stykke – ${frac(1, 3)} &gt; ${frac(1, 6)}.`,
+    visual: () => V.fractionBars([{ n: 3, k: 1, label: frac(1, 3) }, { n: 6, k: 1, label: frac(1, 6) }]),
+  },
+  gen(level) {
+    let a, b, c, d;
+    if (level === 1) {
+      b = d = ri(3, 10);
+      a = ri(1, b - 1); do c = ri(1, d - 1); while (c === a);
+    } else if (level === 2) {
+      a = c = ri(1, 3);
+      b = ri(a + 1, 10); do d = ri(a + 1, 10); while (d === b);
+    } else if (chance(0.35)) {
+      b = ri(2, 5); a = ri(1, b - 1); const m = ri(2, 3); c = a * m; d = b * m;
+      if (chance(0.5)) [a, b, c, d] = [c, d, a, b];
+    } else {
+      do { b = ri(2, 8); d = ri(2, 8); a = ri(1, b - 1); c = ri(1, d - 1); }
+      while (b === d || a * d === b * c || lcm(b, d) > 24);
+    }
+    const sign = a * d > c * b ? '>' : a * d < c * b ? '<' : '=';
+    let explain;
+    if (b === d) explain = `Samme nævner – den med flest dele er størst: ${frac(a, b)} <b>${sign}</b> ${frac(c, d)}.`;
+    else if (a === c) explain = `Samme tæller – jo mindre nævner, jo større stykker: ${frac(a, b)} <b>${sign}</b> ${frac(c, d)}.`;
+    else {
+      const l = lcm(b, d);
+      explain = `Gør nævnerne ens: ${frac(a, b)} = ${frac((a * l) / b, l)} og ${frac(c, d)} = ${frac((c * l) / d, l)}. Så ${frac(a, b)} <b>${sign}</b> ${frac(c, d)}.`;
+    }
+    const bars = V.fractionBars([{ n: b, k: a, label: frac(a, b) }, { n: d, k: c, label: frac(c, d) }]);
+    return {
+      prompt: `Hvilket tegn skal stå mellem ${frac(a, b)} og ${frac(c, d)}?`,
+      visual: level < 3 ? bars : null,
+      input: 'choice', choices: ['<', '=', '>'], answer: sign,
+      explain, explainVisual: level === 3 ? bars : null,
+    };
+  },
+};
+
+const brokafantal = {
+  id: 'brokafantal',
+  name: 'Brøkdel af et antal',
+  desc: '¾ af 20',
+  intro: {
+    text: `${frac(3, 4)} af 20: Del 20 i <b>4</b> lige store grupper (5 i hver). Tag <b>3</b> af grupperne: 3 × 5 = <b>15</b>.`,
+    visual: () => V.groups(20, 4, 3),
+  },
+  gen(level) {
+    let n, k, total;
+    if (level === 1) { n = pick([2, 3, 4, 5, 10]); k = 1; total = n * ri(2, 6); }
+    else {
+      n = pick([3, 4, 5, 6, 8, 10]);
+      do k = ri(2, n - 1); while (gcd(k, n) !== 1); // kun uforkortelige brøker, fx ¾ ikke 6/8
+      total = n * ri(2, level === 2 ? 6 : 9);
+    }
+    const g = total / n, ans = k * g;
+    const prompt = level === 3
+      ? pick([
+        `Pingvinerne får ${total} fisk. ${frac(k, n)} af fiskene er sild. Hvor mange sild er der?`,
+        `Der er ${total} dyr i børnezoo'en. ${frac(k, n)} af dem er geder. Hvor mange geder er der?`,
+      ])
+      : `Hvad er ${frac(k, n)} af ${total}?`;
+    return {
+      prompt, input: 'number', answer: ans,
+      explain: `Del ${total} i ${n} lige store grupper: ${total} : ${n} = ${g}.${k > 1 ? ` Tag ${k} grupper: ${k} × ${g} = <b>${ans}</b>.` : ` Svaret er <b>${ans}</b>.`}`,
+      explainVisual: total <= 48 ? V.groups(total, n, k) : null,
+    };
+  },
+};
+
+const ligevaerdig = {
+  id: 'ligevaerdig',
+  name: 'Ligeværdige brøker',
+  desc: '½ = ?/6',
+  intro: {
+    text: `${frac(1, 2)} og ${frac(3, 6)} er lige store! Gang (eller del) tæller og nævner med <b>det samme tal</b>, så får du en brøk med samme værdi: ${frac(1, 2)} = ${frac('1×3', '2×3')} = ${frac(3, 6)}.`,
+    visual: () => V.fractionBars([{ n: 2, k: 1, label: frac(1, 2) }, { n: 6, k: 3, label: frac(3, 6) }]),
+  },
+  gen(level) {
+    let a, b, m;
+    if (level === 1) { a = 1; b = 2; m = ri(2, 6); }
+    else { b = pick([3, 4, 5]); a = ri(1, b - 1); m = ri(2, 5); }
+    const A = a * m, B = b * m;
+    const bars = V.fractionBars([{ n: b, k: a, label: frac(a, b) }, { n: B, k: A, label: frac(A, B) }]);
+    if (level < 3) {
+      const askTop = chance(0.6);
+      const how = askTop
+        ? `Nævneren er ganget med ${m} (${b} × ${m} = ${B}), så tælleren skal også ganges med ${m}: ${a} × ${m} = <b>${A}</b>.`
+        : `Tælleren er ganget med ${m} (${a} × ${m} = ${A}), så nævneren skal også ganges med ${m}: ${b} × ${m} = <b>${B}</b>.`;
+      return {
+        prompt: `Hvilket tal mangler? ${frac(a, b)} = ${askTop ? frac(box(), B) : frac(A, box())}`,
+        input: 'number', answer: askTop ? A : B,
+        explain: `${how} Altså ${frac(a, b)} = ${frac(A, B)}.`,
+        explainVisual: bars,
+      };
+    }
+    const askTop = chance(0.5);
+    return {
+      prompt: `Forkort brøken. ${frac(A, B)} = ${askTop ? frac(box(), b) : frac(a, box())}`,
+      input: 'number', answer: askTop ? a : b,
+      explain: `Del tæller og nævner med ${m}: ${A} : ${m} = ${a} og ${B} : ${m} = ${b}. Altså ${frac(A, B)} = ${frac(a, b)}.`,
+      explainVisual: bars,
+    };
+  },
+};
+
+// ---------- E. Decimaltal ----------
+
+const decfigur = {
+  id: 'decfigur',
+  name: 'Tiendedele og hundrededele',
+  desc: 'Decimaltal i figurer',
+  intro: {
+    text: 'Deler vi 1 hel i 10 dele, er hver del en <b>tiendedel</b> = 0,1. Deler vi i 100 dele, er hver del en <b>hundrededel</b> = 0,01. Her er 3 af 10 farvet: <b>0,3</b>.',
+    visual: () => V.tenBars(3),
+  },
+  gen(level) {
+    if (level === 1) {
+      const k = ri(1, 9);
+      return {
+        prompt: 'Kvadratet er 1 hel. Hvor meget er farvet? Skriv som decimaltal.',
+        visual: V.tenBars(k), input: 'number', answer: k / 10,
+        explain: `Hver søjle er 0,1. ${k} søjler er <b>${fmtDec(k / 10, 1)}</b>.`,
+      };
+    }
+    if (level === 2) {
+      let k; do k = ri(3, 97); while (k % 10 === 0);
+      return {
+        prompt: 'Kvadratet er 1 hel. Hvor meget er farvet? Skriv som decimaltal.',
+        visual: V.hundredGrid(k), input: 'number', answer: k / 100,
+        explain: `Hvert lille felt er 0,01. Der er ${Math.floor(k / 10)} hele søjler (${fmtDec(Math.floor(k / 10) / 10, 1)}) og ${k % 10} felter mere – i alt ${k} hundrededele = <b>${fmtDec(k / 100, 2)}</b>.`,
+      };
+    }
+    const w = ri(1, 2), k = ri(1, 9);
+    return {
+      prompt: 'Hvert kvadrat er 1 hel. Hvor meget er farvet i alt? Skriv som decimaltal.',
+      visual: V.tenBars(k, w), input: 'number', answer: w + k / 10,
+      explain: `${w} ${w === 1 ? 'helt kvadrat' : 'hele kvadrater'} og ${k} tiendedele: <b>${fmtDec(w + k / 10, 1)}</b>.`,
+    };
+  },
+};
+
+const dectallinje = {
+  id: 'dectallinje',
+  name: 'Decimaltal på tallinjen',
+  desc: 'Find tallet, pilen peger på',
+  intro: {
+    text: 'Mellem 0 og 1 er der 10 små stykker på 0,1. Pilen står på det 7. stykke: <b>0,7</b>.',
+    visual: () => V.numberLine({ min: 0, max: 1, div: 10, labels: (i) => (i % 10 === 0 ? String(i / 10) : null), mark: 0.7 }),
+  },
+  gen(level) {
+    if (level === 1) {
+      const k = ri(1, 9);
+      return {
+        prompt: 'Hvilket decimaltal peger pilen på?',
+        visual: V.numberLine({ min: 0, max: 1, div: 10, labels: (i) => (i === 0 ? '0' : i === 10 ? '1' : i === 5 ? '0,5' : null), mark: k / 10 }),
+        input: 'number', answer: k / 10,
+        explain: `Hvert lille stykke er 0,1. Pilen står ${k} stykker fra 0: <b>${fmtDec(k / 10, 1)}</b>.`,
+      };
+    }
+    if (level === 2) {
+      let k; do k = ri(1, 29); while (k % 10 === 0);
+      return {
+        prompt: 'Hvilket decimaltal peger pilen på?',
+        visual: V.numberLine({ min: 0, max: 3, div: 30, minorEvery: 10, labels: (i) => (i % 10 === 0 ? String(i / 10) : null), mark: k / 10 }),
+        input: 'number', answer: k / 10,
+        explain: `Mellem hvert helt tal er der 10 stykker på 0,1. Pilen står ved ${Math.floor(k / 10)} og ${k % 10} tiendedele: <b>${fmtDec(k / 10, 1)}</b>.`,
+      };
+    }
+    const base = ri(10, 49); // i tiendedele, fx 23 = 2,3
+    const h = ri(1, 9);
+    const lo = base / 10;
+    const val = (base * 10 + h) / 100;
+    return {
+      prompt: 'Hvilket decimaltal peger pilen på?',
+      visual: V.numberLine({ min: lo, max: lo + 0.1, div: 10, labels: (i) => (i === 0 ? fmtDec(lo, 1) : i === 10 ? fmtDec(lo + 0.1, 1) : null), mark: val }),
+      input: 'number', answer: val,
+      explain: `Stykket fra ${fmtDec(lo, 1)} til ${fmtDec(lo + 0.1, 1)} er delt i 10 hundrededele (0,01). Pilen står ${h} stykker efter ${fmtDec(lo, 1)}: <b>${fmtDec(val, 2)}</b>.`,
+    };
+  },
+};
+
+const decsammenlign = {
+  id: 'decsammenlign',
+  name: 'Sammenlign decimaltal',
+  desc: 'Er 0,5 eller 0,45 størst?',
+  intro: {
+    text: 'Pas på: <b>flere cifre betyder ikke større!</b> 0,5 er større end 0,45. Tip: skriv dem med lige mange decimaler – 0,<b>50</b> og 0,<b>45</b> – så kan du sammenligne som hele tal.',
+  },
+  gen(level) {
+    const vals = new Set();
+    let w = 0;
+    if (level === 3) w = ri(1, 9);
+    while (vals.size < (level === 1 ? 3 : 4)) {
+      let hund;
+      if (level === 1) hund = ri(1, 9) * 10;
+      else hund = chance(0.5) ? ri(1, 9) * 10 : ri(1, 99);
+      vals.add(w * 100 + hund);
+    }
+    // sørg for mindst ét "fælde"-par på niveau 2-3 (kort decimal > lang decimal)
+    const list = [...vals];
+    const big = chance(0.5);
+    const target = big ? Math.max(...list) : Math.min(...list);
+    const show = (h) => fmtDec(h / 100, h % 10 === 0 ? 1 : 2);
+    const padded = [...list].sort((a, b) => b - a).map((h) => fmtDec(h / 100, 2)).join(' &gt; ');
+    return {
+      prompt: `Yasmin har vejet nogle dyreunger (i kg). Hvilken vægt er <b>${big ? 'størst' : 'mindst'}</b>?`,
+      input: 'choice', choices: shuffle(list).map(show), answer: show(target),
+      explain: `Skriv dem med to decimaler og sammenlign: ${padded}. Så <b>${show(target)}</b> er ${big ? 'størst' : 'mindst'}.`,
+    };
+  },
+};
+
+const decplusminus = {
+  id: 'decplusminus',
+  name: 'Regn med decimaltal',
+  desc: 'Plus og minus – også med penge',
+  intro: {
+    text: 'Stil kommaerne under hinanden, og regn som normalt. 0,7 + 0,6 = 13 tiendedele = <b>1,3</b>.<br>Med penge: 12,50 kr. + 7,25 kr. = 19 kr. + 0,75 kr. = <b>19,75 kr.</b>',
+  },
+  gen(level) {
+    if (level < 3) {
+      // i tiendedele
+      let a, b, add = chance(0.6);
+      do {
+        a = ri(1, 5) * 10 + ri(1, 9);
+        b = ri(0, 4) * 10 + ri(1, 9);
+        if (level === 1) { a = ri(0, 5) * 10 + ri(1, 5); b = ri(0, 4) * 10 + ri(1, 4); }
+      } while (
+        (level === 1 && add && (a % 10) + (b % 10) >= 10) ||
+        (level === 1 && !add && (a % 10) < (b % 10)) ||
+        (level === 2 && add && (a % 10) + (b % 10) < 10) ||
+        (level === 2 && !add && (a % 10) >= (b % 10)) ||
+        (!add && a <= b)
+      );
+      const ans = add ? a + b : a - b;
+      const d = (x) => fmtDec(x / 10, 1);
+      return {
+        prompt: `<span class="big-expr">${d(a)} ${add ? '+' : '−'} ${d(b)}</span>`,
+        input: 'number', answer: ans / 10,
+        explain: `Tænk i tiendedele: ${a} ${add ? '+' : '−'} ${b} = ${ans} tiendedele = <b>${d(ans)}</b>.`,
+      };
+    }
+    const a = ri(20, 180) * 25, b = ri(10, 120) * 25; // øre, i hele 25-øre
+    const nm = pick(NAMES);
+    if (chance(0.5)) {
+      return {
+        prompt: `${nm} køber et dyrekort til ${fmtKr(a)} og en is til ${fmtKr(b)} i zoo-kiosken. Hvad koster det i alt?`,
+        input: 'number', answer: (a + b) / 100, unit: 'kr.',
+        explain: `Læg kroner og øre sammen hver for sig, eller stil kommaerne under hinanden: ${fmtKr(a)} + ${fmtKr(b)} = <b>${fmtKr(a + b)}</b>`,
+      };
+    }
+    const pay = Math.ceil((a + 1) / 10000) * 10000;
+    return {
+      prompt: `${nm} køber en tøjpanda i zoo-butikken til ${fmtKr(a)} og betaler med ${fmt(pay / 100)} kr. Hvor mange penge får ${nm} tilbage?`,
+      input: 'number', answer: (pay - a) / 100, unit: 'kr.',
+      explain: `${fmt(pay / 100)} kr. − ${fmtKr(a)} = <b>${fmtKr(pay - a)}</b>. Tip: tæl op fra ${fmtKr(a)} til ${fmt(pay / 100)} kr.`,
+    };
+  },
+};
+
+// ---------- F. Geometri og måling ----------
+
+const omkreds = {
+  id: 'omkreds',
+  name: 'Omkreds',
+  desc: 'Hele vejen rundt om en figur',
+  intro: {
+    text: 'Omkredsen er længden <b>hele vejen rundt</b>. Et rektangel på 5 cm × 3 cm har omkreds 5 + 3 + 5 + 3 = <b>16 cm</b>.',
+    visual: () => V.rectShape(5, 3),
+  },
+  gen(level) {
+    if (level === 3) {
+      const w = ri(3, 12), h = ri(2, 9), P = 2 * (w + h);
+      return {
+        prompt: `Zebraernes anlæg er et rektangel med <b>${P} m</b> hegn hele vejen rundt. Den ene side er ${w} m. Hvor lang er den anden side?`,
+        visual: V.rectShape(w, h, { top: `${w} m`, left: '?' }),
+        input: 'number', answer: h, unit: 'm',
+        explain: `To sider (én af hver) er halvdelen af omkredsen: ${P} : 2 = ${P / 2} m. Så den anden side er ${P / 2} − ${w} = <b>${h} m</b>.`,
+      };
+    }
+    const unit = 'm';
+    const [lo, hi] = level === 1 ? [2, 9] : [5, 25];
+    const w = ri(lo, hi), h = chance(0.2) ? w : ri(lo, hi);
+    const P = 2 * (w + h);
+    return {
+      prompt: level === 1
+        ? `Kaninernes indhegning er ${w === h ? 'et kvadrat' : 'et rektangel'}. Hvad er omkredsen?`
+        : `Hvor mange meter hegn skal der bruges hele vejen rundt om ${pick(['lama', 'kamel', 'zebra'])}-anlægget?`,
+      visual: V.rectShape(w, h, { unit }),
+      input: 'number', answer: P, unit,
+      explain: `Læg alle fire sider sammen: ${w} + ${h} + ${w} + ${h} = <b>${P} ${unit}</b>.`,
+    };
+  },
+};
+
+const areal = {
+  id: 'areal',
+  name: 'Areal',
+  desc: 'Hvor stor en flade er',
+  intro: {
+    text: 'Arealet er hvor mange <b>kvadrater</b> der kan være inde i figuren. Et rektangel på 5 × 3 har 3 rækker med 5 kvadrater: 5 × 3 = <b>15 cm²</b>.',
+    visual: () => V.rectShape(5, 3, { grid: true }),
+  },
+  gen(level) {
+    if (level === 1) {
+      const w = ri(2, 8), h = ri(2, 6);
+      return {
+        prompt: 'Hvert lille kvadrat er 1 m². Hvor stort er arealet af marsvinenes indhegning?',
+        visual: V.rectShape(w, h, { grid: true }), input: 'number', answer: w * h, unit: 'm²',
+        explain: `Der er ${h} rækker med ${w} kvadrater: ${h} × ${w} = <b>${w * h} m²</b>.`,
+      };
+    }
+    if (level === 2) {
+      const w = ri(3, 12), h = ri(2, 9);
+      return {
+        prompt: 'Hvad er arealet af løvernes anlæg?',
+        visual: V.rectShape(w, h, { unit: 'm' }), input: 'number', answer: w * h, unit: 'm²',
+        explain: `Areal = længde × bredde = ${w} × ${h} = <b>${w * h} m²</b>.`,
+      };
+    }
+    const W = ri(5, 9), H = ri(4, 8), cw = ri(1, W - 2), ch = ri(1, H - 2);
+    const A = W * H - cw * ch;
+    return {
+      prompt: 'Elefanterne får et nyt anlæg med denne form. Hvad er arealet?',
+      visual: V.lShape(W, H, cw, ch), input: 'number', answer: A, unit: 'm²',
+      explain: `Del figuren i to rektangler: ${W - cw} × ${H} = ${(W - cw) * H} og ${cw} × ${H - ch} = ${cw * (H - ch)}. I alt ${(W - cw) * H} + ${cw * (H - ch)} = <b>${A} m²</b>.`,
+    };
+  },
+};
+
+const enheder = {
+  id: 'enheder',
+  name: 'Måleenheder',
+  desc: 'm og cm, kg og g, l og dl',
+  intro: {
+    text: '<b>1 m = 100 cm</b> · <b>1 km = 1.000 m</b> · <b>1 cm = 10 mm</b><br><b>1 kg = 1.000 g</b><br><b>1 l = 10 dl = 100 cl</b>',
+  },
+  gen(level) {
+    const conv = [
+      // [fra, til, faktor] – faktor: 1 fra = faktor til
+      ['m', 'cm', 100], ['kg', 'g', 1000], ['l', 'dl', 10], ['km', 'm', 1000], ['cm', 'mm', 10], ['l', 'cl', 100],
+    ];
+    const pool = level === 1 ? conv.slice(0, 3) : conv;
+    const [big, small, f] = pick(pool);
+    if (level < 3) {
+      const n = ri(2, 9);
+      if (chance(0.5)) {
+        return {
+          prompt: `<span class="big-expr">${n} ${big} = ${box()} ${small}</span>`,
+          input: 'number', answer: n * f, unit: small,
+          explain: `1 ${big} = ${fmt(f)} ${small}, så ${n} ${big} = ${n} × ${fmt(f)} = <b>${fmt(n * f)} ${small}</b>.`,
+        };
+      }
+      return {
+        prompt: `<span class="big-expr">${fmt(n * f)} ${small} = ${box()} ${big}</span>`,
+        input: 'number', answer: n, unit: big,
+        explain: `${fmt(f)} ${small} = 1 ${big}, så ${fmt(n * f)} ${small} = ${fmt(n * f)} : ${fmt(f)} = <b>${n} ${big}</b>.`,
+      };
+    }
+    const kind = ri(0, 2);
+    if (kind === 0) {
+      const n = ri(1, 5), r = ri(1, f - 1);
+      return {
+        prompt: `<span class="big-expr">${n} ${big} og ${r} ${small} = ${box()} ${small}</span>`,
+        input: 'number', answer: n * f + r, unit: small,
+        explain: `${n} ${big} = ${fmt(n * f)} ${small}. Læg ${r} til: <b>${fmt(n * f + r)} ${small}</b>.`,
+      };
+    }
+    if (kind === 1) {
+      const n = ri(1, 5);
+      return {
+        prompt: `<span class="big-expr">${n},5 ${big} = ${box()} ${small}</span>`,
+        input: 'number', answer: n * f + f / 2, unit: small,
+        explain: `${n} ${big} = ${fmt(n * f)} ${small}, og en halv ${big} = ${fmt(f / 2)} ${small}. I alt <b>${fmt(n * f + f / 2)} ${small}</b>.`,
+      };
+    }
+    const n = ri(1, 9);
+    return {
+      prompt: `<span class="big-expr">${fmt(n * f + f / 2)} ${small} = ${box()} ${big}</span>`,
+      input: 'number', answer: n + 0.5, unit: big,
+      explain: `${fmt(n * f)} ${small} = ${n} ${big}, og ${fmt(f / 2)} ${small} er en halv ${big}. Altså <b>${fmtDec(n + 0.5, 1)} ${big}</b>.`,
+    };
+  },
+};
+
+const pad2 = (x) => String(x).padStart(2, '0');
+function danishTime(h, m) {
+  const next = (h % 12) + 1;
+  if (m === 0) return `klokken ${h}`;
+  if (m === 15) return `kvart over ${h}`;
+  if (m === 30) return `halv ${next}`;
+  if (m === 45) return `kvart i ${next}`;
+  if (m < 30) return `${m} minutter over ${h}`;
+  return `${60 - m} minutter i ${next}`;
+}
+
+const klokken = {
+  id: 'klokken',
+  name: 'Klokken',
+  desc: 'Aflæs et analogt ur',
+  intro: {
+    text: 'Den <b>lille viser</b> viser timerne. Den <b>store viser</b> viser minutterne – hvert tal på uret er 5 minutter. Her er klokken <b>3:15</b> (kvart over 3). Husk: ved "halv 4" er klokken 3:30!',
+    visual: () => V.clock(3, 15),
+  },
+  gen(level) {
+    const ms = [[0, 30], [0, 15, 30, 45], [5, 10, 20, 25, 35, 40, 50, 55, 15, 45]][level - 1];
+    const h = ri(1, 12), m = pick(ms);
+    const show = (hh, mm) => `${hh}:${pad2(mm)}`;
+    const correct = show(h, m);
+    const opts = new Set([correct]);
+    const cand = [
+      [m / 5 === 0 ? 12 : m / 5, (h % 12) * 5], // viserne byttet
+      [h === 12 ? 1 : h + 1, m], [h === 1 ? 12 : h - 1, m],
+      [h, (m + 30) % 60], [h, (m + 15) % 60], [h, (m + 45) % 60],
+    ];
+    for (const [hh, mm] of shuffle(cand)) {
+      if (opts.size >= 4) break;
+      if (hh >= 1 && hh <= 12 && Number.isInteger(hh)) opts.add(show(hh, mm));
+    }
+    return {
+      prompt: 'Hvad viser zoo-uret?',
+      visual: V.clock(h, m), input: 'choice', choices: shuffle([...opts]), answer: correct,
+      explain: `Den lille viser står ved ${h}${m >= 30 ? ` (på vej mod ${(h % 12) + 1})` : ''}, og den store viser viser ${m} minutter. Klokken er <b>${correct}</b> – ${danishTime(h, m)}.`,
+    };
+  },
+};
+
+const tidsforskel = {
+  id: 'tidsforskel',
+  name: 'Hvor lang tid?',
+  desc: 'Tiden mellem to klokkeslæt',
+  intro: {
+    text: 'Tæl op til en hel time først. Fra 13:45 til 14:20:<br>13:45 → 14:00 er <b>15 min</b>. 14:00 → 14:20 er <b>20 min</b>. I alt <b>35 minutter</b>.',
+  },
+  gen(level) {
+    let h1, m1, h2, m2;
+    if (level === 1) {
+      h1 = h2 = ri(8, 20); m1 = ri(0, 7) * 5; m2 = ri(m1 / 5 + 2, 11) * 5;
+    } else if (level === 2) {
+      h1 = ri(8, 20); h2 = h1 + 1; m1 = ri(6, 11) * 5; m2 = ri(1, 8) * 5;
+    } else {
+      h1 = ri(8, 18); m1 = ri(1, 11) * 5; h2 = h1 + ri(1, 3); m2 = ri(0, 11) * 5;
+    }
+    const mins = (h2 * 60 + m2) - (h1 * 60 + m1);
+    const t1 = `${pad2(h1)}:${pad2(m1)}`, t2 = `${pad2(h2)}:${pad2(m2)}`;
+    const ctx = pick([
+      `Sæl-showet starter kl. ${t1} og slutter kl. ${t2}.`,
+      `Løvefodringen begynder kl. ${t1} og slutter kl. ${t2}.`,
+      `Zoo-toget kører fra indgangen kl. ${t1} og er ved elefanterne kl. ${t2}.`,
+    ]);
+    let explain;
+    if (h1 === h2) explain = `Fra ${m1} til ${m2} minutter: ${m2} − ${m1} = <b>${mins} minutter</b>.`;
+    else {
+      const first = 60 - m1, full = (h2 - h1 - 1) * 60;
+      explain = `${t1} → ${pad2(h1 + 1)}:00 er ${first} min.${full ? ` Så ${h2 - h1 - 1} hel${h2 - h1 - 1 > 1 ? 'e' : ''} time${h2 - h1 - 1 > 1 ? 'r' : ''} = ${full} min.` : ''} ${pad2(h2)}:00 → ${t2} er ${m2} min. I alt <b>${mins} minutter</b>.`;
+    }
+    return { prompt: `${ctx} Hvor mange minutter varer det?`, input: 'number', answer: mins, unit: 'min.', explain };
+  },
+};
+
+const vinkler = {
+  id: 'vinkler',
+  name: 'Vinkler',
+  desc: 'Spids, ret, stump eller lige',
+  intro: {
+    text: 'En <b>ret</b> vinkel er 90° – som hjørnet på et stykke papir. Er vinklen mindre, er den <b>spids</b>. Er den større, er den <b>stump</b>. En <b>lige</b> vinkel er 180° – en helt lige linje.',
+    visual: () => V.angle(90, 10),
+  },
+  gen(level) {
+    const opts = level === 3 ? ['spids', 'ret', 'stump', 'lige'] : ['spids', 'ret', 'stump'];
+    const kind = pick(opts);
+    const deg = {
+      spids: level === 1 ? ri(25, 50) : ri(55, 80),
+      ret: 90,
+      stump: level === 1 ? ri(130, 160) : ri(100, 125),
+      lige: 180,
+    }[kind];
+    const rot = level === 1 ? 0 : ri(0, 11) * 30;
+    return {
+      prompt: 'Hvilken slags vinkel er det?',
+      visual: V.angle(deg, rot), input: 'choice', choices: opts, answer: kind,
+      explain: {
+        spids: 'Vinklen er mindre end en ret vinkel (90°), så den er <b>spids</b>.',
+        ret: 'Vinklen er præcis som hjørnet på et papir – 90°. Den er <b>ret</b>.',
+        stump: 'Vinklen er større end en ret vinkel (90°), men ikke en lige linje. Den er <b>stump</b>.',
+        lige: 'De to ben danner en lige linje – 180°. Det er en <b>lige</b> vinkel.',
+      }[kind],
+    };
+  },
+};
+
+// ---------- G. Statistik og sandsynlighed ----------
+
+const THEMES = [
+  { title: 'Gæsternes yndlingsdyr', cats: ['Løve', 'Panda', 'Giraf', 'Pingvin', 'Abe'], noun: 'gæster' },
+  { title: 'Børnenes yndlingsunge i Babyhuset', cats: ['Føl', 'Lam', 'Ælling', 'Kid', 'Kanin'], noun: 'børn' },
+  { title: 'Solgte is i zoo-kiosken', cats: ['Man', 'Tirs', 'Ons', 'Tors', 'Fre'], noun: 'is' },
+];
+
+const soejle = {
+  id: 'soejle',
+  name: 'Søjlediagrammer',
+  desc: 'Aflæs og regn med diagrammer',
+  intro: {
+    text: 'Et søjlediagram viser tal som søjler. Aflæs højden på tallene ude til venstre. Kig godt efter, <b>hvor meget hver streg er værd</b> – det er ikke altid 1!',
+  },
+  gen(level) {
+    const th = pick(THEMES);
+    const n = level === 1 ? 4 : 5;
+    const cats = th.cats.slice(0, n);
+    const step = [1, 2, 5][level - 1];
+    const maxV = [10, 20, 50][level - 1];
+    let vals;
+    do vals = cats.map(() => ri(1, maxV / step) * step); while (new Set(vals).size < n - 1);
+    const vis = V.barChart(cats, vals, { step, max: maxV, title: th.title });
+    const isWeek = th.noun === 'is';
+    const q = isWeek ? (c) => `om ${c.toLowerCase()}dagen` : (c) => `${c.toLowerCase()}`;
+    if (level === 1) {
+      const i = ri(0, n - 1);
+      return {
+        prompt: isWeek ? `Hvor mange is blev der solgt ${q(cats[i])}?` : `Hvor mange ${th.noun} valgte ${q(cats[i])}?`,
+        visual: vis, input: 'number', answer: vals[i],
+        explain: `Søjlen for ${cats[i]} går op til <b>${vals[i]}</b>.`,
+      };
+    }
+    if (level === 2) {
+      let i, j;
+      do { i = ri(0, n - 1); j = ri(0, n - 1); } while (vals[i] <= vals[j]);
+      return {
+        prompt: isWeek ? `Hvor mange flere is blev der solgt ${q(cats[i])} end ${q(cats[j])}?` : `Hvor mange flere ${th.noun} valgte ${q(cats[i])} end ${q(cats[j])}?`,
+        visual: vis, input: 'number', answer: vals[i] - vals[j],
+        explain: `${cats[i]}: ${vals[i]}. ${cats[j]}: ${vals[j]}. Forskellen er ${vals[i]} − ${vals[j]} = <b>${vals[i] - vals[j]}</b>.`,
+      };
+    }
+    const total = vals.reduce((s, v) => s + v, 0);
+    return {
+      prompt: isWeek ? 'Hvor mange is blev der solgt i alt på de fem dage?' : `Hvor mange ${th.noun} er der i alt?`,
+      visual: vis, input: 'number', answer: total,
+      explain: `Hver streg er ${step} værd. Læg alle søjler sammen: ${vals.join(' + ')} = <b>${total}</b>.`,
+    };
+  },
+};
+
+const typetal = {
+  id: 'typetal',
+  name: 'Typetal, variationsbredde og median',
+  desc: 'Beskriv en række tal',
+  intro: {
+    text: '<b>Typetal:</b> det tal, der er flest af.<br><b>Variationsbredde:</b> største tal − mindste tal.<br><b>Median:</b> sæt tallene i rækkefølge – medianen er det midterste.',
+  },
+  gen(level) {
+    const ctx = pick(['Antal fisk hver pingvin spiste', 'Antal bananer hver abe fik', 'Antal timer løverne sov hver dag', 'Antal æg i hver af svanernes reder']);
+    if (level === 1) {
+      const mode = ri(1, 9);
+      const list = [mode, mode, mode];
+      const others = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter((x) => x !== mode)).slice(0, ri(2, 3));
+      others.forEach((o) => { list.push(o); if (chance(0.5)) list.push(o); });
+      const nums = shuffle(list);
+      return {
+        prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>typetallet</b>?`,
+        input: 'number', answer: mode,
+        explain: `Typetallet er det tal, der optræder flest gange. ${mode} optræder 3 gange: <b>${mode}</b>.`,
+      };
+    }
+    const len = level === 2 ? ri(6, 8) : pick([5, 7, 9]);
+    const nums = Array.from({ length: len }, () => ri(1, 20));
+    if (level === 2) {
+      const mx = Math.max(...nums), mn = Math.min(...nums);
+      return {
+        prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>variationsbredden</b>?`,
+        input: 'number', answer: mx - mn,
+        explain: `Største tal er ${mx}, mindste er ${mn}. Variationsbredden er ${mx} − ${mn} = <b>${mx - mn}</b>.`,
+      };
+    }
+    const sorted = [...nums].sort((a, b) => a - b);
+    const mid = sorted[(len - 1) / 2];
+    return {
+      prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>medianen</b>?`,
+      input: 'number', answer: mid,
+      explain: `Sæt i rækkefølge: ${sorted.map((x, i) => (i === (len - 1) / 2 ? `<b><u>${x}</u></b>` : x)).join(', ')}. Det midterste tal er <b>${mid}</b>.`,
+    };
+  },
+};
+
+const COLORS = ['rød', 'blå', 'grøn', 'gul'];
+const COLOR_CLS = { 'rød': 'red', 'blå': 'blue', 'grøn': 'green', 'gul': 'yellow' };
+const PL = { 'rød': 'røde', 'blå': 'blå', 'grøn': 'grønne', 'gul': 'gule' };
+
+const sandsynlighed = {
+  id: 'sandsynlighed',
+  name: 'Sandsynlighed',
+  desc: 'Hvor stor er chancen?',
+  intro: {
+    text: '<b>Umulig</b>: kan ikke ske. <b>Sikker</b>: sker helt sikkert. <b>Lige chance</b>: halvdelen af gangene.<br><b>Sandsynlig</b>: sker oftest. <b>Usandsynlig</b>: sker sjældent.<br>Chancen for rød i en pose med 1 rød og 3 blå er <b>1 ud af 4</b> = ' + frac(1, 4) + '.',
+    visual: () => V.bag([{ color: 'red', n: 1 }, { color: 'blue', n: 3 }]),
+  },
+  gen(level) {
+    const [c1, c2, c3] = shuffle(COLORS);
+    if (level === 3) {
+      if (chance(0.5)) {
+        const counts = shuffle([1, 2, 3, 4, 5, 6]).slice(0, 3);
+        const cols = [c1, c2, c3];
+        const bi = counts.indexOf(Math.max(...counts));
+        return {
+          prompt: 'Lodtrækning i billetlugen: Du trækker én kugle uden at kigge. Hvilken farve har du <b>størst chance</b> for at trække?',
+          visual: V.bag(cols.map((c, i) => ({ color: COLOR_CLS[c], n: counts[i] }))),
+          input: 'choice', choices: cols, answer: cols[bi],
+          explain: `Der er flest ${PL[cols[bi]]} kugler (${counts[bi]}), så <b>${cols[bi]}</b> har størst chance.`,
+        };
+      }
+      const a = ri(1, 5), b = ri(1, 6);
+      return {
+        prompt: `Lodtrækning i billetlugen: Du trækker én kugle uden at kigge. Hvad er chancen for at trække en <b>${c1}</b> kugle? Skriv som brøk.`,
+        visual: V.bag([{ color: COLOR_CLS[c1], n: a }, { color: COLOR_CLS[c2], n: b }]),
+        input: 'fraction', answer: [a, a + b],
+        explain: `Der er ${a + b} kugler i alt, og ${a} af dem er ${c1}. Chancen er ${a} ud af ${a + b} = <b>${frac(a, a + b)}</b>.`,
+      };
+    }
+    const opts = level === 1 ? ['umulig', 'lige chance', 'sikker'] : ['umulig', 'usandsynlig', 'lige chance', 'sandsynlig', 'sikker'];
+    const kind = pick(opts);
+    let a, b; // a = antal af den efterspurgte farve, b = andre
+    switch (kind) {
+      case 'umulig': a = 0; b = ri(3, 8); break;
+      case 'sikker': a = ri(3, 8); b = 0; break;
+      case 'lige chance': a = b = ri(2, 5); break;
+      case 'usandsynlig': a = ri(1, 2); b = ri(5, 8); break;
+      default: a = ri(5, 8); b = ri(1, 2);
+    }
+    const balls = [];
+    if (a) balls.push({ color: COLOR_CLS[c1], n: a });
+    if (b) balls.push({ color: COLOR_CLS[c2], n: b });
+    const why = {
+      umulig: `Der er ingen ${PL[c1]} kugler i posen – det er <b>umuligt</b>.`,
+      sikker: `Alle kuglerne er ${PL[c1]} – det er <b>sikkert</b>.`,
+      'lige chance': `Der er lige mange af hver farve (${a} og ${b}) – det er <b>lige chance</b>.`,
+      usandsynlig: `Kun ${a} ud af ${a + b} kugler er ${PL[c1]} – det er <b>usandsynligt</b>.`,
+      sandsynlig: `${a} ud af ${a + b} kugler er ${PL[c1]} – det er <b>sandsynligt</b>.`,
+    }[kind];
+    return {
+      prompt: `Lodtrækning i billetlugen: Du trækker én kugle uden at kigge. Hvor sandsynligt er det, at den er <b>${c1}</b>?`,
+      visual: V.bag(balls), input: 'choice', choices: opts, answer: kind, explain: why,
+    };
+  },
+};
+
+// ---------- H. Mønstre og ligninger ----------
+
+const talfolger = {
+  id: 'talfolger',
+  name: 'Talfølger',
+  desc: 'Find mønstret og fortsæt',
+  intro: {
+    text: 'Kig på, hvad der sker fra det ene tal til det næste. 3, 7, 11, 15 … Der lægges <b>4</b> til hver gang, så næste tal er <b>19</b>.',
+  },
+  gen(level) {
+    let seq, rule;
+    if (level === 1) {
+      const s = ri(1, 20), d = ri(2, 10);
+      seq = Array.from({ length: 6 }, (_, i) => s + i * d); rule = `Der lægges ${d} til hver gang`;
+    } else if (level === 2) {
+      if (chance(0.4)) {
+        const s = ri(1, 5);
+        seq = Array.from({ length: 6 }, (_, i) => s * 2 ** i); rule = 'Tallet fordobles hver gang (× 2)';
+      } else {
+        const d = ri(3, 12), s = ri(6 * d, 100);
+        seq = Array.from({ length: 6 }, (_, i) => s - i * d); rule = `Der trækkes ${d} fra hver gang`;
+      }
+    } else if (chance(0.6)) {
+      const s = ri(1, 10), d0 = ri(1, 3), inc = ri(1, 2);
+      seq = [s];
+      for (let i = 0; i < 5; i++) seq.push(seq[i] + d0 + i * inc);
+      const diffs = seq.slice(1).map((x, i) => x - seq[i]);
+      rule = `Spring: ${diffs.slice(0, 4).map((x) => '+' + x).join(', ')} … springet bliver ${inc} større hver gang`;
+    } else {
+      const s = ri(1, 3);
+      seq = Array.from({ length: 6 }, (_, i) => s * 3 ** i).slice(0, 5); rule = 'Tallet ganges med 3 hver gang';
+      seq.push(seq[4] * 3);
+    }
+    const shown = seq.slice(0, -1), ans = seq[seq.length - 1];
+    return {
+      prompt: `Følg pote-sporet. Hvad er det næste tal?<br><span class="big-expr">${shown.map(fmt).join(', ')}, ${box()}</span>`,
+      input: 'number', answer: ans,
+      explain: `${rule}. Næste tal er <b>${fmt(ans)}</b>.`,
+    };
+  },
+};
+
+const ukendt = {
+  id: 'ukendt',
+  name: 'Find det ukendte tal',
+  desc: 'Små ligninger: ? + 7 = 15',
+  intro: {
+    text: `Regn <b>baglæns</b> med det modsatte regnestykke.<br>${box()} + 7 = 15 → 15 − 7 = <b>8</b>.<br>4 × ${box()} = 28 → 28 : 4 = <b>7</b>.`,
+  },
+  gen(level) {
+    const B = box();
+    if (level === 1) {
+      const x = ri(3, 60), b = ri(2, 40), kind = ri(0, 2);
+      if (kind === 0) return { prompt: `<span class="big-expr">${B} + ${b} = ${x + b}</span>`, input: 'number', answer: x, explain: `Regn baglæns: ${x + b} − ${b} = <b>${x}</b>.` };
+      if (kind === 1) return { prompt: `<span class="big-expr">${b} + ${B} = ${x + b}</span>`, input: 'number', answer: x, explain: `Regn baglæns: ${x + b} − ${b} = <b>${x}</b>.` };
+      return { prompt: `<span class="big-expr">${B} − ${b} = ${x}</span>`, input: 'number', answer: x + b, explain: `Regn baglæns: ${x} + ${b} = <b>${x + b}</b>.` };
+    }
+    if (level === 2) {
+      const a = ri(2, 10), x = ri(2, 10), kind = ri(0, 2);
+      if (kind === 0) return { prompt: `<span class="big-expr">${a} × ${B} = ${a * x}</span>`, input: 'number', answer: x, explain: `Regn baglæns: ${a * x} : ${a} = <b>${x}</b>.` };
+      if (kind === 1) return { prompt: `<span class="big-expr">${B} : ${a} = ${x}</span>`, input: 'number', answer: a * x, explain: `Regn baglæns: ${x} × ${a} = <b>${a * x}</b>.` };
+      return { prompt: `<span class="big-expr">${a * x} : ${B} = ${a}</span>`, input: 'number', answer: x, explain: `Hvad skal ${a * x} deles med for at give ${a}? ${a} × ${x} = ${a * x}, så svaret er <b>${x}</b>.` };
+    }
+    const a = ri(2, 9), x = ri(2, 10), b = ri(1, 20), c = a * x + b;
+    if (chance(0.5)) {
+      return { prompt: `<span class="big-expr">${a} × ${B} + ${b} = ${c}</span>`, input: 'number', answer: x, explain: `Baglæns: først − ${b}: ${c} − ${b} = ${a * x}. Så : ${a}: ${a * x} : ${a} = <b>${x}</b>.` };
+    }
+    const c2 = a * x - Math.min(b, a * x - 1), b2 = a * x - c2;
+    return { prompt: `<span class="big-expr">${a} × ${B} − ${b2} = ${c2}</span>`, input: 'number', answer: x, explain: `Baglæns: først + ${b2}: ${c2} + ${b2} = ${a * x}. Så : ${a}: ${a * x} : ${a} = <b>${x}</b>.` };
+  },
+};
+
+// ---------- Områder ----------
+
+// Hvert område er et sted i zoo'en (se univers-zoo.md).
+export const AREAS = [
+  {
+    id: 'tal', name: 'Tal og talsystem', place: 'Billetlugen', icon: '🎟️', color: 'var(--c-tal)',
+    skills: [positionssystem, afrunding, sammenlign, plusminus],
+    snak: ['Hvad er 7-tallet værd i husnummeret / postnummeret?', 'Rund prisen på indkøbskurven af til nærmeste hundrede.'],
+  },
+  {
+    id: 'gange', name: 'Gange', place: 'Foderlageret', icon: '📦', color: 'var(--c-gange)',
+    skills: [gange10, gangeflercifret, gangetekst],
+    snak: ['Hvor mange hjul har 7 biler?', 'Hvad koster 6 is til 15 kr.?'],
+  },
+  {
+    id: 'division', name: 'Division', place: 'Foderkøkkenet', icon: '🥕', color: 'var(--c-div)',
+    skills: [divtabel, divrest, divflercifret, divtekst],
+    snak: ['Vi er 4 og har 30 kr. – hvor meget får hver, og hvad bliver tilbage?', 'Hvor mange hold á 5 kan vi lave af 23 børn?'],
+  },
+  {
+    id: 'brok', name: 'Brøker', place: 'Pingvinbassinet', icon: '🐧', color: 'var(--c-brok)',
+    skills: [brokfigur, broktallinje, broksammenlign, brokafantal, ligevaerdig],
+    snak: ['Vil du hellere have ⅓ eller ¼ af pizzaen? Hvorfor?', 'Hvad er ¾ af en time i minutter?'],
+  },
+  {
+    id: 'decimal', name: 'Decimaltal', place: 'Dyrlægeklinikken', icon: '🩺', color: 'var(--c-dec)',
+    skills: [decfigur, dectallinje, decsammenlign, decplusminus],
+    snak: ['Hvad er billigst: 12,5 kr. eller 12,45 kr.?', 'Hvor meget skal vi have tilbage fra 50 kr., hvis det koster 37,50?'],
+  },
+  {
+    id: 'geometri', name: 'Geometri', place: 'Anlæggene', icon: '🌿', color: 'var(--c-geo)',
+    skills: [omkreds, areal, vinkler],
+    snak: ['Hvor mange meter er der hele vejen rundt om haven?', 'Find en ret, en spids og en stump vinkel her i bilen.'],
+  },
+  {
+    id: 'maaling', name: 'Tid og måling', place: 'Zoo-uret', icon: '🕐', color: 'var(--c-maal)',
+    skills: [enheder, klokken, tidsforskel],
+    snak: ['Hvor mange minutter er der, til vi er fremme?', 'Hvor mange deciliter er der i en liter mælk?'],
+  },
+  {
+    id: 'data', name: 'Statistik og sandsynlighed', place: 'Gæsteundersøgelsen', icon: '📊', color: 'var(--c-data)',
+    skills: [soejle, typetal, sandsynlighed],
+    snak: ['Tæl farverne på de næste 20 biler – hvilken farve er typetallet?', 'Er det sandsynligt eller usandsynligt, at det regner i morgen?'],
+  },
+  {
+    id: 'algebra', name: 'Mønstre og ligninger', place: 'Skattejagten', icon: '🗺️', color: 'var(--c-alg)',
+    skills: [talfolger, ukendt],
+    snak: ['Jeg tænker på et tal. Ganger jeg det med 3 og lægger 2 til, får jeg 20. Hvilket tal?', 'Hvad kommer efter 1, 2, 4, 8, 16 …?'],
+  },
+];
+
+
+export const SKILLS = {};
+for (const area of AREAS) for (const s of area.skills) SKILLS[s.id] = { ...s, area: area.id };
+
+// ---------- Gangetabellen (spaced repetition pr. fakta) ----------
+
+// Alle par 2–10 (7×8 og 8×7 er samme fakta), sorteret fra let til svær
+export const FACTS = (() => {
+  const ease = { 2: 0, 10: 0, 5: 1, 3: 2, 4: 2, 9: 3, 6: 4, 7: 5, 8: 5 };
+  const list = [];
+  for (let a = 2; a <= 10; a++)
+    for (let b = a; b <= 10; b++) list.push({ key: `${a}x${b}`, a, b, d: Math.min(ease[a], ease[b]) * 10 + ease[a] + ease[b] + (a === b ? -1 : 0) });
+  return list.sort((x, y) => x.d - y.d).map(({ key, a, b }) => ({ key, a, b }));
+})();
+
+export function factStrategy(a, b) {
+  const [x, y] = a <= b ? [a, b] : [b, a];
+  const p = a * b;
+  if (x === 2) return `×2 er det dobbelte: ${y} + ${y} = ${p}.`;
+  if (y === 10) return `×10: hvert ciffer bliver 10 gange mere værd og rykker én plads til venstre: ${x} enere bliver til ${x} tiere = ${p}.`;
+  if (x === 5 || y === 5) { const o = x === 5 ? y : x; return `×5 er halvdelen af ×10: ${o} × 10 = ${o * 10}, halvdelen er ${p}.`; }
+  if (x === 9 || y === 9) { const o = x === 9 ? y : x; return `×9: gang med 10 og træk én gang fra: ${o * 10} − ${o} = ${p}.`; }
+  if (x === 4 || y === 4) { const o = x === 4 ? y : x; return `×4 er dobbelt af dobbelt: ${o} → ${o * 2} → ${p}.`; }
+  if (x === y) return `${x} × ${x} = ${p} – kvadrattal er gode at kunne udenad.`;
+  if (y - x === 1) return `Brug kvadrattallet: ${x} × ${x} = ${x * x}, plus én ${x}'er mere: ${x * x} + ${x} = ${p}.`;
+  if (x === 3 || y === 3) { const o = x === 3 ? y : x; return `×3 er dobbelt plus én: ${o * 2} + ${o} = ${p}.`; }
+  if (x === 6 || y === 6) { const o = x === 6 ? y : x; return `×6 er ×5 plus én: ${o * 5} + ${o} = ${p}.`; }
+  if (y === 8) return `×8 er dobbelt af ×4: ${x} × 4 = ${x * 4}, dobbelt er ${p}.`;
+  return `${x} × ${y - 1} = ${x * (y - 1)}, plus ${x} = ${p}.`;
+}
+
+export function factProblem(f) {
+  const [a, b] = chance(0.5) ? [f.a, f.b] : [f.b, f.a];
+  return {
+    fact: f.key,
+    prompt: `<span class="big-expr">${a} × ${b}</span>`,
+    input: 'number', answer: a * b,
+    explain: factStrategy(a, b),
+    explainVisual: V.dotArray(Math.min(a, b), Math.max(a, b)),
+  };
+}

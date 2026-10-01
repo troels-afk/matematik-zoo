@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe7f6"/><stop offset="1" stop-color="#eef9fb"/></linearGradient></defs>
+  <rect width="180" height="180" rx="40" fill="url(#s)"/>
+  <path d="M0 130 Q60 100 110 122 T180 115 V180 H0 Z" fill="#a9dcb6"/>
+  <path d="M0 150 H180 V180 H0 Z" fill="#8fd0a0"/>
+  <path d="M44 150 V78 Q90 30 136 78 V150" fill="none" stroke="#2c7f64" stroke-width="10" stroke-linecap="round"/>
+  <rect x="50" y="56" width="80" height="30" rx="9" fill="#fffaf0" stroke="#2c7f64" stroke-width="4"/>
+  <text x="90" y="78" text-anchor="middle" font-family="Arial Rounded MT Bold, Arial, sans-serif" font-weight="bold" font-size="19" fill="#1f3346">ZOO</text>
+  <text x="90" y="146" text-anchor="middle" font-size="54">🦒</text>
+</svg>
