@@ -1476,12 +1476,19 @@ for (const set of PRACTICE_SETS) for (const s of set.skills) ALL_SKILLS[s.id] = 
 // ---------- Gangetabellen (spaced repetition pr. fakta) ----------
 
 // Alle par 2–10 (7×8 og 8×7 er samme fakta), sorteret fra let til svær
+// Tabellerne 2–9 (7×8 og 8×7 er samme fakta) – 36 i alt.
+// Nye fakta introduceres i en blanding af mellem, lette og svære, så opvarmningen ikke bliver for let.
 export const FACTS = (() => {
-  const ease = { 2: 0, 10: 0, 5: 1, 3: 2, 4: 2, 9: 3, 6: 4, 7: 5, 8: 5 };
+  const ease = { 2: 0, 5: 1, 3: 2, 4: 2, 9: 3, 6: 4, 7: 5, 8: 5 };
   const list = [];
-  for (let a = 2; a <= 10; a++)
-    for (let b = a; b <= 10; b++) list.push({ key: `${a}x${b}`, a, b, d: Math.min(ease[a], ease[b]) * 10 + ease[a] + ease[b] + (a === b ? -1 : 0) });
-  return list.sort((x, y) => x.d - y.d).map(({ key, a, b }) => ({ key, a, b }));
+  for (let a = 2; a <= 9; a++)
+    for (let b = a; b <= 9; b++) list.push({ key: `${a}x${b}`, a, b, d: Math.min(ease[a], ease[b]) * 10 + ease[a] + ease[b] + (a === b ? -1 : 0) });
+  list.sort((x, y) => x.d - y.d);
+  const n = Math.ceil(list.length / 3);
+  const easy = list.slice(0, n), mid = list.slice(n, 2 * n), hard = list.slice(2 * n);
+  const mixed = [];
+  for (let i = 0; i < n; i++) for (const tier of [mid, easy, hard]) if (tier[i]) mixed.push(tier[i]);
+  return mixed.map(({ key, a, b }) => ({ key, a, b }));
 })();
 
 export function factStrategy(a, b) {

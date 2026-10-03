@@ -982,10 +982,10 @@ function showParent() {
   }).join('');
 
   let heat = '<div></div>';
-  for (let b = 2; b <= 10; b++) heat += `<div class="h">${b}</div>`;
-  for (let a = 2; a <= 10; a++) {
+  for (let b = 2; b <= 9; b++) heat += `<div class="h">${b}</div>`;
+  for (let a = 2; a <= 9; a++) {
     heat += `<div class="h">${a}</div>`;
-    for (let b = 2; b <= 10; b++) {
+    for (let b = 2; b <= 9; b++) {
       const key = a <= b ? `${a}x${b}` : `${b}x${a}`;
       const box = E.factBox(st, key);
       heat += `<div class="c b${box}" title="${a}×${b}: kasse ${box < 0 ? '–' : box}">${a * b}</div>`;

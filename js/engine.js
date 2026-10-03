@@ -14,6 +14,7 @@ export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'me
 const HIST_MAX = 40;
 const FACT_INTERVALS = [0, 1, 2, 4, 7, 14]; // dage pr. Leitner-kasse
 const SLOW_MS = 8000; // rigtigt men langsomt tabel-svar rykker ikke op
+const KNOWN_MS = 4000; // nyt fakta besvaret rigtigt så hurtigt = kendes allerede
 
 export const SESSION_SIZES = {
   kort: { warm: 6, main: 7, review: 3 },
@@ -137,10 +138,13 @@ export function factBox(state, key) {
 export function recordFact(state, key, correct, ms) {
   const d = today();
   let f = state.facts[key];
+  const isNew = !f;
   if (!f) f = state.facts[key] = { box: 0, due: d, hist: [] };
   f.hist.push({ c: correct, ms, t: Date.now() });
   if (f.hist.length > 20) f.hist.splice(0, f.hist.length - 20);
-  if (correct && ms < SLOW_MS) f.box = Math.min(FACT_INTERVALS.length - 1, f.box + 1);
+  // Hurtigspor: kan hun det allerede (rigtigt og hurtigt første gang), springes de første kasser over
+  if (isNew && correct && ms < KNOWN_MS) f.box = 3;
+  else if (correct && ms < SLOW_MS) f.box = Math.min(FACT_INTERVALS.length - 1, f.box + 1);
   else if (!correct) f.box = 0;
   f.due = addDays(d, FACT_INTERVALS[f.box] || 1);
   if (!correct) f.due = d;

@@ -368,7 +368,7 @@ table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line-2); vertical-align: top; }
 th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: uppercase; letter-spacing: .5px; }
 .table-wrap { overflow-x: auto; }
-.heat { display: grid; grid-template-columns: 34px repeat(9, 1fr); gap: 3px; max-width: 460px; }
+.heat { display: grid; grid-template-columns: 34px repeat(8, 1fr); gap: 3px; max-width: 460px; }
 .heat .h { font: 600 .8rem var(--font-head); text-align: center; color: var(--ink-2); align-self: center; }
 .heat .c { aspect-ratio: 1; border-radius: 6px; font-size: .7rem; display: grid; place-items: center; font-weight: 800; color: #fff; }
 .heat .b-1 { background: var(--line); color: var(--ink-2); }
