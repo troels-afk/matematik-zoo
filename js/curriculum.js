@@ -1224,6 +1224,255 @@ export const AREAS = [
 export const SKILLS = {};
 for (const area of AREAS) for (const s of area.skills) SKILLS[s.id] = { ...s, area: area.id };
 
+// ---------- Øvebanen: lektiepakker uden for zoo-forløbet ----------
+// Hver færdighed har intro.steps: et gennemregnet eksempel, der vises ét trin ad gangen.
+
+const sn = (n) => (n < 0 ? `−${fmt(-n)}` : fmt(n)); // rigtigt minustegn
+const X = '<i class="xvar">x</i>';
+const stepsHTML = (arr) => `<ol class="steps">${arr.map((s) => `<li>${s}</li>`).join('')}</ol>`;
+
+// VII) Omskriv tal: tiendedele og hundrededele
+const decimalDele = {
+  id: 'decimaldele',
+  name: 'Tiendedele og hundrededele',
+  desc: 'Fx 6/100 + 5 + 2/10 = 5,26',
+  intro: {
+    text: 'Et decimaltal er bygget af hele, tiendedele og hundrededele.',
+    steps: [
+      { text: 'Et tal med komma har faste pladser: <b>hele</b> foran kommaet, så <b>tiendedele</b> og <b>hundrededele</b> efter kommaet.', visual: () => V.decimalPlaces(5, 2, 6) },
+      { text: `${frac(6, 100)} betyder 6 ud af 100 – altså <b>6 hundrededele</b>. Det skrives <b>0,06</b>.` },
+      { text: `${frac(2, 10)} betyder 2 ud af 10 – altså <b>2 tiendedele</b>. Det skrives <b>0,2</b>.` },
+      { text: `Læg det hele sammen: ${frac(6, 100)} + 5 + ${frac(2, 10)} = 5 + 0,2 + 0,06 = <b>5,26</b>. Rækkefølgen er ligegyldig – hvert tal har sin egen plads.` },
+      { text: `Pas på nullet! 3 + ${frac(3, 100)} har <b>0 tiendedele</b>, så der skal stå et 0 lige efter kommaet: <b>3,03</b> (ikke 3,3).`, visual: () => V.decimalPlaces(3, 0, 3) },
+    ],
+  },
+  gen(level) {
+    const w = level === 1 ? ri(1, 9) : ri(1, 25);
+    let t = ri(1, 9), h = level === 1 ? 0 : ri(1, 9);
+    if (level === 3) { if (chance(0.5)) t = 0; else if (chance(0.35)) h = 0; }
+    const val = w * 100 + t * 10 + h; // i hundrededele
+    const dec = fmtDec(val / 100, h ? 2 : 1);
+    const how = [];
+    if (t) how.push(`${frac(t, 10)} er ${t} tiendedel${t > 1 ? 'e' : ''} = ${fmtDec(t / 10, 1)}`);
+    else how.push('Der er <b>0 tiendedele</b> – så der skal stå 0 lige efter kommaet');
+    if (h) how.push(`${frac(h, 100)} er ${h} hundrededel${h > 1 ? 'e' : ''} = ${fmtDec(h / 100, 2)}`);
+    const parts = [String(w), t ? fmtDec(t / 10, 1) : null, h ? fmtDec(h / 100, 2) : null].filter(Boolean);
+    how.push(`Læg sammen: ${parts.join(' + ')} = <b>${dec}</b>`);
+
+    if (chance(0.5)) {
+      // Saml til et decimaltal (som opgave a på arket)
+      let terms = [String(w), t ? frac(t, 10) : null, h ? frac(h, 100) : null];
+      if (level === 3 && (!t || !h)) terms = terms.map((x) => x ?? '0');
+      terms = terms.filter(Boolean);
+      if (level > 1) terms = shuffle(terms);
+      return {
+        prompt: `Skriv som ét decimaltal:<span class="big-expr">${terms.join(' + ')} = ${box()}</span>`,
+        input: 'number', answer: val / 100,
+        explain: stepsHTML(how), explainVisual: V.decimalPlaces(w, t, h),
+      };
+    }
+    // Del et decimaltal op (som opgave b på arket)
+    const useFrac = level === 1 || chance(0.5);
+    const layout = useFrac
+      ? [`${dec} =`, { slot: 0, label: 'hele' }, '+', { slot: 1, den: 10 }, ...(level > 1 ? ['+', { slot: 2, den: 100 }] : [])]
+      : [`${dec} =`, { slot: 0, label: 'hele' }, '+', { slot: 1, label: 'tiendedele' }, ...(level > 1 ? ['+', { slot: 2, label: 'hundrededele' }] : [])];
+    const answer = useFrac ? [w, t, ...(level > 1 ? [h] : [])] : [w, t / 10, ...(level > 1 ? [h / 100] : [])];
+    const shown = useFrac
+      ? `${w} + ${frac(t, 10)}${level > 1 ? ` + ${frac(h, 100)}` : ''}`
+      : `${w} + ${fmtDec(t / 10, 1)}${level > 1 ? ` + ${fmtDec(h / 100, 2)}` : ''}`;
+    return {
+      prompt: useFrac ? 'Del tallet op i hele, tiendedele og hundrededele:' : 'Del tallet op. Skriv tiendedele og hundrededele som decimaltal (fx 0,7 og 0,03):',
+      input: 'parts', layout, answer, answerText: `${dec} = ${shown}`,
+      explain: stepsHTML([
+        `${dec} har <b>${w}</b> hele, <b>${t}</b> tiendedel${t === 1 ? '' : 'e'}${level > 1 ? ` og <b>${h}</b> hundrededel${h === 1 ? '' : 'e'}` : ''}.`,
+        `Altså: ${dec} = ${shown}`,
+      ]),
+      explainVisual: V.decimalPlaces(w, t, level > 1 ? h : null),
+    };
+  },
+};
+
+// VIII) Find x
+const findX = {
+  id: 'findx',
+  name: 'Find x',
+  desc: 'Fx 7 · 8 = x + x − 10',
+  intro: {
+    text: `${X} er et tal, vi ikke kender endnu.`,
+    steps: [
+      { text: `${X} er et tal, vi ikke kender endnu. Vi skal finde det tal, der gør, at <b>begge sider af = er lige store</b>.` },
+      { text: `Eksempel: <b>7 · 8 = ${X} + ${X} − 10</b>. Regn først det, du kan: 7 · 8 = <b>56</b>.` },
+      { text: `Nu står der 56 = ${X} + ${X} − 10. Der er trukket 10 fra – så læg 10 til igen: ${X} + ${X} = <b>66</b>.` },
+      { text: `To ${X}'er er 66. Så er ét ${X}: 66 : 2 = <b>33</b>.` },
+      { text: `Tjek altid dit svar: 33 + 33 − 10 = 56 ✓. Begge sider er lige store!` },
+    ],
+  },
+  gen(level) {
+    const check = (s) => `<span class="check-line">Tjek: ${s} ✓</span>`;
+    if (level === 1) {
+      const x = ri(3, 40), b = ri(2, 25);
+      if (chance(0.5)) {
+        const left = chance(0.5);
+        return {
+          prompt: `Find ${X}:<span class="big-expr">${left ? `${X} + ${b} = ${x + b}` : `${x + b} = ${b} + ${X}`}</span>`,
+          input: 'number', answer: x,
+          explain: stepsHTML([`Hvad skal lægges til ${b} for at få ${x + b}?`, `Regn baglæns: ${x + b} − ${b} = <b>${x}</b>`, check(`${x} + ${b} = ${x + b}`)]),
+        };
+      }
+      return {
+        prompt: `Find ${X}:<span class="big-expr">${X} − ${b} = ${x}</span>`,
+        input: 'number', answer: x + b,
+        explain: stepsHTML([`Der er trukket ${b} fra ${X}, og så er der ${x} tilbage.`, `Regn baglæns: ${x} + ${b} = <b>${x + b}</b>`, check(`${x + b} − ${b} = ${x}`)]),
+      };
+    }
+    if (level === 2) {
+      const kind = ri(0, 2);
+      if (kind === 0) {
+        const x = ri(3, 30);
+        return {
+          prompt: `Find ${X}:<span class="big-expr">${X} + ${X} = ${2 * x}</span>`,
+          input: 'number', answer: x,
+          explain: stepsHTML([`To ${X}'er er ${2 * x}.`, `Ét ${X} er halvdelen: ${2 * x} : 2 = <b>${x}</b>`, check(`${x} + ${x} = ${2 * x}`)]),
+        };
+      }
+      if (kind === 1) {
+        const x = ri(3, 25), b = ri(2, 15), c = 2 * x + b;
+        return {
+          prompt: `Find ${X}:<span class="big-expr">${X} + ${X} + ${b} = ${c}</span>`,
+          input: 'number', answer: x,
+          explain: stepsHTML([`Træk ${b} fra på begge sider: ${X} + ${X} = ${c} − ${b} = ${c - b}`, `Ét ${X} er ${c - b} : 2 = <b>${x}</b>`, check(`${x} + ${x} + ${b} = ${c}`)]),
+        };
+      }
+      const a = ri(3, 9), b = ri(3, 9), c = ri(2, a * b - 2), x = a * b - c;
+      return {
+        prompt: `Find ${X}:<span class="big-expr">${a} · ${b} = ${X} + ${c}</span>`,
+        input: 'number', answer: x,
+        explain: stepsHTML([`Regn først det, du kan: ${a} · ${b} = ${a * b}`, `Nu står der ${a * b} = ${X} + ${c}`, `${X} = ${a * b} − ${c} = <b>${x}</b>`, check(`${x} + ${c} = ${a * b}`)]),
+      };
+    }
+    if (chance(0.5)) {
+      // Som opgave a på arket: 7 · 8 = x + x − 10
+      let a, b, c;
+      do { a = ri(3, 9); b = ri(3, 9); c = pick([2, 4, 6, 8, 10, 12, 14, 20]); } while ((a * b + c) % 2);
+      const x = (a * b + c) / 2;
+      return {
+        prompt: `Find ${X}:<span class="big-expr">${a} · ${b} = ${X} + ${X} − ${c}</span>`,
+        input: 'number', answer: x,
+        explain: stepsHTML([
+          `Regn først det, du kan: ${a} · ${b} = ${a * b}`,
+          `Nu står der ${a * b} = ${X} + ${X} − ${c}. Læg ${c} til: ${X} + ${X} = ${a * b + c}`,
+          `Ét ${X} er ${a * b + c} : 2 = <b>${x}</b>`,
+          check(`${x} + ${x} − ${c} = ${a * b}`),
+        ]),
+      };
+    }
+    // Som opgave b på arket: 2,1 + 2,01 + 2,10 = 4 + x
+    const a = ri(1, 3), d1 = ri(1, 9);
+    const forms = shuffle([[`${a},${d1}`, a * 100 + d1 * 10], [`${a},0${d1}`, a * 100 + d1], [`${a},${d1}0`, a * 100 + d1 * 10]]);
+    const S = forms.reduce((s, f) => s + f[1], 0);
+    const d = Math.floor(S / 100) - ri(1, 2);
+    const xv = S - d * 100;
+    const show = (v) => fmtDec(v / 100, 2);
+    return {
+      prompt: `Find ${X}:<span class="big-expr">${forms.map((f) => f[0]).join(' + ')} = ${d} + ${X}</span>`,
+      input: 'number', answer: xv / 100,
+      explain: stepsHTML([
+        `Skriv tallene med lige mange decimaler: ${forms.map((f) => show(f[1])).join(' + ')}`,
+        `Læg dem sammen: ${show(S)}`,
+        `Nu står der ${show(S)} = ${d} + ${X}. ${X} = ${show(S)} − ${d} = <b>${fmtDec(xv / 100, 2)}</b>`,
+        check(`${d} + ${fmtDec(xv / 100, 2)} = ${show(S)}`),
+      ]),
+    };
+  },
+};
+
+// IX) Regnehierarki – sæt parenteser (også med minus-tal)
+function hierarchyExpr(level) {
+  const pickT = level === 1 ? ri(0, 1) : level === 2 ? ri(2, 4) : ri(5, 7);
+  let a, b, c, d;
+  switch (pickT) {
+    case 0: // a − b · c (positivt resultat)
+      do { a = ri(4, 30); b = ri(1, 6); c = ri(1, 6); } while (b * c > a);
+      return { show: `${a} − ${b} · ${c}`, paren: `${a} − (${b} · ${c})`, wrong: `(${a} − ${b}) · ${c}`, prods: [`${b} · ${c} = ${b * c}`], rest: `${a} − ${b * c}`, val: a - b * c };
+    case 1: // a + b · c
+      a = ri(2, 20); b = ri(2, 6); c = ri(2, 6);
+      return { show: `${a} + ${b} · ${c}`, paren: `${a} + (${b} · ${c})`, wrong: `(${a} + ${b}) · ${c}`, prods: [`${b} · ${c} = ${b * c}`], rest: `${a} + ${b * c}`, val: a + b * c };
+    case 2: // a · b + c · d
+      a = ri(2, 7); b = ri(2, 7); c = ri(2, 7); d = ri(2, 7);
+      return { show: `${a} · ${b} + ${c} · ${d}`, paren: `(${a} · ${b}) + (${c} · ${d})`, wrong: `${a} · (${b} + ${c}) · ${d}`, prods: [`${a} · ${b} = ${a * b}`, `${c} · ${d} = ${c * d}`], rest: `${a * b} + ${c * d}`, val: a * b + c * d };
+    case 3: // a · b − c · d (positivt)
+      do { a = ri(3, 9); b = ri(3, 9); c = ri(2, 6); d = ri(2, 6); } while (c * d >= a * b);
+      return { show: `${a} · ${b} − ${c} · ${d}`, paren: `(${a} · ${b}) − (${c} · ${d})`, wrong: `${a} · (${b} − ${c}) · ${d}`, prods: [`${a} · ${b} = ${a * b}`, `${c} · ${d} = ${c * d}`], rest: `${a * b} − ${c * d}`, val: a * b - c * d };
+    case 4: // a + b · c − d
+      do { a = ri(2, 20); b = ri(2, 6); c = ri(2, 6); d = ri(1, 15); } while (a + b * c - d < 0);
+      return { show: `${a} + ${b} · ${c} − ${d}`, paren: `${a} + (${b} · ${c}) − ${d}`, wrong: `(${a} + ${b}) · (${c} − ${d})`, prods: [`${b} · ${c} = ${b * c}`], rest: `${a} + ${b * c} − ${d}`, val: a + b * c - d };
+    case 5: // −a + b · c (som −3 + 3 · 2)
+      a = ri(1, 9); b = ri(1, 5); c = ri(1, 5);
+      return { show: `−${a} + ${b} · ${c}`, paren: `−${a} + (${b} · ${c})`, wrong: `(−${a} + ${b}) · ${c}`, prods: [`${b} · ${c} = ${b * c}`], rest: `−${a} + ${b * c}`, val: -a + b * c, neg: true };
+    case 6: // a · −b + c · d (som 6 · −1 + 2 · 2)
+      a = ri(2, 6); b = ri(1, 3); c = ri(1, 4); d = ri(1, 4);
+      return { show: `${a} · −${b} + ${c} · ${d}`, paren: `(${a} · −${b}) + (${c} · ${d})`, wrong: `${a} · (−${b} + ${c}) · ${d}`, prods: [`${a} · −${b} = −${a * b} <span class="muted">(${a} gange "minus ${b}")</span>`, `${c} · ${d} = ${c * d}`], rest: `−${a * b} + ${c * d}`, val: -a * b + c * d, neg: true };
+    default: // a − b · c med negativt resultat (som 5 − 5 · 2)
+      do { a = ri(1, 9); b = ri(2, 5); c = ri(2, 5); } while (b * c <= a);
+      return { show: `${a} − ${b} · ${c}`, paren: `${a} − (${b} · ${c})`, wrong: `(${a} − ${b}) · ${c}`, prods: [`${b} · ${c} = ${b * c}`], rest: `${a} − ${b * c}`, val: a - b * c, neg: true };
+  }
+}
+
+const negLine = (from, to) => {
+  const lo = Math.min(-10, Math.floor(Math.min(from, to) / 5) * 5), hi = Math.max(10, Math.ceil(Math.max(from, to) / 5) * 5);
+  return V.numberLine({ min: lo, max: hi, div: hi - lo, minorEvery: 5, labels: (i, v) => (v % 5 === 0 ? sn(v) : null), mark: to, markText: sn(to) });
+};
+
+const parenteser = {
+  id: 'parenteser',
+  name: 'Regnehierarki og parenteser',
+  desc: 'Gange før plus og minus – også med minus-tal',
+  intro: {
+    text: 'Gange og division regnes FØR plus og minus.',
+    steps: [
+      { text: 'Regneregel: <b>gange og division regnes FØR plus og minus</b> – også selvom gangestykket står til sidst.' },
+      { text: 'Sæt parentes om det, der skal regnes først: <b>5 − 5 · 1</b> → <b>5 − (5 · 1)</b>' },
+      { text: 'Regn parentesen først: 5 · 1 = 5. Så resten: 5 − 5 = <b>0</b>.' },
+      { text: 'Minus-tal er tal <b>under nul</b>. −3 ligger 3 skridt til venstre for 0 på tallinjen – ligesom −3 grader på et termometer.', visual: () => negLine(0, -3) },
+      { text: '−3 + (3 · 2) = −3 + 6. Start ved −3 og gå 6 skridt frem: <b>3</b>.', visual: () => negLine(-3, 3) },
+      { text: '6 · −1 betyder 6 gange "minus én" = <b>−6</b>. Så (6 · −1) + (2 · 2) = −6 + 4 = <b>−2</b>.', visual: () => negLine(-6, -2) },
+    ],
+  },
+  gen(level) {
+    const e = hierarchyExpr(level);
+    const how = stepsHTML([
+      `Gange før plus og minus – sæt parentes: <b>${e.paren}</b>`,
+      `Regn parentesen${e.prods.length > 1 ? 'erne' : ''}: ${e.prods.join(' og ')}`,
+      `Regn resten: ${e.rest} = <b>${sn(e.val)}</b>`,
+    ]);
+    const vis = e.neg || e.val < 0 ? negLine(0, e.val) : null;
+    if (chance(0.4)) {
+      return {
+        prompt: `Hvor skal parentesen stå?<span class="big-expr">${e.show}</span>`,
+        input: 'choice', choices: shuffle([e.paren, e.wrong]), answer: e.paren, wide: true,
+        explain: how,
+      };
+    }
+    return {
+      prompt: `Regn – husk gange før plus og minus:<span class="big-expr">${e.show} = ${box()}</span>`,
+      input: 'number', answer: e.val, signed: level === 3,
+      explain: how, explainVisual: vis,
+    };
+  },
+};
+
+export const PRACTICE_SETS = [
+  {
+    id: 'uge40', name: 'Lektier uge 40', place: 'Lektier uge 40', icon: '📝', color: 'var(--c-tal)',
+    desc: 'Decimaltal, find x og parenteser – som på lektiearket',
+    skills: [decimalDele, findX, parenteser],
+  },
+];
+
+// Alle færdigheder (zoo + øvebane) – til opslag ved øvning
+export const ALL_SKILLS = { ...SKILLS };
+for (const set of PRACTICE_SETS) for (const s of set.skills) ALL_SKILLS[s.id] = { ...s, area: set.id, practice: true };
+
 // ---------- Gangetabellen (spaced repetition pr. fakta) ----------
 
 // Alle par 2–10 (7×8 og 8×7 er samme fakta), sorteret fra let til svær

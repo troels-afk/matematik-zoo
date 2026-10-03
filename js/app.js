@@ -1,6 +1,6 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, FACTS, factProblem } from './curriculum.js';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js';
 import * as E from './engine.js';
 import * as Z from './zoo.js';
 import { zooGate } from './scene.js';
@@ -30,7 +30,7 @@ const $ = (sel) => app.querySelector(sel);
 const $$ = (sel) => [...app.querySelectorAll(sel)];
 const on = (sel, ev, fn) => $$(sel).forEach((el) => el.addEventListener(ev, fn));
 const save = (now = false) => saveState(S.id, S.state, { now });
-const areaOf = (id) => AREAS.find((a) => a.id === id);
+const areaOf = (id) => AREAS.find((a) => a.id === id) || PRACTICE_SETS.find((a) => a.id === id);
 const ME = ['🦊', '🐼', '🦒', '🐧', '🦁', '🐨', '🦓', '🐢'];
 const meAvatar = (name) => ME[[...name].reduce((h, c) => h + c.charCodeAt(0), 0) % ME.length];
 
@@ -302,6 +302,16 @@ function showHome() {
       : 'Hver træning har tre dele: <b>🍼 morgenrunde</b> i Babyhuset → <b>dagens opgave</b> → <b>🧭 runde i zoo\'en</b>. Ca. 15 minutter.'}</p>
     <div class="tasks">${sugg.map(taskCard).join('')}</div>
 
+    <div class="section-title"><h2>📝 Øvebanen</h2><span class="muted small">Øv noget bestemt</span></div>
+    <p class="section-help">Her kan du øve et bestemt emne – fx ugens lektier. Hvert emne starter med et eksempel, der viser trin for trin, hvordan man gør.</p>
+    <div class="practice-sets">${PRACTICE_SETS.map((set) => `
+      <button class="practice-set" data-set="${set.id}" style="--ac:${set.color}">
+        <span class="ps-ic">${set.icon}</span>
+        <span class="ps-body"><span class="head ps-nm">${set.name}</span><span class="ps-d">${set.desc}</span>
+          <span class="ps-chips">${set.skills.map((sk) => `<span class="st ${E.skillStatus(st, sk.id)}">${sk.name}</span>`).join('')}</span></span>
+        <span class="go" aria-hidden="true">→</span>
+      </button>`).join('')}</div>
+
     <div class="section-title"><h2>🍼 Babyhuset</h2><button class="link" id="book">Dyrebogen →</button></div>
     <p class="section-help">Hvert gangestykke er en dyreunge. Ungerne vokser, når du husker deres gangestykke i morgenrunden – også dagen efter. 🍼 = vil have flaske i dag.</p>
     <section class="card nursery">
@@ -323,6 +333,7 @@ function showHome() {
   on('#book', 'click', showBook);
   on('#sprint', 'click', startSprint);
   on('#help', 'click', () => showIntroTour());
+  on('.practice-set', 'click', (e) => { sfx('tap'); showPracticeSet(e.currentTarget.dataset.set); });
   on('#snd', 'click', () => {
     st.settings.sound = !st.settings.sound;
     setSound(st.settings.sound);
@@ -373,31 +384,76 @@ function showPlace(areaId) {
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), 'Tilbage'));
 }
 
+// ================= Øvebanen: en lektiepakke =================
+
+function showPracticeSet(setId) {
+  const st = S.state, set = PRACTICE_SETS.find((x) => x.id === setId);
+  const label = { ny: 'Ny', øver: 'Øver', sikker: 'Sikker ⭐', mestret: 'Mestret 🌟' };
+  const rows = set.skills.map((sk, i) => {
+    const status = E.skillStatus(st, sk.id);
+    const acc = E.skillAccuracy(st, sk.id, 30);
+    return `<div class="card skill-row" style="--ac:${set.color}">
+      <span class="wn big-n">${i + 1}</span>
+      <div style="flex:1;min-width:220px">
+        <h3 style="margin:0 0 2px">${sk.name} <span class="st ${status}">${label[status]}</span></h3>
+        <span class="muted small">${sk.desc}${acc ? ` · ${acc.pct} % rigtige` : ''}</span>
+      </div>
+      <div class="row"><button class="btn ghost" data-intro="${sk.id}">💡 Se eksemplet</button><button class="btn" data-practice="${sk.id}">Øv 10 opgaver</button></div>
+    </div>`;
+  }).join('');
+  view(`
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Øvebanen</span></div>
+    <section class="area-hero" style="--ac:${set.color}">
+      <span class="big">${set.icon}</span>
+      <div style="flex:1;min-width:200px"><h1 style="margin:0">${set.name}</h1><div class="muted" style="font-weight:700">${set.desc}</div></div>
+    </section>
+    <div style="margin-top:14px">${say('kaj', 'Start med eksemplet – det viser trin for trin, hvordan man gør. Opgaverne bliver sværere, efterhånden som du kan dem 🦜')}</div>
+    <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
+  on('#back', 'click', showHome);
+  on('[data-practice]', 'click', (e) => startPractice(e.currentTarget.dataset.practice));
+  on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPracticeSet(setId), 'Tilbage'));
+}
+
 // ================= Intro til en færdighed =================
 
 function showIntro(skillId, next, btnText = 'Jeg er klar') {
-  const s = SKILLS[skillId], a = areaOf(s.area);
-  view(`
-    <div class="card sheet intro-card stack">
-      <div class="kicker">${a.icon} ${a.place} · Nyt emne</div>
-      <h1>${s.name}</h1>
-      <div class="body">${s.intro.text}</div>
-      ${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}
-      <div class="center"><button class="btn big" id="go">${btnText}</button></div>
-    </div>`, (e) => { if (e.key === 'Enter') go(); });
+  const s = ALL_SKILLS[skillId], a = areaOf(s.area);
+  const steps = s.intro.steps;
+  let shown = 1;
   const go = () => {
     E.skillState(S.state, skillId).introSeen = true;
     save();
     next();
   };
-  on('#go', 'click', go);
+  const render = () => {
+    const more = steps && shown < steps.length;
+    view(`
+      <div class="card sheet intro-card stack">
+        <div class="kicker">${a.icon} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
+        <h1>${s.name}</h1>
+        ${steps ? stepsBlock(steps, shown) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
+        <div class="center">${more
+          ? `<button class="btn big" id="more">Næste trin (${shown}/${steps.length})</button>`
+          : `<button class="btn big" id="go">${btnText}</button>`}</div>
+      </div>`, (e) => { if (e.key === 'Enter') (more ? step() : go()); });
+    on('#go', 'click', go);
+    on('#more', 'click', step);
+    if (shown > 1) $$('.walk li').pop()?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+  const step = () => { sfx('tap'); shown++; render(); };
+  render();
 }
+
+// Gennemregnet eksempel: trin vises ét ad gangen
+const stepsBlock = (steps, shown = steps.length) => `<ol class="walk">${steps.slice(0, shown).map((st, i) => `
+  <li class="${i === shown - 1 ? 'new' : ''}"><span class="wn">${i + 1}</span><div><div class="body">${st.text}</div>${st.visual ? `<div class="visual">${st.visual()}</div>` : ''}</div></li>`).join('')}</ol>`;
 
 // ================= Sessioner =================
 
 function snapshot(st) {
   const status = {}, unlocked = {}, boxes = {};
-  for (const id of Object.keys(SKILLS)) { status[id] = E.skillStatus(st, id); unlocked[id] = E.isUnlocked(st, id); }
+  for (const id of Object.keys(ALL_SKILLS)) status[id] = E.skillStatus(st, id);
+  for (const id of Object.keys(SKILLS)) unlocked[id] = E.isUnlocked(st, id);
   for (const f of FACTS) boxes[f.key] = E.factBox(st, f.key);
   return { status, unlocked, boxes, levels: levelsOf(st), guests: Z.guestsPerDay(st) };
 }
@@ -432,8 +488,8 @@ function startSession(areaId) {
 }
 
 function startPractice(skillId) {
-  const s = SKILLS[skillId], a = areaOf(s.area);
-  const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub: s.name, count: 8, skill: skillId }] };
+  const s = ALL_SKILLS[skillId], a = areaOf(s.area);
+  const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub: s.name, count: s.practice ? 10 : 8, skill: skillId }] };
   S.run = { mode: 'practice', sess, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
   goBlock();
 }
@@ -494,7 +550,7 @@ function renderTask(block, task) {
     </div>
     <div class="card">
       ${banner}
-      <div class="task ${p.input !== 'choice' ? 'has-input' : ''}">
+      <div class="task ${p.input !== 'choice' && p.input !== 'parts' ? 'has-input' : ''}">
         <div>
           <div class="prompt">${p.prompt}</div>
           ${p.visual ? `<div class="visual">${p.visual}</div>` : ''}
@@ -507,8 +563,10 @@ function renderTask(block, task) {
 
   on('#quit', 'click', quitSession);
   on('#help', 'click', () => {
-    const s = SKILLS[task.skill];
-    $('#helpbox').innerHTML = `<div class="feedback retry" style="margin-top:14px"><div>${s.intro.text}</div>${s.intro.visual ? `<div class="explain-visual">${s.intro.visual()}</div>` : ''}</div>`;
+    const s = ALL_SKILLS[task.skill];
+    $('#helpbox').innerHTML = s.intro.steps
+      ? `<div class="feedback retry" style="margin-top:14px">${stepsBlock(s.intro.steps)}</div>`
+      : `<div class="feedback retry" style="margin-top:14px"><div>${s.intro.text}</div>${s.intro.visual ? `<div class="explain-visual">${s.intro.visual()}</div>` : ''}</div>`;
     $('#help').remove();
   });
   mountInput(p, answer);
@@ -520,7 +578,7 @@ function mountInput(p, onSubmit) {
   const aa = $('#aa');
   if (p.input === 'choice') {
     const sym = p.choices.every((c) => c.length <= 1);
-    aa.innerHTML = `<div class="choice-grid">${p.choices.map((c, i) => `<button class="choice ${sym ? 'sym' : ''}" data-i="${i}">${esc(c)}</button>`).join('')}</div>`;
+    aa.innerHTML = `<div class="choice-grid ${p.wide ? 'wide' : ''}">${p.choices.map((c, i) => `<button class="choice ${sym ? 'sym' : ''}" data-i="${i}">${esc(c)}</button>`).join('')}</div>`;
     const pickIdx = (i) => {
       if (S.run?.answered) return;
       $$('.choice').forEach((b) => (b.disabled = true));
@@ -535,15 +593,28 @@ function mountInput(p, onSubmit) {
     return;
   }
 
-  const nSlots = p.input === 'number' ? 1 : 2;
+  const slot = (i, extra = '') => `<div class="slot ${extra}" data-i="${i}"></div>`;
+  let inputs, nSlots;
+  if (p.input === 'parts') {
+    nSlots = p.layout.filter((x) => typeof x === 'object').length;
+    inputs = `<div class="parts">${p.layout.map((x) => {
+      if (typeof x === 'string') return `<span class="pt">${x}</span>`;
+      if (x.den) return `<div class="frac-input mini">${slot(x.slot, 'sm')}<div class="bar"></div><span class="den">${x.den}</span></div>`;
+      return `<div class="lab-slot">${slot(x.slot, 'sm')}${x.label ? `<span class="lab">${x.label}</span>` : ''}</div>`;
+    }).join('')}</div>`;
+  } else {
+    nSlots = p.input === 'number' ? 1 : 2;
+    if (p.input === 'number') inputs = `${slot(0)}${p.unit ? `<span class="unit">${esc(p.unit)}</span>` : ''}`;
+    else if (p.input === 'fraction') inputs = `<div class="frac-input">${slot(0)}<div class="bar"></div>${slot(1)}</div>`;
+    else inputs = `${slot(0)}<span class="qr-word">rest</span>${slot(1)}`;
+  }
   const vals = Array(nSlots).fill('');
   let active = 0;
-  const slot = (i) => `<div class="slot" data-i="${i}"></div>`;
-  let inputs;
-  if (p.input === 'number') inputs = `${slot(0)}${p.unit ? `<span class="unit">${esc(p.unit)}</span>` : ''}`;
-  else if (p.input === 'fraction') inputs = `<div class="frac-input">${slot(0)}<div class="bar"></div>${slot(1)}</div>`;
-  else inputs = `${slot(0)}<span class="qr-word">rest</span>${slot(1)}`;
-  const third = p.input === 'number' ? '<button class="key fn" data-k=",">,</button>' : `<button class="key fn" data-k="next" aria-label="Skift felt">${p.input === 'fraction' ? '⇅' : '⇄'}</button>`;
+  const multi = nSlots > 1;
+  let third;
+  if (p.signed) third = '<button class="key fn" data-k="neg" aria-label="Minus">±</button>';
+  else if (p.input === 'number' || p.input === 'parts') third = '<button class="key fn" data-k=",">,</button>';
+  else third = `<button class="key fn" data-k="next" aria-label="Skift felt">${p.input === 'fraction' ? '⇅' : '⇄'}</button>`;
 
   aa.innerHTML = `
     <div class="inputs">${inputs}</div>
@@ -551,39 +622,43 @@ function mountInput(p, onSubmit) {
       ${[7, 8, 9, 4, 5, 6, 1, 2, 3].map((d) => `<button class="key" data-k="${d}">${d}</button>`).join('')}
       ${third}<button class="key" data-k="0">0</button><button class="key fn" data-k="back" aria-label="Slet">⌫</button>
     </div>
+    ${p.input === 'parts' ? '<button class="btn ghost check" data-k="next" id="nextslot">Næste felt →</button>' : ''}
     <button class="btn big check" id="check">Tjek</button>`;
 
+  const show = (v) => v.replace('-', '−');
   const paint = () => {
     $$('.slot').forEach((el) => {
       const i = Number(el.dataset.i);
-      el.textContent = vals[i];
+      el.textContent = show(vals[i]);
       el.classList.toggle('active', i === active);
-      el.classList.toggle('empty', vals[i] === '');
+      el.classList.toggle('empty', vals[i] === '' || vals[i] === '-');
     });
-    $('#check').disabled = vals.some((v) => v === '');
+    $('#check').disabled = vals.some((v) => v === '' || v === '-');
   };
   const press = (k) => {
     if (S.run?.answered) return;
-    if (k === 'back') vals[active] = vals[active].slice(0, -1);
+    const v = vals[active];
+    if (k === 'back') vals[active] = v.slice(0, -1);
     else if (k === 'next') active = (active + 1) % nSlots;
-    else if (k === ',') { if (!vals[active].includes(',')) vals[active] = (vals[active] || '0') + ','; }
-    else if (/^\d$/.test(k) && vals[active].length < 9) {
-      vals[active] = vals[active] === '0' ? k : vals[active] + k;
-    }
+    else if (k === 'neg') vals[active] = v.startsWith('-') ? v.slice(1) : '-' + v;
+    else if (k === ',') { if (!v.includes(',')) vals[active] = (v.replace('-', '') ? v : v + '0') + ','; }
+    else if (/^\d$/.test(k) && v.length < 9) vals[active] = v === '0' ? k : v === '-0' ? '-' + k : v + k;
     paint();
   };
   const submit = () => {
-    if (vals.some((v) => v === '') || S.run?.answered) return;
+    if (vals.some((v) => v === '' || v === '-') || S.run?.answered) return;
     onSubmit(nSlots === 1 ? vals[0] : [...vals]);
   };
   on('.key', 'click', (e) => press(e.currentTarget.dataset.k));
+  on('#nextslot', 'click', () => press('next'));
   on('.slot', 'click', (e) => { active = Number(e.currentTarget.dataset.i); paint(); });
   on('#check', 'click', submit);
   keyHandler = (e) => {
     if (/^\d$/.test(e.key)) press(e.key);
-    else if (e.key === ',' || e.key === '.') press(nSlots === 1 ? ',' : 'next');
+    else if (e.key === '-' && p.signed) press('neg');
+    else if (e.key === ',' || e.key === '.') press(p.input === 'number' || p.input === 'parts' ? ',' : 'next');
     else if (e.key === 'Backspace') { e.preventDefault(); press('back'); }
-    else if (['Tab', '/', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key) && nSlots > 1) { e.preventDefault(); press('next'); }
+    else if (['Tab', '/', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', '+'].includes(e.key) && multi) { e.preventDefault(); press('next'); }
     else if (e.key === 'Enter') { e.preventDefault(); submit(); }
   };
   paint();
@@ -595,6 +670,8 @@ const PRAISE = ['Rigtigt!', 'Sådan!', 'Flot regnet!', 'Præcis!', 'Ja, det er r
 const KAJ_OOPS = ['Det er sådan, man lærer! 🦜', 'Bare rolig – den kommer igen 🦜', 'Næste gang sidder den! 🦜', 'Selv papegøjer regner forkert nogle gange 🦜'];
 
 function answerText(p) {
+  if (p.answerText) return p.answerText;
+  if (p.input === 'number' && p.answer < 0) return `−${fmt(-p.answer)}${p.unit ? ' ' + esc(p.unit) : ''}`;
   if (p.input === 'fraction') return frac(p.answer[0], p.answer[1]);
   if (p.input === 'qr') return `${p.answer[0]} rest ${p.answer[1]}`;
   if (p.input === 'choice') return esc(p.answer);
@@ -703,11 +780,11 @@ function finish() {
       bigWin = true;
     }
   });
-  for (const id of Object.keys(SKILLS)) {
-    const s = SKILLS[id];
+  for (const id of Object.keys(ALL_SKILLS)) {
+    const s = ALL_SKILLS[id];
     if (after.status[id] === 'mestret' && b.status[id] !== 'mestret') wins.push({ e: '🌟', t: `Du har mestret ${s.name.toLowerCase()}` });
     else if (after.status[id] === 'sikker' && !['sikker', 'mestret'].includes(b.status[id])) wins.push({ e: '⭐', t: `Du er nu sikker i ${s.name.toLowerCase()}` });
-    if (after.unlocked[id] && !b.unlocked[id]) wins.push({ e: '🔓', t: `Nyt i ${areaOf(s.area).place}: ${s.name}` });
+    if (!s.practice && after.unlocked[id] && !b.unlocked[id]) wins.push({ e: '🔓', t: `Nyt i ${areaOf(s.area).place}: ${s.name}` });
   }
   const born = FACTS.filter((f) => b.boxes[f.key] < 0 && after.boxes[f.key] >= 0);
   const grew = FACTS.filter((f) => b.boxes[f.key] >= 0 && after.boxes[f.key] > b.boxes[f.key]);
@@ -720,6 +797,7 @@ function finish() {
   if (born.length) wins.push({ e: born.slice(0, 3).map((f) => Z.BABIES[f.key].emoji).join(''), t: `${born.length === 1 ? 'En ny unge er født' : `${born.length} nye unger er født`}: ${names(born)}` });
   if (grew.length) wins.push({ e: '🍼', t: `${names(grew)} voksede` });
   const n = run.results.length;
+  const backSet = PRACTICE_SETS.find((x) => x.id === run.sess.area);
   S.run = null;
   const night = Z.goodnight(st);
   const diff = after.guests - b.guests;
@@ -737,11 +815,12 @@ function finish() {
       <div style="text-align:left">${say(night.who, night.text)}</div>
       <div class="row" style="justify-content:center">${weekDots(st)}<span class="small muted">dage denne uge</span></div>
       <div class="row" style="justify-content:center">
-        <button class="btn big" id="home">Til zoo'en</button>
-        ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
+        ${backSet ? `<button class="btn big" id="backset">← ${backSet.name}</button><button class="btn ghost" id="home">Til zoo'en</button>`
+          : `<button class="btn big" id="home">Til zoo'en</button>${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}`}
       </div>
-    </div>`, (e) => { if (e.key === 'Enter') showHome(); });
+    </div>`, (e) => { if (e.key === 'Enter') (backSet ? showPracticeSet(backSet.id) : showHome()); });
   on('#home', 'click', showHome);
+  on('#backset', 'click', () => showPracticeSet(backSet.id));
   on('#sprint', 'click', startSprint);
   setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 350);
   if (bigWin) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
@@ -952,10 +1031,19 @@ function showParent() {
     <div class="section-title"><h2>Pensum</h2></div>
     <div class="stack">${areaBlocks}</div>
 
+    <div class="section-title"><h2>Øvebanen</h2></div>
+    <div class="stack">${PRACTICE_SETS.map((set) => `<div class="card">
+      <h3 style="margin:0 0 8px">${set.icon} ${set.name}</h3>
+      <div class="table-wrap"><table><thead><tr><th>Emne</th><th>Status</th><th>Niv.</th><th>Rigtige 14 d.</th><th>Sidst</th></tr></thead><tbody>
+      ${set.skills.map((sk) => { const ss = st.skills[sk.id], acc = E.skillAccuracy(st, sk.id), status = E.skillStatus(st, sk.id);
+        return `<tr><td>${sk.name}</td><td><span class="st ${status}">${status}</span></td><td>${ss && ss.hist.length ? ss.level : '–'}</td>
+        <td>${acc ? `${acc.pct} % <span class="muted">(${acc.n})</span>` : '–'}</td><td>${ss?.last ? fmtDate(ss.last) : '–'}</td></tr>`; }).join('')}
+      </tbody></table></div></div>`).join('')}</div>
+
     <div class="section-title"><h2>Seneste 14 dage</h2></div>
     <div class="card table-wrap">
       ${recent.length ? `<table><thead><tr><th>Dato</th><th>Hvad</th><th>Opgaver</th><th>Rigtige</th><th>Tid</th></tr></thead><tbody>
-        ${recent.map((s) => `<tr><td>${fmtDate(s.t)}</td><td>${s.mode === 'practice' ? 'Øvede: ' : ''}${areaOf(s.area)?.place || ''}${s.main ? ` · ${SKILLS[s.main]?.name || ''}` : ''}</td>
+        ${recent.map((s) => `<tr><td>${fmtDate(s.t)}</td><td>${s.mode === 'practice' ? 'Øvede: ' : ''}${areaOf(s.area)?.place || ''}${s.main ? ` · ${ALL_SKILLS[s.main]?.name || ''}` : ''}</td>
           <td>${s.n}</td><td>${s.correct}</td><td>${Math.round(s.ms / 60000)} min</td></tr>`).join('')}
       </tbody></table>` : '<p class="muted">Ingen sessioner endnu.</p>'}
     </div>
@@ -1016,4 +1104,4 @@ function showParent() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, show: { home: showHome, book: showBook, profiles: showProfiles, tour: showIntroTour } };
+window.__mo = { S, E, Z, show: { home: showHome, book: showBook, profiles: showProfiles, tour: showIntroTour, set: showPracticeSet, practice: startPractice } };

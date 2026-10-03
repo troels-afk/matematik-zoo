@@ -7,7 +7,7 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, FACTS, factProblem } from './curriculum.js';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js';
 import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
@@ -180,7 +180,7 @@ function pickFacts(state, n) {
 // ---------- Session ----------
 
 function makeTask(kind, skillId, state) {
-  const s = SKILLS[skillId];
+  const s = ALL_SKILLS[skillId];
   const level = skillState(state, skillId).level;
   return { kind, skill: skillId, level, p: s.gen(level) };
 }
@@ -261,6 +261,10 @@ export function checkAnswer(p, given) {
       const [n, d] = given.map(parseNum);
       if (!Number.isInteger(n) || !Number.isInteger(d) || d === 0) return false;
       return n * p.answer[1] === d * p.answer[0];
+    }
+    case 'parts': {
+      const v = given.map(parseNum);
+      return v.length === p.answer.length && v.every((x, i) => Number.isFinite(x) && Math.abs(x - p.answer[i]) < 1e-9);
     }
     case 'qr': {
       const [q, r] = given.map(parseNum);

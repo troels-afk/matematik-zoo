@@ -251,6 +251,28 @@ export function placeValue(n) {
   return svg(x0 * 2 + cols * cw, 116, b);
 }
 
+// Positionstabel for decimaltal: (tiere) enere , tiendedele hundrededele
+export function decimalPlaces(whole, t, h = null) {
+  const wd = String(whole).split('');
+  const heads = [...(wd.length > 1 ? ['tiere'] : []), 'enere', ',', 'tiendedele', ...(h != null ? ['hundrededele'] : [])];
+  const digits = [...wd, ',', String(t), ...(h != null ? [String(h)] : [])];
+  const cw = (hd) => (hd === ',' ? 36 : 128);
+  let x = 10, b = '';
+  heads.forEach((hd, i) => {
+    const w = cw(hd);
+    if (hd !== ',') {
+      const dec = i > heads.indexOf(',');
+      b += `<rect x="${x}" y="10" width="${w}" height="40" class="${dec ? 'v-soft' : 'v-empty'} v-line"/>`;
+      b += t0(x + w / 2, 37, hd);
+      b += `<rect x="${x}" y="50" width="${w}" height="60" class="v-empty v-line"/>`;
+    }
+    b += `<text x="${x + w / 2}" y="${hd === ',' ? 98 : 92}" class="v-text v-big" text-anchor="middle">${digits[i]}</text>`;
+    x += w;
+  });
+  return svg(x + 10, 120, b);
+}
+const t0 = (x, y, s) => `<text x="${x}" y="${y}" class="v-text v-small" text-anchor="middle">${s}</text>`;
+
 // Positionstabel før og efter ×10/×100: cifrene rykker til venstre
 export function placeShift(n, factor) {
   const heads = ['tusinder', 'hundreder', 'tiere', 'enere'];
