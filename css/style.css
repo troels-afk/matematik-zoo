@@ -546,7 +546,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (max-width: 760px) { .task-card .top .ani .ani-img { width: 52px; height: 52px; } }
 .task-card .rec { top: auto; right: auto; bottom: -11px; left: 16px; z-index: 1; box-shadow: 0 2px 6px rgba(31, 51, 70, .15); }
 .task-card .body { padding-top: 18px; }
-.icon-btn.pill { width: auto; padding: 0 14px; gap: 6px; display: inline-flex; align-items: center; font: 600 .95rem var(--font-head); color: #1f3346; }
+.icon-btn.pill { width: auto; padding: 0 14px; gap: 6px; display: inline-flex; align-items: center; font: 600 .95rem var(--font-head); color: var(--ink); }
 @media (max-width: 520px) { .icon-btn.pill span { display: none; } .icon-btn.pill { padding: 0; width: 48px; justify-content: center; } }
 
 /* ---------- Om appen ---------- */
@@ -606,6 +606,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .sheet-skill { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--card-2); border: 1px solid var(--line-2); }
 .btn.sm { min-height: 44px; padding: 0 16px; font-size: .98rem; border-radius: 13px; }
 .cribs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.cribs > p { grid-column: 1 / -1; margin: 0; }
 .crib { display: grid; justify-items: center; gap: 4px; font: 600 .82rem var(--font-head); color: var(--ink-2); text-align: center; }
 .crib.sleep .baby > img { filter: saturate(.7); opacity: .8; }
 .goal-line { display: grid; gap: 8px; font-weight: 700; }
@@ -673,3 +674,40 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .feedback.nudge { background: var(--sun-soft); border: 2px solid color-mix(in srgb, var(--sun) 55%, transparent); padding: 12px 16px; }
 .feedback.nudge .fh { font-size: 1.15rem; margin: 0; }
 .feedback.nudge #hinttext { margin-top: 6px; font-weight: 700; }
+
+/* ---------- Tegnede UI-ikoner (img/ui) ---------- */
+.ui-ic { display: block; width: 32px; height: 32px; object-fit: contain; flex: none; -webkit-user-drag: none; user-select: none; }
+.icon-btn .ui-ic { width: 36px; height: 36px; }
+.icon-btn.pill { padding: 0 14px 0 8px; }
+@media (max-width: 520px) { .icon-btn.pill { padding: 0; } }
+.icon-btn.snd { position: relative; }
+.icon-btn.snd.off .ui-ic { filter: grayscale(1); opacity: .45; }
+.icon-btn.snd.off::after { content: ''; position: absolute; width: 34px; height: 4px; border-radius: 2px; background: var(--ink-2); transform: rotate(-45deg); box-shadow: 0 0 0 2px var(--card); }
+.kicker.with-ic { display: inline-flex; align-items: center; gap: 8px; }
+.mission-steps .si { position: relative; width: 44px; height: 44px; flex: none; }
+.mission-steps .si .ui-ic { width: 44px; height: 44px; }
+.mission-steps .si i { position: absolute; right: -4px; bottom: -3px; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--primary-ink); color: var(--card); font: 600 .72rem var(--font-head); box-shadow: 0 0 0 2px var(--card); }
+.sheet-plan span { display: inline-flex; align-items: center; gap: 6px; }
+.sheet-plan .ui-ic { width: 26px; height: 26px; margin: -3px 0 -3px -6px; }
+.sheet-ic.art { background: none; }
+.sheet-ic.art .ui-ic { width: 54px; height: 54px; }
+.area-hero .big .ui-ic { width: 84px; height: 84px; }
+.plan .ico .ui-ic { width: 40px; height: 40px; }
+.mt-ic .ui-ic { width: 28px; height: 28px; margin: -3px 0; }
+.mt-steps li.todo .ui-ic { filter: saturate(.5); }
+.mt-title .ui-ic { display: inline-block; width: 22px; height: 22px; vertical-align: -6px; margin-right: 6px; }
+.block-art { display: grid; place-items: center; }
+.block-art .ui-ic { width: 120px; height: 120px; filter: drop-shadow(0 8px 14px rgba(31, 51, 70, .14)); animation: pop .4s ease-out; }
+@media (prefers-reduced-motion: reduce) { .block-art .ui-ic { animation: none; } }
+/* Lukket ark: skjul det helt (ingen skygge i bunden, knapperne kan ikke fokuseres) */
+.bsheet { visibility: hidden; transition: transform .32s cubic-bezier(.2, .8, .2, 1), visibility 0s .32s; }
+.bsheet.open { visibility: visible; transition: transform .32s cubic-bezier(.2, .8, .2, 1); }
+@media (prefers-reduced-motion: reduce) { .bsheet, .bsheet.open { transition: none; } }
+@media (max-width: 640px) {
+  .mt-ic .ui-ic { width: 22px; height: 22px; margin: -2px 0; }
+  .mt-steps li { flex: none; }
+  .mt-steps li:not(.current) { padding: 2px 3px; }
+  .mt-steps li.current { flex: 0 1 auto; min-width: 0; }
+  .mt-steps li.current .mt-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}

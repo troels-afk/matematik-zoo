@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004204259';
-import * as E from './engine.js?v=20261004204259';
-import * as Z from './zoo.js?v=20261004204259';
-import { zooGate } from './scene.js?v=20261004204259';
-import { zooMap } from './map.js?v=20261004204259';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004204259';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004204259';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004204259';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004205649';
+import * as E from './engine.js?v=20261004205649';
+import * as Z from './zoo.js?v=20261004205649';
+import { zooGate } from './scene.js?v=20261004205649';
+import { zooMap } from './map.js?v=20261004205649';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004205649';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004205649';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004205649';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -87,6 +87,13 @@ const say = (who, text) => `
   <div class="say">${avatar(who)}
     <div class="bubble"><span class="who">${Z.CAST[who].name} · ${Z.CAST[who].role}</span><span class="txt">${text}</span></div>
   </div>`;
+
+// Tegnede ikoner i stedet for emoji: de tre missionstrin, Øvebanen, lyd og dagens mission
+const UI_ICONS = {
+  baby: 'img/ui/babyhuset.webp', area: 'img/ui/zoo-omraade.webp', round: 'img/ui/zoo-runden.webp',
+  oeve: 'img/ui/oevebane.webp', lyd: 'img/ui/lyd.webp', opgave: 'img/ui/opgave.webp',
+};
+const ui = (key) => `<img class="ui-ic" src="${UI_ICONS[key]}" alt="" draggable="false">`;
 
 function baby(key, size = '') {
   const b = Z.BABIES[key];
@@ -245,9 +252,9 @@ function showIntroTour(done = showHome) {
     },
     {
       art: `<ol class="plan">
-        <li><span class="n">1</span><div><div class="t">🍼 Morgenrunde i Babyhuset</div><div class="d">Giv ungerne flaske – gangetabellen</div></div></li>
-        <li><span class="n">2</span><div><div class="t">🦒 Dagens opgave</div><div class="d">Hjælp Nora, Liv eller Yasmin med en opgave i zoo'en</div></div></li>
-        <li><span class="n">3</span><div><div class="t">🧭 Runde i zoo'en</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div></li>
+        <li><span class="n">1</span><div><div class="t">Morgenrunde i Babyhuset</div><div class="d">Giv ungerne flaske – gangetabellen</div></div><span class="ico">${ui('baby')}</span></li>
+        <li><span class="n">2</span><div><div class="t">Dagens opgave</div><div class="d">Hjælp Nora, Liv eller Yasmin med en opgave i zoo'en</div></div><span class="ico">${ui('area')}</span></li>
+        <li><span class="n">3</span><div><div class="t">Runde i zoo'en</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div><span class="ico">${ui('round')}</span></li>
       </ol>`,
       title: 'Sådan går en dag',
       body: say('nora', 'Det tager cirka 15 minutter. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
@@ -369,9 +376,9 @@ function showHome() {
     <div class="home-top">
       <span class="me-chip"><span class="avatar">${meAvatar(st.name)}</span>${esc(st.name)}</span>
       <div class="row" style="gap:8px">
-        <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">📝 <span>Øvebanen</span></button>
+        <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">${ui('oeve')}<span>Øvebanen</span></button>
         <button class="icon-btn" id="help" aria-label="Sådan spiller du">?</button>
-        <button class="icon-btn" id="snd" aria-label="Lyd til/fra">${st.settings.sound ? '🔊' : '🔇'}</button>
+        <button class="icon-btn snd ${st.settings.sound ? '' : 'off'}" id="snd" aria-label="Lyd" aria-pressed="${st.settings.sound}">${ui('lyd')}</button>
       </div>
     </div>
 
@@ -410,7 +417,8 @@ function showHome() {
     st.settings.sound = !st.settings.sound;
     setSound(st.settings.sound);
     save();
-    $('#snd').textContent = st.settings.sound ? '🔊' : '🔇';
+    $('#snd').classList.toggle('off', !st.settings.sound);
+    $('#snd').setAttribute('aria-pressed', st.settings.sound);
     sfx('tap');
   });
   on('#switch', 'click', () => { try { localStorage.removeItem('mr_last'); } catch { /* */ } showProfiles(); });
@@ -429,13 +437,13 @@ function missionCard(st, t, open) {
     <section class="mission card">
       <div class="mission-art">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}</div>
       <div class="mission-body">
-        <span class="kicker">Dagens mission</span>
+        <span class="kicker with-ic">${ui('opgave')}Dagens mission</span>
         <h1>${t.title}</h1>
         <p class="mission-need"><b>${c.name}</b> har brug for din hjælp i ${a.icon} <b>${a.place}</b>.</p>
         <ol class="mission-steps">
-          <li><span class="n">1</span><span><b>Morgenrunde</b> · giv ungerne i Babyhuset flaske</span></li>
-          <li><span class="n">2</span><span><b>${a.place}</b> · ${z.step} <span class="topic">${cur ? SKILLS[cur].name : 'repetition'}</span></span></li>
-          <li><span class="n">3</span><span><b>Runde i zoo'en</b> · et par blandede opgaver</span></li>
+          <li><span class="si">${ui('baby')}<i>1</i></span><span><b>Morgenrunde</b> · giv ungerne i Babyhuset flaske</span></li>
+          <li><span class="si">${ui('area')}<i>2</i></span><span><b>${a.place}</b> · ${z.step} <span class="topic">${cur ? SKILLS[cur].name : 'repetition'}</span></span></li>
+          <li><span class="si">${ui('round')}<i>3</i></span><span><b>Runde i zoo'en</b> · et par blandede opgaver</span></li>
         </ol>
         <div class="mission-go">
           <button class="btn big" id="start">Start missionen</button>
@@ -474,7 +482,7 @@ function taskSheet(t) {
   const a = areaOf(t.area), cur = E.currentSkill(S.state, t.area);
   openSheet(`
     ${say(t.who, `<b>${t.title}</b> – kan du hjælpe mig? Vi starter med morgenrunden i Babyhuset.`)}
-    <div class="sheet-plan"><span>🍼 Morgenrunde</span><span>→</span><span>${a.icon} ${a.place} · ${Z.ZONES[t.area].step}</span><span>→</span><span>🧭 Runde i zoo'en</span></div>
+    <div class="sheet-plan"><span>${ui('baby')}Morgenrunde</span><span>→</span><span>${ui('area')}${a.place} · ${Z.ZONES[t.area].step}</span><span>→</span><span>${ui('round')}Runde i zoo'en</span></div>
     <div class="row" style="justify-content:flex-end">
       <button class="btn ghost" data-close>Senere</button>
       <button class="btn" id="go-task">Start dagens vagt</button>
@@ -512,7 +520,7 @@ function babySheet() {
     ? list.slice(0, 15).map(({ f, due }) => `<div class="crib ${due ? '' : 'sleep'}">${baby(f.key)}<span>${Z.BABIES[f.key].name}${due ? ' 🍼' : ' 💤'}</span></div>`).join('')
     : '<p class="muted">Babyhuset er tomt endnu. De første unger bliver født i morgenrunden.</p>';
   openSheet(`
-    <div class="sheet-head"><span class="sheet-ic">🍼</span><div><h2 style="margin:0">Babyhuset</h2>
+    <div class="sheet-head"><span class="sheet-ic art">${ui('baby')}</span><div><h2 style="margin:0">Babyhuset</h2>
       <span class="muted">${fs.introduced} af ${fs.total} unger født · ${fs.due ? `${fs.due} vil have flaske i dag` : 'alle sover sødt'}</span></div></div>
     <div class="cribs">${cribs}</div>
     <div class="row" style="justify-content:flex-end">
@@ -581,7 +589,7 @@ function showPracticeHub() {
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Zoo'en</span></div>
     <section class="area-hero" style="--ac:var(--c-tal)">
-      <span class="big">📝</span>
+      <span class="big">${ui('oeve')}</span>
       <div style="flex:1;min-width:200px"><h1 style="margin:0">Øvebanen</h1>
         <div class="muted" style="font-weight:700">Øv et bestemt emne – fx ugens lektier. Hvert emne starter med et eksempel, der viser trin for trin, hvordan man gør.</div></div>
     </section>
@@ -670,7 +678,7 @@ function snapshot(st) {
   return { status, unlocked, boxes, levels: levelsOf(st), guests: Z.guestsPerDay(st) };
 }
 
-const blockIcon = (b, areaId) => (b.kind === 'warm' ? '🍼' : b.kind === 'review' ? '🧭' : areaOf(areaId).icon);
+const blockIcon = (b) => ui(b.kind === 'warm' ? 'baby' : b.kind === 'review' ? 'round' : 'area');
 
 function runSession(areaId, mission = null) {
   const sess = E.buildSession(S.state, areaId);
@@ -694,9 +702,9 @@ function missionTrack(run, block) {
     const idx = run.sess.blocks.indexOf(b);
     const state = idx < run.bi ? 'done' : idx === run.bi ? 'current' : 'todo';
     const tail = state === 'done' ? '<span class="mt-check">✓</span>' : state === 'current' ? `<span class="mt-count">${Math.min(run.ti + 1, b.count)}/${b.count}</span>` : '';
-    return `<li class="${state}"><span class="mt-ic">${blockIcon(b, run.sess.area)}</span><span class="mt-lbl">${label(b)}</span>${tail}</li>`;
+    return `<li class="${state}"><span class="mt-ic">${blockIcon(b)}</span><span class="mt-lbl">${label(b)}</span>${tail}</li>`;
   }).join('<li class="mt-arrow" aria-hidden="true">→</li>');
-  return `<div class="mission-track"><div class="mt-title">Mission: <b>${esc(title)}</b></div><ol class="mt-steps">${steps}</ol></div>`;
+  return `<div class="mission-track"><div class="mt-title">${ui('opgave')}Mission: <b>${esc(title)}</b></div><ol class="mt-steps">${steps}</ol></div>`;
 }
 
 // Startskærm: dagens plan, så man kan fortryde før regnestykkerne begynder
@@ -706,7 +714,7 @@ function startSession(areaId) {
   const steps = sess.blocks.filter((b) => b.count).map((b, i) => `
     <li><span class="n">${i + 1}</span>
       <div><div class="t">${b.title}</div><div class="d">${b.sub} · ${b.count} opgaver</div></div>
-      <span class="ico">${blockIcon(b, areaId)}</span></li>`).join('');
+      <span class="ico">${blockIcon(b)}</span></li>`).join('');
   view(`
     <div class="card sheet stack">
       <div class="kicker">${a.icon} ${a.place}</div>
@@ -747,7 +755,7 @@ function goBlock() {
     ${run.mode === 'daily' ? `<div class="session-top"><button class="icon-btn" id="quit" aria-label="Stop">✕</button>${missionTrack(run, block)}</div>` : ''}
     <div class="card sheet center stack" style="margin-top:4vh">
       ${prev?.kind === 'warm' ? '<div class="kicker">✓ Opvarmning klaret</div>' : ''}
-      <div style="font-size:3.6rem">${blockIcon(block, run.sess.area)}</div>
+      <div class="block-art">${blockIcon(block)}</div>
       <h1>${block.title}</h1>
       <div style="text-align:left">${line}</div>
       <div><button class="btn big" id="go">Videre</button></div>
