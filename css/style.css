@@ -670,3 +670,6 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .mt-steps { gap: 4px; }
   .mt-steps li.mt-arrow { display: none; }
 }
+.feedback.nudge { background: var(--sun-soft); border: 2px solid color-mix(in srgb, var(--sun) 55%, transparent); padding: 12px 16px; }
+.feedback.nudge .fh { font-size: 1.15rem; margin: 0; }
+.feedback.nudge #hinttext { margin-top: 6px; font-weight: 700; }

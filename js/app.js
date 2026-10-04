@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004203647';
-import * as E from './engine.js?v=20261004203647';
-import * as Z from './zoo.js?v=20261004203647';
-import { zooGate } from './scene.js?v=20261004203647';
-import { zooMap } from './map.js?v=20261004203647';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004203647';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004203647';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004203647';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004204106';
+import * as E from './engine.js?v=20261004204106';
+import * as Z from './zoo.js?v=20261004204106';
+import { zooGate } from './scene.js?v=20261004204106';
+import { zooMap } from './map.js?v=20261004204106';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004204106';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004204106';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004204106';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -922,59 +922,97 @@ function answerText(p) {
   return `${fmt(p.answer)}${p.unit ? ' ' + esc(p.unit) : ''}`;
 }
 
+// Et lille hint til andet forsøg – uden at give svaret væk
+function factHint(key) {
+  const f = FACTS.find((x) => x.key === key);
+  const [x, y] = [Math.min(f.a, f.b), Math.max(f.a, f.b)];
+  if (x === 2) return `×2 er det dobbelte: ${y} + ${y}.`;
+  if (x === 5 || y === 5) return `×5 er halvdelen af ×10. Hvad er ${x === 5 ? y : x} × 10?`;
+  if (x === 9 || y === 9) { const o = x === 9 ? y : x; return `×9: regn ${o} × 10 og træk én ${o}'er fra.`; }
+  if (x === 4 || y === 4) { const o = x === 4 ? y : x; return `×4 er dobbelt af dobbelt: ${o} → ${o * 2} → ?`; }
+  if (x === y) return `${x} × ${x}: tænk på ${x} × ${x - 1} = ${x * (x - 1)} og læg én ${x}'er til.`;
+  return `Tænk på ${x} × ${y - 1} = ${x * (y - 1)}. Hvad bliver det med én ${x}'er mere?`;
+}
+const NUDGE = ['Næsten – prøv igen!', 'Ikke helt – prøv en gang til!', 'Tæt på – giv den et forsøg mere!'];
+
 function answer(given, choiceIdx) {
   const run = S.run, block = run.sess.blocks[run.bi], task = run.task, p = task.p;
   run.answered = true;
   const ms = Date.now() - run.shownAt;
   const correct = E.checkAnswer(p, given);
+  const second = !!task.second; // andet forsøg efter en fejl
   const st = S.state;
   let again = '', grew = '';
+  const b = task.kind === 'warm' ? Z.BABIES[task.fact] : null;
 
-  if (task.kind === 'warm') {
-    const before = E.factBox(st, task.fact);
-    E.recordFact(st, task.fact, correct, ms);
-    const after = E.factBox(st, task.fact);
-    const b = Z.BABIES[task.fact];
-    if (correct && after > before) grew = after >= 5 ? `${b.name} er nu helt voksen! 🌟` : `${b.name} voksede: ${Z.STAGES[after].toLowerCase()} 🍼`;
-    else if (correct) grew = `${b.name} er mæt og glad 🍼`;
-    if (!correct && !run.retried.has(task.fact)) {
-      run.retried.add(task.fact);
-      block.tasks.push({ kind: 'warm', fact: task.fact, p: factProblem(FACTS.find((f) => f.key === task.fact)) });
-      block.count = block.tasks.length;
-      again = `${b.name} kommer igen om lidt, så du kan prøve igen.`;
+  // Kun første forsøg tæller i den adaptive motor
+  if (!second) {
+    if (task.kind === 'warm') {
+      const before = E.factBox(st, task.fact);
+      E.recordFact(st, task.fact, correct, ms);
+      const after = E.factBox(st, task.fact);
+      if (correct && after > before) grew = after >= 5 ? `${b.name} er nu helt voksen! 🌟` : `${b.name} voksede: ${Z.STAGES[after].toLowerCase()} 🍼`;
+      else if (correct) grew = `${b.name} er mæt og glad 🍼`;
+      if (!correct && !run.retried.has(task.fact)) {
+        run.retried.add(task.fact);
+        block.tasks.push({ kind: 'warm', fact: task.fact, p: factProblem(FACTS.find((f) => f.key === task.fact)) });
+        block.count = block.tasks.length;
+      }
+    } else {
+      E.recordSkill(st, task.skill, correct, task.level, ms);
     }
-  } else {
-    E.recordSkill(st, task.skill, correct, task.level, ms);
-    if (!correct) again = 'Du får en lignende opgave igen senere.';
+    run.results.push({ kind: task.kind, id: task.fact || task.skill, correct });
+    save();
   }
-  run.results.push({ kind: task.kind, id: task.fact || task.skill, correct });
-  save();
-  sfx(correct ? (grew && grew.includes('voksede') ? 'grow' : 'correct') : 'wrong');
-  if (task.kind === 'warm') {
-    const kind = !correct ? 'think' : grew && grew.includes('voksede') ? 'grow' : 'happy';
+  if (!correct) again = task.kind === 'warm' ? `${b.name} kommer igen om lidt, så du kan prøve igen.` : 'Du får en lignende opgave igen senere.';
+
+  // Ungen reagerer
+  const react = (kind, src) => {
     const el = $('.baby-banner .baby');
-    if (el) {
-      el.outerHTML = baby(task.fact); // ny størrelse/ring efter svaret
-      const nb = $('.baby-banner .baby');
-      // Har ungen udtryk: jubler ved rigtigt svar, tænker ved forkert
-      const ex = Z.BABIES[task.fact].expr;
-      if (ex) nb.querySelector('img').src = correct ? ex.cheer : ex.think;
-      babyReact(nb, kind);
-    }
+    if (!el) return;
+    el.outerHTML = baby(task.fact);
+    const nb = $('.baby-banner .baby');
+    if (b.expr && src) nb.querySelector('img').src = src;
+    babyReact(nb, kind);
+  };
+
+  // Første fejl (ikke ved valgmuligheder): kort, venlig besked og ét forsøg til
+  if (!correct && !second && p.input !== 'choice') {
+    task.second = true;
+    sfx('wrong');
+    if (b) react('think', b.expr?.think);
+    const hint = task.kind === 'warm' ? factHint(task.fact) : ALL_SKILLS[task.skill]?.intro?.text || '';
+    mountInput(p, answer);
+    run.answered = false;
+    run.shownAt = Date.now();
+    const aa = $('#aa');
+    aa.insertAdjacentHTML('afterbegin', `<div class="feedback nudge"><div class="fh">${pick(NUDGE)}</div>
+      ${hint ? `<button class="link small" id="hint">💡 Vis et hint</button><div id="hinttext" hidden></div>` : ''}</div>`);
+    on('#hint', 'click', () => { const h = $('#hinttext'); h.innerHTML = hint; h.hidden = false; $('#hint').remove(); });
+    return;
+  }
+
+  sfx(correct ? (grew && grew.includes('voksede') ? 'grow' : 'correct') : 'wrong');
+  if (b) {
+    const kind = !correct ? 'think' : grew && grew.includes('voksede') ? 'grow' : 'happy';
+    react(kind, correct ? b.expr?.cheer : b.expr?.think);
   }
 
   if (p.input === 'choice') {
-    $$('.choice').forEach((b, i) => {
-      if (p.choices[i] === p.answer) b.classList.add('right');
-      else if (i === choiceIdx) b.classList.add('wrong');
+    $$('.choice').forEach((bt, i) => {
+      if (p.choices[i] === p.answer) bt.classList.add('right');
+      else if (i === choiceIdx) bt.classList.add('wrong');
     });
   }
 
+  const praise = second ? 'Sådan – andet forsøg!' : pick(PRAISE);
+  const goodBody = task.kind === 'warm'
+    ? `<div style="font-weight:700">${grew || `${b.name} er mæt og glad 🍼`}</div>`
+    : `<div class="small">${p.explain}</div>`;
   const fb = correct
-    ? `<div class="feedback good"><div class="fh"><span class="tick">✓</span>${pick(PRAISE)}</div>
-        ${task.kind === 'warm' ? `<div style="font-weight:700">${grew}</div>` : `<div class="small">${p.explain}</div>`}</div>`
+    ? `<div class="feedback good"><div class="fh"><span class="tick">✓</span>${praise}</div>${goodBody}</div>`
     : `<div class="feedback retry">
-        <div class="fh">Ikke helt – svaret er ${answerText(p)}</div>
+        <div class="fh">Svaret er ${answerText(p)}</div>
         <div>${p.explain}</div>
         ${p.explainVisual ? `<div class="explain-visual">${p.explainVisual}</div>` : ''}
         ${again ? `<div class="small muted" style="margin-top:8px">${again}</div>` : ''}
