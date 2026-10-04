@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004202447';
-import * as E from './engine.js?v=20261004202447';
-import * as Z from './zoo.js?v=20261004202447';
-import { zooGate } from './scene.js?v=20261004202447';
-import { zooMap } from './map.js?v=20261004202447';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004202447';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004202447';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004202447';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004202632';
+import * as E from './engine.js?v=20261004202632';
+import * as Z from './zoo.js?v=20261004202632';
+import { zooGate } from './scene.js?v=20261004202632';
+import { zooMap } from './map.js?v=20261004202632';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004202632';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004202632';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004202632';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -444,7 +444,7 @@ function missionCard(st, t, open) {
           <button class="btn big" id="start">Start missionen</button>
           <span class="muted small">ca. 15 minutter</span>
         </div>
-        ${others.length ? `<div class="mission-others"><span class="muted small">Andre der har brug for hjælp:</span>
+        ${others.length ? `<div class="mission-others"><span class="muted small">Vil du hellere hjælpe en anden i dag?</span>
           ${others.map((o) => `<button class="chip-btn" data-mission="${o.area}">${avatar(o.who, 'sm')}${Z.CAST[o.who].name} · ${areaOf(o.area).place}</button>`).join('')}</div>` : ''}
       </div>
     </section>`;
