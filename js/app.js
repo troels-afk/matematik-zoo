@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004214041';
-import * as E from './engine.js?v=20261004214041';
-import * as Z from './zoo.js?v=20261004214041';
-import { zooGate } from './scene.js?v=20261004214041';
-import { zooMap } from './map.js?v=20261004214041';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004214041';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004214041';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004214041';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004215017';
+import * as E from './engine.js?v=20261004215017';
+import * as Z from './zoo.js?v=20261004215017';
+import { zooGate } from './scene.js?v=20261004215017';
+import { zooMap } from './map.js?v=20261004215017';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004215017';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004215017';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004215017';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -83,8 +83,8 @@ const avatar = (who, size = '') => {
   const c = Z.CAST[who];
   return `<span class="avatar ${size} who-${who} ${c.img ? 'has-img' : ''}" aria-hidden="true">${c.img ? `<img src="${c.img}" alt="" draggable="false">` : c.emoji}</span>`;
 };
-const say = (who, text) => `
-  <div class="say">${avatar(who)}
+const say = (who, text, size = '') => `
+  <div class="say">${avatar(who, size)}
     <div class="bubble"><span class="who">${Z.CAST[who].name} · ${Z.CAST[who].role}</span><span class="txt">${text}</span></div>
   </div>`;
 
@@ -238,7 +238,10 @@ function showAbout(back = showHome) {
 
 function showIntroTour(done = showHome) {
   const st = S.state, zname = Z.zooName(st);
-  const someBabies = FACTS.slice(0, 6).map((f, i) => `<span class="baby" style="--st:${i}"><span>${Z.BABIES[f.key].emoji}</span></span>`).join('');
+  const someBabies = FACTS.slice(0, 6).map((f, i) => {
+    const b = Z.BABIES[f.key];
+    return `<span class="baby ${b.img ? 'has-img' : ''}" style="--st:${i}">${b.img ? `<img src="${b.img}" alt="" draggable="false">` : `<span>${b.emoji}</span>`}</span>`;
+  }).join('');
   const pages = [
     {
       art: Z.CAST.bodil.bust ? `<img class="tour-portrait" src="${Z.CAST.bodil.bust}" alt="Bodil">` : '<div class="tour-art">🦒🐘🦁🐧🦓</div>',
@@ -265,7 +268,7 @@ function showIntroTour(done = showHome) {
       body: say('nora', `Hvert gangestykke er en dyreunge. Når du husker gangestykket – også dagen efter – vokser ungen, til den er voksen. Kan du få alle ${FACTS.length} unger voksne?`),
     },
     {
-      art: '<div class="tour-art">🦜</div>',
+      art: `<img class="tour-portrait" src="${Z.CAST.kaj.full}" alt="Kaj">`,
       title: 'Bare rolig!',
       body: say('kaj', 'Regner du forkert, sker der ikke noget. Du får en forklaring, og opgaven kommer igen senere. Og går en division ikke op, så er resten MIN!'),
     },
@@ -443,7 +446,7 @@ function missionVisual(t, after = false) {
   const portrait = c.bust || c.img
     ? `<img class="mission-face" src="${c.bust || c.img}" alt="${c.name}">`
     : `<span class="mission-emoji" aria-hidden="true">${c.emoji}</span>`;
-  return `<div class="mission-art ${after ? 'after' : ''}">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}${party}</div>`;
+  return `<div class="mission-art who-${t.who} ${after ? 'after' : ''}">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}${party}</div>`;
 }
 
 // "Du hjalp <b>Nora</b> med giraffernes foder."
@@ -791,8 +794,8 @@ function goBlock() {
   const prev = run.sess.blocks[run.bi - 1];
   const z = Z.ZONES[run.sess.area];
   const line = block.kind === 'review'
-    ? say('kaj', "Sidste runde! Lad os tjekke resten af zoo'en 🦜")
-    : say(run.mission?.who || (z.who === 'bodil' ? 'nora' : z.who), `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${z.step}.`);
+    ? say('kaj', "Sidste runde! Lad os tjekke resten af zoo'en 🦜", 'lg')
+    : say(run.mission?.who || (z.who === 'bodil' ? 'nora' : z.who), `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${z.step}.`, 'lg');
   view(`
     ${run.mode === 'daily' ? `<div class="session-top"><button class="icon-btn" id="quit" aria-label="Stop">✕</button>${missionTrack(run, block)}</div>` : ''}
     <div class="card sheet center stack" style="margin-top:4vh">

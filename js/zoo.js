@@ -1,16 +1,20 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261004214041';
-import * as E from './engine.js?v=20261004214041';
-import { today } from './util.js?v=20261004214041';
+import { AREAS, FACTS } from './curriculum.js?v=20261004215017';
+import * as E from './engine.js?v=20261004215017';
+import { today } from './util.js?v=20261004215017';
+
+// Figurernes tegninger: ansigt (talebobler og kort), buste (missionens cirkel) og helfigur (scener).
+// Emojien bruges kun som reserve, hvis en tegning mangler.
+const art = (id) => ({ img: `img/cast/${id}-face.webp`, bust: `img/cast/${id}-bust.webp`, full: `img/cast/${id}.webp` });
 
 export const CAST = {
   bodil: { name: 'Bodil', role: 'Zoo-direktør', emoji: '👵🏼', img: 'img/cast/bodil-face.webp', bust: 'img/cast/bodil.webp' },
-  kaj: { name: 'Kaj', role: 'Papegøje', emoji: '🦜' },
-  nora: { name: 'Nora', role: 'Dyrepasser-elev', emoji: '👧🏼', img: 'img/cast/nora-face.webp', full: 'img/cast/nora.webp' },
-  liv: { name: 'Liv', role: 'Laver skilte og kort', emoji: '👧🏻' },
-  yasmin: { name: 'Yasmin', role: 'Dyrlæge-elev', emoji: '👧🏽' },
+  kaj: { name: 'Kaj', role: 'Papegøje', emoji: '🦜', ...art('kaj') },
+  nora: { name: 'Nora', role: 'Dyrepasser-elev', emoji: '👧🏼', ...art('nora') },
+  liv: { name: 'Liv', role: 'Laver skilte og kort', emoji: '👧🏻', ...art('liv') },
+  yasmin: { name: 'Yasmin', role: 'Dyrlæge-elev', emoji: '👧🏽', ...art('yasmin') },
 };
 
 // Scener til "Dagens mission": stedet bagest og dyret i midten. Figuren forrest er

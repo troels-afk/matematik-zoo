@@ -792,3 +792,10 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (prefers-reduced-motion: reduce) {
   .mission-scene.after img, .mission-art.after img, .party i, .ms-say, .pm-art img { animation: none !important; }
 }
+
+/* ---------- Figurerne: hver har sin egen farve bag tegningen ---------- */
+.avatar.has-img.who-bodil, .mission-art.who-bodil { background: var(--sun-soft); }
+.avatar.has-img.who-nora, .mission-art.who-nora { background: var(--coral-soft); }
+.avatar.has-img.who-liv, .mission-art.who-liv { background: var(--lav-soft); }
+.avatar.has-img.who-yasmin, .mission-art.who-yasmin { background: var(--sky-soft); }
+.avatar.has-img.who-kaj, .mission-art.who-kaj { background: var(--primary-soft); }
