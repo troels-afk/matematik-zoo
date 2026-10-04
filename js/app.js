@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004203330';
-import * as E from './engine.js?v=20261004203330';
-import * as Z from './zoo.js?v=20261004203330';
-import { zooGate } from './scene.js?v=20261004203330';
-import { zooMap } from './map.js?v=20261004203330';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004203330';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004203330';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004203330';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004203647';
+import * as E from './engine.js?v=20261004203647';
+import * as Z from './zoo.js?v=20261004203647';
+import { zooGate } from './scene.js?v=20261004203647';
+import { zooMap } from './map.js?v=20261004203647';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004203647';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004203647';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004203647';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -298,7 +298,7 @@ let sheetEl = null;
 function openSheet(html, bind) {
   if (!sheetEl) {
     sheetEl = document.createElement('div');
-    sheetEl.className = 'sheet';
+    sheetEl.className = 'bsheet';
     sheetEl.setAttribute('role', 'dialog');
     document.body.appendChild(sheetEl);
   }
@@ -746,7 +746,7 @@ function goBlock() {
   const z = Z.ZONES[run.sess.area];
   const line = block.kind === 'review'
     ? say('kaj', "Sidste runde! Lad os tjekke resten af zoo'en 🦜")
-    : say(z.who, `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang: ${block.sub.toLowerCase()}.`);
+    : say(run.mission?.who || (z.who === 'bodil' ? 'nora' : z.who), `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${z.step}.`);
   view(`
     ${run.mode === 'daily' ? `<div class="session-top"><button class="icon-btn" id="quit" aria-label="Stop">✕</button>${missionTrack(run, block)}</div>` : ''}
     <div class="card sheet center stack" style="margin-top:4vh">

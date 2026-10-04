@@ -592,11 +592,11 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .map-bar .muted { flex: 1; min-width: 220px; font-weight: 700; }
 
 /* ---------- Ark nedefra ---------- */
-.sheet { position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 110%); width: min(680px, calc(100% - 24px)); max-height: 82vh; overflow-y: auto;
+.bsheet { position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 110%); width: min(680px, calc(100% - 24px)); max-height: 82vh; overflow-y: auto;
   background: var(--card); color: var(--ink); border-radius: 26px 26px 0 0; padding: 18px 20px calc(22px + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -10px 40px rgba(0, 0, 0, .18); transition: transform .32s cubic-bezier(.2, .8, .2, 1); z-index: 25; display: grid; gap: 14px; }
-.sheet.open { transform: translate(-50%, 0); }
-.sheet .grab { width: 44px; height: 5px; border-radius: 99px; background: var(--line); justify-self: center; margin-top: -6px; }
+.bsheet.open { transform: translate(-50%, 0); }
+.bsheet .grab { width: 44px; height: 5px; border-radius: 99px; background: var(--line); justify-self: center; margin-top: -6px; }
 .sheet-x { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 12px; background: var(--card-2); color: var(--ink-2); font-size: 1rem; }
 .sheet-head { display: flex; align-items: center; gap: 14px; padding-right: 44px; }
 .sheet-ic { width: 54px; height: 54px; border-radius: 16px; background: var(--sun-soft); display: grid; place-items: center; font-size: 1.8rem; flex: none; }
@@ -609,7 +609,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .crib { display: grid; justify-items: center; gap: 4px; font: 600 .82rem var(--font-head); color: var(--ink-2); text-align: center; }
 .crib.sleep .baby > img { filter: saturate(.7); opacity: .8; }
 .goal-line { display: grid; gap: 8px; font-weight: 700; }
-@media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .bsheet { transition: none; } }
 
 /* ---------- Dagens mission (forsidens hovedfokus) ---------- */
 .home-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
