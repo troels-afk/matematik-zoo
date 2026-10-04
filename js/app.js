@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004203116';
-import * as E from './engine.js?v=20261004203116';
-import * as Z from './zoo.js?v=20261004203116';
-import { zooGate } from './scene.js?v=20261004203116';
-import { zooMap } from './map.js?v=20261004203116';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004203116';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004203116';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004203116';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004203330';
+import * as E from './engine.js?v=20261004203330';
+import * as Z from './zoo.js?v=20261004203330';
+import { zooGate } from './scene.js?v=20261004203330';
+import { zooMap } from './map.js?v=20261004203330';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004203330';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004203330';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004203330';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -401,7 +401,7 @@ function showHome() {
   };
   svgEl.addEventListener('click', (e) => { const t = e.target.closest('.m-tap'); if (t) act(t); });
   svgEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { const t = e.target.closest('.m-tap'); if (t) { e.preventDefault(); act(t); } } });
-  on('#start', 'click', () => { sfx('tap'); runSession(mission.area); });
+  on('#start', 'click', () => { sfx('tap'); runSession(mission.area, mission); });
   on('[data-mission]', 'click', (e) => { sfx('tap'); S.mission = e.currentTarget.dataset.mission; showHome(); });
   on('#again', 'click', () => { sfx('tap'); taskSheet(first); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
@@ -482,7 +482,7 @@ function taskSheet(t) {
     <div class="row" style="justify-content:flex-end">
       <button class="btn ghost" data-close>Senere</button>
       <button class="btn" id="go-task">Start dagens vagt</button>
-    </div>`, (el) => el.querySelector('#go-task').addEventListener('click', () => { closeSheet(); runSession(t.area); }));
+    </div>`, (el) => el.querySelector('#go-task').addEventListener('click', () => { closeSheet(); runSession(t.area, t); }));
 }
 
 function areaSheet(areaId) {
@@ -676,10 +676,31 @@ function snapshot(st) {
 
 const blockIcon = (b, areaId) => (b.kind === 'warm' ? '🍼' : b.kind === 'review' ? '🧭' : areaOf(areaId).icon);
 
-function runSession(areaId) {
+function runSession(areaId, mission = null) {
   const sess = E.buildSession(S.state, areaId);
-  S.run = { mode: 'daily', sess, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
+  const m = mission ? { who: mission.who, title: mission.title } : null;
+  S.run = { mode: 'daily', sess, mission: m, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
   goBlock();
+}
+
+// Missionslinjen øverst i træningen: missionen + de 3 trin med fremdrift
+function missionTrack(run, block) {
+  if (run.mode !== 'daily') {
+    const a = areaOf(run.sess.area);
+    return `<div class="mission-track">
+      <div class="mt-title">${a.icon} <b>${a.place}</b> · ${esc(block.sub)}</div>
+      <ol class="mt-steps"><li class="current"><span class="mt-lbl">Øvelse</span> <span class="mt-count">${run.ti + 1}/${block.count}</span></li></ol></div>`;
+  }
+  const name = run.mission ? Z.CAST[run.mission.who].name : null;
+  const title = run.mission ? `Hjælp ${name}: ${run.mission.title}` : `${areaOf(run.sess.area).place}`;
+  const label = (b) => (b.kind === 'warm' ? 'Babyhuset' : b.kind === 'review' ? 'Zoo-runden' : areaOf(run.sess.area).place);
+  const steps = run.sess.blocks.filter((b) => b.count).map((b) => {
+    const idx = run.sess.blocks.indexOf(b);
+    const state = idx < run.bi ? 'done' : idx === run.bi ? 'current' : 'todo';
+    const tail = state === 'done' ? '<span class="mt-check">✓</span>' : state === 'current' ? `<span class="mt-count">${Math.min(run.ti + 1, b.count)}/${b.count}</span>` : '';
+    return `<li class="${state}"><span class="mt-ic">${blockIcon(b, run.sess.area)}</span><span class="mt-lbl">${label(b)}</span>${tail}</li>`;
+  }).join('<li class="mt-arrow" aria-hidden="true">→</li>');
+  return `<div class="mission-track"><div class="mt-title">Mission: <b>${esc(title)}</b></div><ol class="mt-steps">${steps}</ol></div>`;
 }
 
 // Startskærm: dagens plan, så man kan fortryde før regnestykkerne begynder
@@ -727,7 +748,8 @@ function goBlock() {
     ? say('kaj', "Sidste runde! Lad os tjekke resten af zoo'en 🦜")
     : say(z.who, `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang: ${block.sub.toLowerCase()}.`);
   view(`
-    <div class="card sheet center stack" style="margin-top:8vh">
+    ${run.mode === 'daily' ? `<div class="session-top"><button class="icon-btn" id="quit" aria-label="Stop">✕</button>${missionTrack(run, block)}</div>` : ''}
+    <div class="card sheet center stack" style="margin-top:4vh">
       ${prev?.kind === 'warm' ? '<div class="kicker">✓ Opvarmning klaret</div>' : ''}
       <div style="font-size:3.6rem">${blockIcon(block, run.sess.area)}</div>
       <h1>${block.title}</h1>
@@ -735,6 +757,7 @@ function goBlock() {
       <div><button class="btn big" id="go">Videre</button></div>
     </div>`, (e) => { if (e.key === 'Enter') showTask(); });
   on('#go', 'click', showTask);
+  on('#quit', 'click', quitSession);
 }
 
 function totalTasks(run) { return run.sess.blocks.reduce((n, b) => n + (b.count || 0), 0); }
@@ -755,21 +778,19 @@ function renderTask(block, task) {
   run.task = task;
   run.shownAt = Date.now();
   const p = task.p;
-  const pct = Math.round((100 * doneTasks(run)) / totalTasks(run));
   let banner = '';
   if (task.kind === 'warm') {
     const b = Z.BABIES[task.fact];
     if (b.expr) [b.expr.think, b.expr.cheer].forEach((src) => { new Image().src = src; }); // forhåndsindlæs udtryk
-    banner = `<div class="baby-banner">${baby(task.fact).replace('class="baby ', 'class="baby idle ')}
-      <div><div class="t">${b.name} vil have flaske</div><div class="s">Opvarmning ${run.ti + 1}/${block.count} · gangetabellen – bagefter går vi til ${areaOf(run.sess.area).place}</div></div></div>`;
+    banner = `<div class="baby-banner">${baby(task.fact).replace('class="baby ', 'class="baby idle ').replace(' new ', ' ')}
+      <div><div class="t">${b.name} vil have flaske</div><div class="s">Opvarmning med gangetabellen</div></div></div>`;
   }
   const help = (task.kind === 'main' || task.kind === 'practice') ? `<button class="link small" id="help">💡 Hjælp</button>` : '';
 
   view(`
     <div class="session-top">
       <button class="icon-btn" id="quit" aria-label="Stop">✕</button>
-      <div class="progress"><i style="width:${pct}%"></i></div>
-      <span class="block-label">${blockIcon(block, run.sess.area)} ${block.title}</span>
+      ${missionTrack(run, block)}
     </div>
     <div class="card">
       ${banner}

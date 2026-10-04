@@ -647,3 +647,26 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .m-bang { animation-duration: 2.6s; }
 .mission-steps .topic { display: inline-block; margin-left: 6px; font: 600 .74rem var(--font-head); color: var(--ink-2); background: var(--card-2); border: 1px solid var(--line); border-radius: 99px; padding: 1px 9px; vertical-align: 2px; }
 .sheet-next { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--sun-soft); font-weight: 700; }
+
+/* ---------- Missionslinje i træningen ---------- */
+.session-top { align-items: center; }
+.mission-track { flex: 1; min-width: 0; display: grid; gap: 6px; background: var(--card); border: 1px solid var(--line-2); border-radius: 18px; padding: 8px 14px; box-shadow: var(--shadow-sm); }
+.mt-title { font-size: .92rem; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mt-title b { color: var(--ink); font-family: var(--font-head); font-weight: 600; }
+.mt-steps { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; min-width: 0; }
+.mt-steps li { display: inline-flex; align-items: center; gap: 6px; font: 600 .92rem var(--font-head); color: var(--ink-2); white-space: nowrap; padding: 3px 10px; border-radius: 99px; }
+.mt-steps li.done { color: var(--primary-ink); }
+.mt-steps li.current { background: var(--primary-soft); color: var(--ink); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--primary) 45%, transparent); }
+.mt-steps li.todo { opacity: .6; }
+.mt-steps li.mt-arrow { padding: 0; opacity: .45; }
+.mt-check { color: var(--primary); font-weight: 900; }
+.mt-count { font-variant-numeric: tabular-nums; color: var(--primary-ink); }
+@media (max-width: 640px) {
+  .mt-steps li:not(.current) .mt-lbl { display: none; }
+  .mt-steps li { padding: 3px 8px; font-size: .86rem; }
+  .mission-track { padding: 6px 10px; }
+}
+@media (max-width: 640px) {
+  .mt-steps { gap: 4px; }
+  .mt-steps li.mt-arrow { display: none; }
+}
