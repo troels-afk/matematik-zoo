@@ -294,6 +294,7 @@ function showHome() {
       <div class="hero-bar">
         <span class="me-chip"><span class="avatar">${meAvatar(st.name)}</span>${esc(st.name)}</span>
         <div class="row" style="gap:8px">
+          <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">📝 <span>Øvebanen</span></button>
           <button class="icon-btn" id="help" aria-label="Sådan spiller du">?</button>
           <button class="icon-btn" id="snd" aria-label="Lyd til/fra">${st.settings.sound ? '🔊' : '🔇'}</button>
         </div>
@@ -327,16 +328,6 @@ function showHome() {
       : 'Hver træning har tre dele: <b>🍼 morgenrunde</b> i Babyhuset → <b>dagens opgave</b> → <b>🧭 runde i zoo\'en</b>. Ca. 15 minutter.'}</p>
     <div class="tasks">${sugg.map(taskCard).join('')}</div>
 
-    <div class="section-title"><h2>📝 Øvebanen</h2><span class="muted small">Øv noget bestemt</span></div>
-    <p class="section-help">Her kan du øve et bestemt emne – fx ugens lektier. Hvert emne starter med et eksempel, der viser trin for trin, hvordan man gør.</p>
-    <div class="practice-sets">${PRACTICE_SETS.map((set) => `
-      <button class="practice-set" data-set="${set.id}" style="--ac:${set.color}">
-        <span class="ps-ic">${set.icon}</span>
-        <span class="ps-body"><span class="head ps-nm">${set.name}</span><span class="ps-d">${set.desc}</span>
-          <span class="ps-chips">${set.skills.map((sk) => `<span class="st ${E.skillStatus(st, sk.id)}">${sk.name}</span>`).join('')}</span></span>
-        <span class="go" aria-hidden="true">→</span>
-      </button>`).join('')}</div>
-
     <div class="section-title"><h2>🍼 Babyhuset</h2><button class="link" id="book">Dyrebogen →</button></div>
     <p class="section-help">Hvert gangestykke er en dyreunge. Ungerne vokser, når du husker deres gangestykke i morgenrunden – også dagen efter. 🍼 = vil have flaske i dag.</p>
     <section class="card nursery">
@@ -358,7 +349,7 @@ function showHome() {
   on('#book', 'click', showBook);
   on('#sprint', 'click', startSprint);
   on('#help', 'click', () => showIntroTour());
-  on('.practice-set', 'click', (e) => { sfx('tap'); showPracticeSet(e.currentTarget.dataset.set); });
+  on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
   on('#snd', 'click', () => {
     st.settings.sound = !st.settings.sound;
     setSound(st.settings.sound);
@@ -409,6 +400,28 @@ function showPlace(areaId) {
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), 'Tilbage'));
 }
 
+// ================= Øvebanen: oversigt over lektiepakker =================
+
+function showPracticeHub() {
+  const st = S.state;
+  view(`
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Zoo'en</span></div>
+    <section class="area-hero" style="--ac:var(--c-tal)">
+      <span class="big">📝</span>
+      <div style="flex:1;min-width:200px"><h1 style="margin:0">Øvebanen</h1>
+        <div class="muted" style="font-weight:700">Øv et bestemt emne – fx ugens lektier. Hvert emne starter med et eksempel, der viser trin for trin, hvordan man gør.</div></div>
+    </section>
+    <div class="practice-sets" style="margin-top:16px">${PRACTICE_SETS.map((set) => `
+      <button class="practice-set" data-set="${set.id}" style="--ac:${set.color}">
+        <span class="ps-ic">${set.icon}</span>
+        <span class="ps-body"><span class="head ps-nm">${set.name}</span><span class="ps-d">${set.desc}</span>
+          <span class="ps-chips">${set.skills.map((sk) => `<span class="st ${E.skillStatus(st, sk.id)}">${sk.name}</span>`).join('')}</span></span>
+        <span class="go" aria-hidden="true">→</span>
+      </button>`).join('')}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
+  on('#back', 'click', showHome);
+  on('.practice-set', 'click', (e) => { sfx('tap'); showPracticeSet(e.currentTarget.dataset.set); });
+}
+
 // ================= Øvebanen: en lektiepakke =================
 
 function showPracticeSet(setId) {
@@ -433,8 +446,8 @@ function showPracticeSet(setId) {
       <div style="flex:1;min-width:200px"><h1 style="margin:0">${set.name}</h1><div class="muted" style="font-weight:700">${set.desc}</div></div>
     </section>
     <div style="margin-top:14px">${say('kaj', 'Start med eksemplet – det viser trin for trin, hvordan man gør. Opgaverne bliver sværere, efterhånden som du kan dem 🦜')}</div>
-    <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
-  on('#back', 'click', showHome);
+    <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showPracticeHub(); });
+  on('#back', 'click', showPracticeHub);
   on('[data-practice]', 'click', (e) => startPractice(e.currentTarget.dataset.practice));
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPracticeSet(setId), 'Tilbage'));
 }

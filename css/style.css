@@ -546,3 +546,5 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (max-width: 760px) { .task-card .top .ani .ani-img { width: 52px; height: 52px; } }
 .task-card .rec { top: auto; right: auto; bottom: -11px; left: 16px; z-index: 1; box-shadow: 0 2px 6px rgba(31, 51, 70, .15); }
 .task-card .body { padding-top: 18px; }
+.icon-btn.pill { width: auto; padding: 0 14px; gap: 6px; display: inline-flex; align-items: center; font: 600 .95rem var(--font-head); color: #1f3346; }
+@media (max-width: 520px) { .icon-btn.pill span { display: none; } .icon-btn.pill { padding: 0; width: 48px; justify-content: center; } }
