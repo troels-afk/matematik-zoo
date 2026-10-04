@@ -2,7 +2,7 @@
 // Fremgang vises i verden: byggehegn → dyr flytter ind → gæster → flag → guldskær.
 // Bygningerne er tegnet enkelt her; AREA_ART kan pege på genererede tegninger, der så bruges i stedet.
 
-import { esc } from './util.js?v=20261004201654';
+import { esc } from './util.js?v=20261004202112';
 
 export const W = 1200, H = 960;
 
@@ -145,7 +145,7 @@ export function zooMap(d) {
     s += `<g class="m-tap" tabindex="0" role="button" aria-label="${esc(t.who.name)} har en opgave" data-task="${t.area}">
       <ellipse cx="${x}" cy="${y + 26}" rx="20" ry="6" fill="#000" opacity=".12"/>
       <circle cx="${x}" cy="${y}" r="27" fill="#fff"/><circle cx="${x}" cy="${y}" r="22" fill="#ffede6"/>${face}
-      ${t.done ? '' : `<g class="m-bang" style="animation-delay:${k * .5}s"><circle cx="${x + 20}" cy="${y - 30}" r="13" fill="#ff8a65" stroke="#fff" stroke-width="3"/><text x="${x + 20}" y="${y - 24}" text-anchor="middle" class="m-badge">!</text></g>`}
+      ${t.done || !t.active ? '' : `<g class="m-bang"><circle cx="${x + 20}" cy="${y - 30}" r="13" fill="#ff8a65" stroke="#fff" stroke-width="3"/><text x="${x + 20}" y="${y - 24}" text-anchor="middle" class="m-badge">!</text></g>`}
     </g>`;
   });
 

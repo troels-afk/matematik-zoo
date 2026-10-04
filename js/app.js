@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004201654';
-import * as E from './engine.js?v=20261004201654';
-import * as Z from './zoo.js?v=20261004201654';
-import { zooGate } from './scene.js?v=20261004201654';
-import { zooMap } from './map.js?v=20261004201654';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004201654';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004201654';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004201654';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004202112';
+import * as E from './engine.js?v=20261004202112';
+import * as Z from './zoo.js?v=20261004202112';
+import { zooGate } from './scene.js?v=20261004202112';
+import { zooMap } from './map.js?v=20261004202112';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004202112';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004202112';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004202112';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -347,19 +347,20 @@ function showHome() {
   const introduced = FACTS.filter((f) => E.factBox(st, f.key) >= 0)
     .map((f) => ({ f, due: st.facts[f.key].due <= today() }))
     .sort((a, b) => (b.due - a.due) || E.factBox(st, b.f.key) - E.factBox(st, a.f.key));
+  const openTasks = tasks.filter((t) => !t.done);
+  if (!openTasks.some((t) => t.area === S.mission)) S.mission = (openTasks[0] || tasks[0]).area;
   const mapData = {
     zooName: zname,
     guests: Z.guestsPerDay(st),
     stars: levels.filter((l) => l >= 3).length,
     week: { n: E.weekSessions(st), goal: E.WEEK_GOAL, label: `Uge ${isoWeek()}` },
     areas: AREAS.map((a, i) => ({ id: a.id, place: a.place, level: levels[i], animals: Z.ZONES[a.id].animals.map((e) => ({ emoji: e, art: Z.artFor(e) })) })),
-    tasks: tasks.map((t) => ({ area: t.area, done: t.done, who: { ...Z.CAST[t.who], id: t.who } })),
+    tasks: tasks.map((t) => ({ area: t.area, done: t.done, active: !doneToday && t.area === S.mission, who: { ...Z.CAST[t.who], id: t.who } })),
     babies: introduced.map(({ f, due }) => ({ art: Z.BABIES[f.key].img, emoji: Z.BABIES[f.key].emoji, awake: due })),
     due: fs.due,
     bodil: Z.CAST.bodil.bust,
   };
-  const open = tasks.filter((t) => !t.done);
-  if (!open.some((t) => t.area === S.mission)) S.mission = (open[0] || tasks[0]).area;
+  const open = openTasks;
   const mission = tasks.find((t) => t.area === S.mission);
   const first = mission;
   const todayLog = st.zoo.today?.date === today() ? st.zoo.today : null;
@@ -389,7 +390,11 @@ function showHome() {
   const svgEl = $('.zoo-map-svg');
   const act = (t) => {
     sfx('tap');
-    if (t.dataset.task) taskSheet(tasks.find((x) => x.area === t.dataset.task));
+    if (t.dataset.task) {
+      // Før træningen: figuren bliver dagens mission øverst. Efter: vis opgaven i et ark.
+      if (!doneToday) { S.mission = t.dataset.task; showHome(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      else taskSheet(tasks.find((x) => x.area === t.dataset.task));
+    }
     else if (t.dataset.area) areaSheet(t.dataset.area);
     else if (t.dataset.baby) babySheet();
     else if (t.dataset.bodil) bodilSheet(levels, first);

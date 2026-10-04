@@ -644,3 +644,4 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .mission-body { justify-self: stretch; }
   .mission-go .btn.big { width: 100%; min-width: 0; }
 }
+.m-bang { animation-duration: 2.6s; }
