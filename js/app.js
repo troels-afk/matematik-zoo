@@ -1,12 +1,12 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js';
-import * as E from './engine.js';
-import * as Z from './zoo.js';
-import { zooGate } from './scene.js';
-import { sfx, setSound, confetti, countUp } from './fx.js';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js';
-import { esc, fmt, frac, pick, today } from './util.js';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004193437';
+import * as E from './engine.js?v=20261004193437';
+import * as Z from './zoo.js?v=20261004193437';
+import { zooGate } from './scene.js?v=20261004193437';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004193437';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004193437';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004193437';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
