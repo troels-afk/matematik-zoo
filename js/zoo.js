@@ -1,55 +1,71 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261004210050';
-import * as E from './engine.js?v=20261004210050';
-import { today } from './util.js?v=20261004210050';
+import { AREAS, FACTS } from './curriculum.js?v=20261004212612';
+import * as E from './engine.js?v=20261004212612';
+import { today } from './util.js?v=20261004212612';
 
 export const CAST = {
   bodil: { name: 'Bodil', role: 'Zoo-direktør', emoji: '👵🏼', img: 'img/cast/bodil-face.webp', bust: 'img/cast/bodil.webp' },
   kaj: { name: 'Kaj', role: 'Papegøje', emoji: '🦜' },
-  nora: { name: 'Nora', role: 'Dyrepasser-elev', emoji: '👧🏼' },
+  nora: { name: 'Nora', role: 'Dyrepasser-elev', emoji: '👧🏼', img: 'img/cast/nora-face.webp', full: 'img/cast/nora.webp' },
   liv: { name: 'Liv', role: 'Laver skilte og kort', emoji: '👧🏻' },
   yasmin: { name: 'Yasmin', role: 'Dyrlæge-elev', emoji: '👧🏽' },
 };
 
+// Scener til "Dagens mission": stedet bagest og dyret i midten. Figuren forrest er
+// missionens figur (CAST[who].full). Områder uden scene viser figur og unge i en cirkel.
+export const SCENES = {
+  gange: { bg: 'img/scene/foderstation.webp', animal: 'img/scene/giraf.webp', alt: 'Giraffernes foderstation' },
+};
+
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)
+// done[i] er slutningen på tasks[i] ({who} = missionens figur) – vises, når missionen er klaret
 export const ZONES = {
   tal: {
     animals: ['🦩', '🦢', '🦆'], who: 'bodil', blurb: 'Indgangen, billetlugen og flamingosøen', step: 'tæl gæster og billetter',
     tasks: ['Tæl dagens gæster i billetlugen', 'Lav besøgsrapporten til Bodil', 'Der er kø ved billetlugen – hjælp til!'],
+    done: ['Du hjalp {who} med at tælle dagens gæster.', 'Du hjalp {who} med besøgsrapporten til Bodil.', 'Du fik køen ved billetlugen til at glide.'],
   },
   gange: {
     animals: ['🦒', '🐘', '🦛'], who: 'nora', blurb: 'Her bestilles foder til de store dyr', step: 'regn foderet ud til de store dyr',
     tasks: ['Bestil blade til giraferne', 'Regn ugens foder ud til elefanterne', 'Hjælp Nora med den store foderbestilling'],
+    done: ['Du hjalp {who} med giraffernes foder.', 'Du hjalp {who} med elefanternes foder til hele ugen.', 'Du hjalp {who} med den store foderbestilling.'],
   },
   division: {
     animals: ['🐒', '🐿️', '🦫'], who: 'nora', blurb: 'Maden fordeles ligeligt – resten går til Kaj', step: 'fordel maden ligeligt mellem dyrene',
     tasks: ['Fordel bananerne ligeligt mellem aberne', 'Gør madskålene klar til abehuset', 'Del frugten ud – Kaj holder øje med resten'],
+    done: ['Du fordelte bananerne ligeligt mellem aberne.', 'Du hjalp {who} med madskålene til abehuset.', 'Du delte frugten ud – og Kaj fik resten.'],
   },
   brok: {
     animals: ['🦭', '🐻‍❄️', '🦦'], who: 'nora', blurb: 'Bassiner, fiskespande og pingvinunger', step: 'del fisk og bassiner i brøkdele',
     tasks: ['Fyld pingvinbassinet op', 'Del fiskespandene mellem pingvinerne', 'Hjælp Nora med sælernes madplan'],
+    done: ['Du hjalp {who} med at fylde pingvinbassinet op.', 'Du delte fiskespandene mellem pingvinerne.', 'Du hjalp {who} med sælernes madplan.'],
   },
   decimal: {
     animals: ['🦔', '🐢', '🦥'], who: 'yasmin', blurb: 'Dyrene vejes, måles og får medicin', step: 'vej og mål dyrene i klinikken',
     tasks: ['Vej den nye surikatunge', 'Tjek om pindsvinet har taget på', 'Hjælp Yasmin med at måle medicin op'],
+    done: ['Du hjalp {who} med at veje den nye surikatunge.', 'Du hjalp {who} med at tjekke pindsvinets vægt.', 'Du hjalp {who} med at måle medicinen op.'],
   },
   geometri: {
     animals: ['🦓', '🦏', '🐪'], who: 'liv', blurb: 'Hegn, anlæg og nye indhegninger', step: 'mål hegn og anlæg op',
     tasks: ['Byg et nyt hegn til zebraerne', 'Tegn det nye næsehorn-anlæg', 'Hjælp Liv med at måle anlæggene op'],
+    done: ['Du hjalp {who} med zebraernes nye hegn.', 'Du hjalp {who} med at tegne næsehorn-anlægget.', 'Du hjalp {who} med at måle anlæggene op.'],
   },
   maaling: {
     animals: ['🦁', '🐯', '🐆'], who: 'nora', blurb: 'Fodringstider, shows og åbningstider', step: 'hold styr på tider og mål',
     tasks: ['Lav fodringsplanen for rovdyrene', 'Tjek zoo-uret før løvefodringen', 'Hold styr på tiderne til sæl-showet'],
+    done: ['Du hjalp {who} med rovdyrenes fodringsplan.', 'Du hjalp {who} med at holde tiden til løvefodringen.', 'Du hjalp {who} med tiderne til sæl-showet.'],
   },
   data: {
     animals: ['🐼', '🐨', '🦘'], who: 'liv', blurb: 'Hvad synes gæsterne? Tæl, spørg og tegn diagrammer', step: 'tæl og tegn diagrammer over gæsterne',
     tasks: ['Find gæsternes yndlingsdyr', 'Lav et diagram til opslagstavlen', 'Hjælp Liv med gæsteundersøgelsen'],
+    done: ['Du fandt gæsternes yndlingsdyr.', 'Du hjalp {who} med diagrammet til opslagstavlen.', 'Du hjalp {who} med gæsteundersøgelsen.'],
   },
   algebra: {
     animals: ['🦊', '🦝', '🦉'], who: 'kaj', blurb: 'Pote-spor og kodelåse til gæsternes skattejagt', step: 'knæk koder og følg pote-spor',
     tasks: ['Lav en skattejagt til gæsterne', 'Knæk koden til Kajs skattekiste', "Følg pote-sporet gennem zoo'en"],
+    done: ['Du hjalp {who} med skattejagten til gæsterne.', 'Du knækkede koden til Kajs skattekiste.', "Du fulgte pote-sporet hele vejen gennem zoo'en."],
   },
 };
 
@@ -227,6 +243,19 @@ export function goodnight(state) {
 }
 
 // Tegning til et dyr ud fra dets emoji (bruges på kort, kortet over zoo'en og porten)
+// Slutningen på en mission: "Du hjalp Nora med giraffernes foder."
+export function missionDoneText(areaId, title, who) {
+  const z = ZONES[areaId], i = z.tasks.indexOf(title);
+  const t = z.done[i] || `Du hjalp {who} i ${AREAS.find((a) => a.id === areaId).place}.`;
+  return t.replace('{who}', CAST[who]?.name || CAST[z.who].name);
+}
+
+// Dyret bag en emoji (navn og tegning) – fx til "En girafunge er flyttet ind"
+export function animalFor(emoji) {
+  return Object.values(BABIES).find((b) => b.emoji === emoji) || null;
+}
+export const withArticle = (kind) => `${/(føl|lam|kid)$/.test(kind) ? 'et' : 'en'} ${kind}`;
+
 export function artFor(emoji) {
   for (const b of Object.values(BABIES)) if (b.emoji === emoji && b.img) return b.img;
   return null;

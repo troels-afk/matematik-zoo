@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004210050';
-import * as E from './engine.js?v=20261004210050';
-import * as Z from './zoo.js?v=20261004210050';
-import { zooGate } from './scene.js?v=20261004210050';
-import { zooMap } from './map.js?v=20261004210050';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004210050';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004210050';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004210050';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004212612';
+import * as E from './engine.js?v=20261004212612';
+import * as Z from './zoo.js?v=20261004212612';
+import { zooGate } from './scene.js?v=20261004212612';
+import { zooMap } from './map.js?v=20261004212612';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004212612';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004212612';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004212612';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -425,17 +425,40 @@ function showHome() {
   on('#parent', 'click', parentGate);
 }
 
-// Dagens mission: hvem har brug for hjælp, hvad skal der ske, og én knap
-function missionCard(st, t, open) {
-  const a = areaOf(t.area), z = Z.ZONES[t.area], c = Z.CAST[t.who];
-  const cur = E.currentSkill(st, t.area);
+// Missionens billede: en scene (Z.SCENES) eller figur + unge i en cirkel.
+// after = missionen er klaret: figurerne jubler, og der er stjerner og blade i luften.
+function missionVisual(t, after = false) {
+  const z = Z.ZONES[t.area], c = Z.CAST[t.who], scene = Z.SCENES[t.area];
+  const party = after ? `<span class="party" aria-hidden="true">${'<i></i>'.repeat(9)}</span>` : '';
+  if (scene) {
+    // Et lille udsnit af zoo'en: stedet bagest, dyret i midten og figuren forrest
+    return `<div class="mission-scene ${after ? 'after' : ''}" role="img" aria-label="${esc(scene.alt)}">
+        <img class="ms-bg" src="${scene.bg}" alt="" draggable="false">
+        <img class="ms-animal" src="${scene.animal}" alt="" draggable="false">
+        ${c.full ? `<img class="ms-who" src="${c.full}" alt="" draggable="false">` : ''}
+        ${after && c.full ? '<span class="ms-say" aria-hidden="true">Tak for hjælpen! 💛</span>' : ''}${party}
+      </div>`;
+  }
   const art = z.animals.map((e) => Z.artFor(e)).find(Boolean);
   const portrait = c.bust || c.img
     ? `<img class="mission-face" src="${c.bust || c.img}" alt="${c.name}">`
     : `<span class="mission-emoji" aria-hidden="true">${c.emoji}</span>`;
+  return `<div class="mission-art ${after ? 'after' : ''}">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}${party}</div>`;
+}
+
+// "Du hjalp <b>Nora</b> med giraffernes foder."
+function missionDoneHtml(t) {
+  const name = Z.CAST[t.who]?.name || '';
+  return esc(Z.missionDoneText(t.area, t.title, t.who)).replace(name, `<b>${name}</b>`);
+}
+
+// Dagens mission: hvem har brug for hjælp, hvad skal der ske, og én knap
+function missionCard(st, t, open) {
+  const a = areaOf(t.area), z = Z.ZONES[t.area], c = Z.CAST[t.who];
+  const cur = E.currentSkill(st, t.area);
   return `
-    <section class="mission card">
-      <div class="mission-art">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}</div>
+    <section class="mission card ${Z.SCENES[t.area] ? 'has-scene' : ''}">
+      ${missionVisual(t)}
       <div class="mission-body">
         <span class="kicker with-ic">${ui('opgave')}Dagens mission</span>
         <h1>${t.title}</h1>
@@ -455,6 +478,25 @@ function missionCard(st, t, open) {
 }
 
 function missionDone(st, log) {
+  // Efter dagens mission: samme scene som ved starten, nu i "efter"-tilstand
+  if (log?.mission) {
+    const t = { area: log.area, who: log.mission.who, title: log.mission.title };
+    const chips = (log.chips || []).slice(0, 3);
+    return `
+    <section class="mission card done ${Z.SCENES[t.area] ? 'has-scene' : ''}">
+      ${missionVisual(t, true)}
+      <div class="mission-body">
+        <span class="kicker with-ic">${ui('opgave')}${esc(t.title)} <span class="ok">✓</span></span>
+        <h1>Mission klaret!</h1>
+        <p class="mission-need">${missionDoneHtml(t)}</p>
+        ${chips.length ? `<ul class="payoff-extras">${chips.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
+        <div class="mission-go">
+          <button class="btn ghost" id="again">Tag en vagt mere</button>
+          <button class="link" id="see-baby">Se Babyhuset</button>
+        </div>
+      </div>
+    </section>`;
+  }
   const a = log ? areaOf(log.area) : null;
   const wins = log?.wins?.length ? log.wins : [];
   const items = [
@@ -1096,13 +1138,18 @@ function finish() {
   const n = run.results.length;
   const backSet = PRACTICE_SETS.find((x) => x.id === run.sess.area);
   if (run.mode === 'daily') {
-    // Til forsidens "Dagens mission er klaret" (lægges oven i tidligere vagter i dag)
+    const res = missionResults(st, run, b, after, born, grew);
+    // Til forsidens "Mission klaret" (lægges oven i tidligere vagter i dag)
     const prev = st.zoo.today?.date === today() ? st.zoo.today : null;
     st.zoo.today = {
       date: today(), area: run.sess.area,
+      mission: { who: res.t.who, title: res.t.title }, chips: [res.mainChip, ...res.extras].slice(0, 3),
       wins: [...wins, ...(prev?.wins || [])].slice(0, 6),
       diff: (prev?.diff || 0) + (after.guests - b.guests),
     };
+    save(true);
+    S.run = null;
+    return showPayoff(st, res, b, after, bigWin);
   }
   save(true);
   S.run = null;
@@ -1131,6 +1178,88 @@ function finish() {
   on('#sprint', 'click', startSprint);
   setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 350);
   if (bigWin) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
+}
+
+// Hvad kom der ud af missionen? Det vigtigste først: nyt dyr > guld-område > flere gæster >
+// fremgang i området. Derefter højst 3 små ekstra resultater.
+function missionResults(st, run, b, after, born, grew) {
+  const area = run.sess.area;
+  const m = run.mission || Z.taskFor(area);
+  const t = { area, who: m.who, title: m.title };
+  const cap = (s) => s[0].toUpperCase() + s.slice(1);
+  const moved = (a, lv) => {
+    const an = Z.animalFor(Z.ZONES[a.id].animals[lv - 1]);
+    return `${cap(an ? Z.withArticle(an.kind) : 'et nyt dyr')} er flyttet ind`;
+  };
+  const ups = [];
+  AREAS.forEach((a, i) => { for (let lv = b.levels[i] + 1; lv <= after.levels[i]; lv++) ups.push({ a, lv }); });
+  ups.sort((x, y) => (y.a.id === area) - (x.a.id === area));
+  const upChip = ({ a, lv }) => (lv === 4
+    ? { e: '🌟', t: `${a.place} er blevet et guld-område` }
+    : { e: Z.LEVELS[lv].icon, t: `${moved(a, lv)} i ${a.place}` });
+  const diff = after.guests - b.guests;
+  const up = ups.find((u) => u.lv <= 3) || ups[0];
+
+  let main, mainChip;
+  if (up && up.lv <= 3) {
+    const L = Z.LEVELS[up.lv], emoji = Z.ZONES[up.a.id].animals[up.lv - 1];
+    main = { kind: 'animal', art: Z.artFor(emoji), emoji, kicker: `Ny beboer i ${up.a.place}!`, title: moved(up.a, up.lv), sub: `${L.icon} Nyt niveau: ${L.name}` };
+    mainChip = upChip(up);
+  } else if (up) {
+    main = { kind: 'level', emoji: '🌟', kicker: 'Nyt niveau!', title: `${up.a.place} er blevet et guld-område`, sub: 'Alt sidder – også dagen efter.' };
+    mainChip = upChip(up);
+  } else if (diff > 0) {
+    main = { kind: 'guests', emoji: '🎟️', kicker: 'Flere gæster', title: `<span id="gc">${fmt(b.guests)}</span> gæster om dagen`, sub: `+${fmt(diff)} efter dagens vagt` };
+    mainChip = { e: '🎟️', t: `+${fmt(diff)} gæster om dagen` };
+  } else {
+    const a = areaOf(area), p = E.areaProgress(st, area), L = Z.LEVELS[Z.areaLevel(st, area)];
+    main = { kind: 'progress', icon: 'area', kicker: `${a.place} · ${L.icon} ${L.name}`, title: `${p.done} af ${p.total} færdigheder er sikre`, sub: Z.nextStep(st, a), pct: Math.round((100 * p.done) / p.total) };
+    mainChip = { e: L.icon, t: `${p.done} af ${p.total} færdigheder sikre i ${a.place}` };
+  }
+
+  const extras = ups.filter((u) => u !== up).map(upChip);
+  const ids = Object.keys(ALL_SKILLS);
+  const mastered = ids.filter((id) => after.status[id] === 'mestret' && b.status[id] !== 'mestret');
+  const secure = ids.filter((id) => after.status[id] === 'sikker' && !['sikker', 'mestret'].includes(b.status[id]));
+  if (mastered.length) extras.push({ e: '🌟', t: mastered.length === 1 ? `Mestret: ${ALL_SKILLS[mastered[0]].name.toLowerCase()}` : `${mastered.length} færdigheder er mestret` });
+  if (secure.length) extras.push({ e: '⭐', t: secure.length === 1 ? `Sikker i ${ALL_SKILLS[secure[0]].name.toLowerCase()}` : `Sikker i ${secure.length} færdigheder` });
+  if (main.kind !== 'guests' && diff > 0) extras.push({ e: '🎟️', t: `+${fmt(diff)} gæster om dagen` });
+  if (born.length) extras.push({ e: '🍼', t: born.length === 1 ? `Ny unge i Babyhuset: ${Z.BABIES[born[0].key].name}` : `${born.length} nye unger i Babyhuset` });
+  if (grew.length) extras.push({ e: '✨', t: grew.length === 1 ? `${Z.BABIES[grew[0].key].name} voksede` : `${grew.length} unger voksede` });
+  const unl = ids.find((id) => !ALL_SKILLS[id].practice && after.unlocked[id] && !b.unlocked[id]);
+  if (unl) extras.push({ e: '🔓', t: `Nyt emne: ${ALL_SKILLS[unl].name}` });
+  const wk = E.weekSessions(st);
+  extras.push({ e: '📅', t: wk >= E.WEEK_GOAL ? `Ugens mål er nået: ${wk} dage` : `${wk} af ${E.WEEK_GOAL} dage denne uge` });
+  return { t, main, mainChip, extras: extras.slice(0, 3) };
+}
+
+// Missionens slutning: samme scene som ved starten, nu i "efter"-tilstand
+function showPayoff(st, res, b, after, bigWin) {
+  const { t, main } = res;
+  const art = main.art ? `<img src="${main.art}" alt="">` : main.icon ? ui(main.icon) : `<span aria-hidden="true">${main.emoji}</span>`;
+  view(`
+    <section class="mission card payoff ${Z.SCENES[t.area] ? 'has-scene' : ''}">
+      ${missionVisual(t, true)}
+      <div class="mission-body">
+        <span class="kicker with-ic">${ui('opgave')}${esc(t.title)} <span class="ok">✓</span></span>
+        <h1>Mission klaret!</h1>
+        <p class="mission-need">${missionDoneHtml(t)}</p>
+        <div class="payoff-main pm-${main.kind}">
+          <span class="pm-art">${art}</span>
+          <div class="pm-txt"><span class="pm-kicker">${esc(main.kicker)}</span><b class="pm-title">${main.title}</b>
+            ${main.sub ? `<span class="pm-sub">${esc(main.sub)}</span>` : ''}${main.pct != null ? `<span class="pm-bar"><i style="width:${main.pct}%"></i></span>` : ''}</div>
+        </div>
+        ${res.extras.length ? `<ul class="payoff-extras">${res.extras.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
+        <div class="mission-go">
+          <button class="btn big" id="home">Se din zoo</button>
+          ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
+        </div>
+      </div>
+    </section>`, (e) => { if (e.key === 'Enter') showHome(); });
+  on('#home', 'click', showHome);
+  on('#sprint', 'click', startSprint);
+  if (main.kind === 'guests') setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 500);
+  if (bigWin) { sfx('level'); setTimeout(() => confetti(), 300); } else sfx('finish');
 }
 
 // ================= Dyrebogen =================

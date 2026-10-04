@@ -615,13 +615,14 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 /* ---------- Dagens mission (forsidens hovedfokus) ---------- */
 .home-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
 .home-top .me-chip { background: var(--card); box-shadow: var(--shadow); color: var(--ink); }
-.mission { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 26px; align-items: center; padding: 26px 28px;
+/* --art styrer billedets størrelse: figuren i cirklen og dyret, der kigger frem */
+.mission { --art: clamp(260px, 32vw, 340px); display: grid; grid-template-columns: var(--art) minmax(0, 1fr); gap: 32px; align-items: center; padding: 26px 28px;
   background: linear-gradient(135deg, var(--sun-soft), var(--card) 60%); border: 2px solid color-mix(in srgb, var(--sun) 45%, transparent); }
-.mission .mission-art { position: relative; width: 220px; height: 220px; border-radius: 50%; background: var(--card);
+.mission .mission-art { position: relative; width: var(--art); height: var(--art); border-radius: 50%; background: var(--card);
   box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--sun) 35%, transparent); display: grid; place-items: center; }
 .mission-face { width: 92%; height: auto; border-radius: 50%; }
-.mission-emoji { font-size: 110px; line-height: 1; }
-.mission-animal { position: absolute; right: -14px; bottom: -6px; width: 104px; height: 104px; filter: drop-shadow(0 6px 10px rgba(31, 51, 70, .18)); animation: bob 3s ease-in-out infinite; }
+.mission-emoji { font-size: calc(var(--art) * .5); line-height: 1; }
+.mission-animal { position: absolute; right: calc(var(--art) * -.06); bottom: calc(var(--art) * -.04); width: calc(var(--art) * .52); height: calc(var(--art) * .52); filter: drop-shadow(0 6px 10px rgba(31, 51, 70, .18)); animation: bob 3s ease-in-out infinite; }
 .mission-body { display: grid; gap: 12px; min-width: 0; }
 .mission-body h1 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); margin: 0; }
 .mission-need { font-size: 1.15rem; margin: 0; }
@@ -638,10 +639,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .mission.done .kicker { color: var(--primary-ink); }
 .mission.done .wins li { background: var(--card); }
 @media (max-width: 760px) {
-  .mission { grid-template-columns: 1fr; justify-items: center; text-align: left; padding: 20px; }
-  .mission .mission-art { width: 150px; height: 150px; }
-  .mission-animal { width: 76px; height: 76px; }
-  .mission-emoji { font-size: 76px; }
+  .mission { --art: min(230px, 60vw); grid-template-columns: 1fr; justify-items: center; text-align: left; padding: 20px; gap: 22px; }
   .mission-body { justify-self: stretch; }
   .mission-go .btn.big { width: 100%; min-width: 0; }
 }
@@ -684,8 +682,9 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .icon-btn.snd.off .ui-ic { filter: grayscale(1); opacity: .45; }
 .icon-btn.snd.off::after { content: ''; position: absolute; width: 34px; height: 4px; border-radius: 2px; background: var(--ink-2); transform: rotate(-45deg); box-shadow: 0 0 0 2px var(--card); }
 .kicker.with-ic { display: inline-flex; align-items: center; gap: 8px; }
-.mission-steps .si { position: relative; width: 44px; height: 44px; flex: none; }
-.mission-steps .si .ui-ic { width: 44px; height: 44px; }
+.mission-steps .si { position: relative; width: 54px; height: 54px; flex: none; }
+.mission-steps .si .ui-ic { width: 54px; height: 54px; }
+@media (max-width: 760px) { .mission-steps .si, .mission-steps .si .ui-ic { width: 46px; height: 46px; } }
 .mission-steps .si i { position: absolute; right: -4px; bottom: -3px; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center;
   background: var(--primary-ink); color: var(--card); font: 600 .72rem var(--font-head); box-shadow: 0 0 0 2px var(--card); }
 .sheet-plan span { display: inline-flex; align-items: center; gap: 6px; }
@@ -710,4 +709,86 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .mt-steps li:not(.current) { padding: 2px 3px; }
   .mt-steps li.current { flex: 0 1 auto; min-width: 0; }
   .mt-steps li.current .mt-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ---------- Dagens mission som scene (områder med SCENES i zoo.js) ---------- */
+/* Tekst og knap til venstre på en rolig, lys baggrund; til højre et lille udsnit af zoo'en:
+   stedet bagest, dyret i midten og figuren forrest. Giraffen kigger op over kortets kant. */
+.mission.has-scene { grid-template-columns: minmax(0, 1fr) minmax(250px, 48%); grid-template-areas: "body scene"; justify-items: stretch;
+  gap: 12px; padding: 26px 0 26px 30px; margin-top: 40px;
+  background: radial-gradient(ellipse 52% 70% at 84% 100%, color-mix(in srgb, var(--good) 20%, transparent), transparent 72%),
+    linear-gradient(135deg, var(--sun-soft), var(--card) 58%); }
+.mission.has-scene .mission-body { grid-area: body; }
+/* Fast forhold, så kompositionen er den samme i alle bredder; scenen står på kortets bundkant */
+.mission-scene { grid-area: scene; position: relative; align-self: end; aspect-ratio: 20 / 19; margin: -26px 0; }
+.mission-scene img { position: absolute; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.ms-bg { right: 0; bottom: 24%; width: 76%; height: auto; }
+.ms-animal { right: 4%; bottom: 3%; height: 104%; width: auto; filter: drop-shadow(0 8px 10px rgba(31, 51, 70, .12)); }
+.ms-who { left: -4%; bottom: -3%; height: 70%; width: auto; filter: drop-shadow(0 8px 12px rgba(31, 51, 70, .14)); }
+@media (max-width: 640px) {
+  .mission.has-scene { grid-template-columns: 1fr; grid-template-areas: "scene" "body"; padding: 0 18px 20px; margin-top: 48px; gap: 14px;
+    background: radial-gradient(ellipse 85% 34% at 50% 26%, color-mix(in srgb, var(--good) 18%, transparent), transparent 75%),
+      linear-gradient(180deg, var(--sun-soft), var(--card) 50%); }
+  .mission-scene { aspect-ratio: auto; align-self: auto; height: 210px; margin: 0 -18px; }
+  .ms-bg { width: auto; height: 50%; right: auto; left: calc(50% - 26px); bottom: 20%; }
+  .ms-animal { right: auto; left: calc(50% - 44px); bottom: 0; height: 116%; }
+  .ms-who { left: auto; right: calc(50% + 2px); bottom: -4%; height: 92%; }
+}
+
+/* ---------- Mission klaret: samme scene som ved starten, nu i "efter"-tilstand ---------- */
+.mission.payoff { margin-top: max(40px, 9vh); }
+.kicker .ok { color: var(--primary); font-weight: 900; }
+/* Varmt lys bag figurerne; på slutskærmen hopper de af glæde et par gange */
+.mission-scene.after::before { content: ''; position: absolute; inset: 4% -2% 0 2%; border-radius: 50%;
+  background: radial-gradient(circle at 52% 58%, color-mix(in srgb, var(--sun) 46%, transparent), transparent 64%); }
+.payoff .mission-scene.after .ms-animal { animation: cheer 1s cubic-bezier(.3, .7, .4, 1) .3s 2 both; }
+.payoff .mission-scene.after .ms-who { animation: cheer .9s cubic-bezier(.3, .7, .4, 1) .5s 2 both; }
+.payoff .mission-art.after .mission-animal { animation: cheer 1s cubic-bezier(.3, .7, .4, 1) .3s 2 both, bob 3s ease-in-out 2.4s infinite; }
+@keyframes cheer { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(-6%); } 65% { transform: translateY(1.5%); } }
+.ms-say { position: absolute; z-index: 2; left: 0; top: 9%; padding: 8px 14px; border-radius: 16px; background: var(--card); color: var(--ink);
+  font: 600 .95rem var(--font-head); white-space: nowrap; box-shadow: var(--shadow); animation: pop .35s ease-out .8s both; }
+.ms-say::after { content: ''; position: absolute; left: 30px; bottom: -8px; border: 8px solid transparent; border-top-color: var(--card); border-bottom: 0; }
+/* Stjerner, blade og konfetti – små og diskrete */
+.party { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.party i { position: absolute; display: block; width: 22px; height: 22px; }
+.party i:nth-child(3n+1) { background: var(--sun); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: twinkle 1.8s ease-in-out infinite; }
+.party i:nth-child(3n+2) { width: 15px; height: 10px; border-radius: 0 100% 0 100%; background: var(--primary); animation: leaf-drift 4.5s ease-in-out infinite alternate; }
+.party i:nth-child(3n) { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); animation: twinkle 2.4s ease-in-out infinite; }
+.party i:nth-child(1) { top: 3%; left: 50%; animation-delay: .2s; }
+.party i:nth-child(2) { top: 15%; left: 24%; }
+.party i:nth-child(3) { top: 9%; left: 86%; background: var(--sky); }
+.party i:nth-child(4) { top: 32%; left: 93%; width: 13px; height: 13px; animation-delay: .7s; }
+.party i:nth-child(5) { top: 46%; left: 5%; animation-delay: -1.5s; }
+.party i:nth-child(6) { top: 1%; left: 30%; background: var(--lav); }
+.party i:nth-child(7) { top: 25%; left: 38%; width: 12px; height: 12px; animation-delay: 1.1s; }
+.party i:nth-child(8) { top: 21%; left: 72%; animation-delay: -3s; }
+.party i:nth-child(9) { top: 55%; left: 96%; }
+@keyframes twinkle { 0%, 100% { transform: scale(.55) rotate(0); opacity: .45; } 50% { transform: scale(1.1) rotate(20deg); opacity: 1; } }
+@keyframes leaf-drift { from { transform: translateY(0) rotate(-15deg); } to { transform: translateY(14px) rotate(25deg); } }
+/* Hovedresultatet og de små ekstra */
+.payoff-main { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 18px; background: var(--card);
+  border: 2px solid color-mix(in srgb, var(--sun) 55%, transparent); box-shadow: var(--shadow-sm); }
+.pm-art { width: 64px; height: 64px; flex: none; display: grid; place-items: center; font-size: 2.4rem; line-height: 1; }
+.pm-art img { width: 100%; height: 100%; object-fit: contain; }
+.pm-animal .pm-art { width: 76px; height: 76px; }
+.pm-animal .pm-art img { animation: grow-pop .7s cubic-bezier(.3, 1.6, .5, 1) .6s both; }
+.pm-txt { display: grid; gap: 2px; min-width: 0; }
+.pm-kicker { font: 600 .74rem var(--font-head); text-transform: uppercase; letter-spacing: 1px; color: var(--warm); }
+.pm-title { font: 600 1.2rem/1.25 var(--font-head); color: var(--ink); }
+.pm-sub { font-size: .9rem; font-weight: 700; color: var(--ink-2); }
+.pm-bar { display: block; height: 8px; margin-top: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.pm-bar i { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.payoff-extras { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.payoff-extras li { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 9px; border-radius: 99px; background: var(--card);
+  border: 1px solid var(--line); font: 600 .88rem var(--font-head); color: var(--ink); }
+.payoff-extras .e { font-size: 1.05rem; line-height: 1; }
+@media (max-width: 760px) { .mission.payoff:not(.has-scene) { --art: min(190px, 50vw); } }
+@media (max-width: 640px) {
+  .ms-say { display: none; }
+  .pm-art { width: 54px; height: 54px; font-size: 2rem; }
+  .pm-animal .pm-art { width: 64px; height: 64px; }
+  .pm-title { font-size: 1.08rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mission-scene.after img, .mission-art.after img, .party i, .ms-say, .pm-art img { animation: none !important; }
 }
