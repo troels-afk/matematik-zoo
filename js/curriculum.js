@@ -16,6 +16,42 @@ function randDigits(len) {
   return ri(10 ** (len - 1), 10 ** len - 1);
 }
 
+// ---------- Zoo-kontekst: én kort linje over det store regnestykke (ca. halvdelen af gangene) ----------
+const big = (expr) => `<span class="big-expr">${expr}</span>`;
+const withZoo = (line, expr) => (line ? `${line}${big(expr)}` : big(expr));
+const ZOO_P = 0.5;
+
+// a × b – n grupper med "per" i hver (små tal)
+const timesLine = (a, b) => {
+  const [n, per] = a <= b ? [a, b] : [b, a];
+  return pick([
+    `Zoo-toget har ${n} vogne med ${per} pladser i hver. Hvor mange pladser er der i alt?`,
+    `Giraferne spiser ${per} kg blade om dagen. Hvor meget spiser de på ${n} dage?`,
+    `En familiebillet koster ${per} kr. Hvad koster ${n} familiebilletter?`,
+    `Zoo'en køber ${n} kasser bananer med ${per} bananer i hver. Hvor mange bananer er det?`,
+  ]);
+};
+// Store tal × et lille tal
+const bigTimesLine = (per, n) => pick([
+  `Elefanterne spiser ${per} kg hø om ugen. Hvor meget spiser de på ${n} uger?`,
+  `Der kommer ${per} gæster til sæl-showet hver dag. Hvor mange kommer der på ${n} dage?`,
+  `En palle fiskefoder vejer ${per} kg. Hvad vejer ${n} paller?`,
+  `Zoo-butikken sælger ${per} postkort om måneden. Hvor mange sælger den på ${n} måneder?`,
+]);
+// a : d med små tal
+const divLine = (a, d) => pick([
+  `${a} bananer skal deles ligeligt mellem ${d} aber. Hvor mange får hver abe?`,
+  `${a} fisk skal fordeles i ${d} spande med lige mange i hver. Hvor mange fisk kommer der i hver spand?`,
+  `${a} gæster deler sig i ${d} lige store grupper til rundvisning. Hvor mange er der i hver gruppe?`,
+  `Kaj har ${a} solsikkekerner, som han gemmer i ${d} lige store bunker. Hvor mange er der i hver bunke?`,
+]);
+// a : d med store tal
+const bigDivLine = (a, d) => pick([
+  `Nora vil fordele ${a} gulerødder ligeligt i ${d} skåle. Hvor mange kommer der i hver skål?`,
+  `Zoo'en har ${a} kg hø, som skal række i ${d} uger. Hvor mange kg kan der bruges pr. uge?`,
+  `${a} skolebørn skal fordeles ligeligt på ${d} rundvisninger. Hvor mange kommer med på hver?`,
+]);
+
 // Opdel et tal i positioner, fx 347 -> [300, 40, 7] (nuller springes over)
 function splitPlaces(n) {
   return digitsOf(n).map((d, p) => d * pow10(p)).reverse().filter((x) => x > 0);
@@ -41,7 +77,9 @@ const positionssystem = {
         d = digitsOf(n)[p];
       } while (d === 0 || digitsOf(n).filter((x) => x === d).length > 1);
       return {
-        prompt: `Hvad er cifferet <b>${d}</b> værd i tallet <b>${fmt(n)}</b>?`,
+        prompt: chance(ZOO_P)
+          ? `Billetlugen har solgt <b>${fmt(n)}</b> billetter i år. Hvad er cifferet <b>${d}</b> værd i det tal?`
+          : `Hvad er cifferet <b>${d}</b> værd i tallet <b>${fmt(n)}</b>?`,
         input: 'number',
         answer: d * pow10(p),
         explain: `${d}-tallet står på ${PLACE[p]} plads, så det er <b>${fmt(d * pow10(p))}</b> værd.`,
@@ -178,7 +216,7 @@ const plusminus = {
       explain = `Træk fra i bidder: ${chain.join(' ')}. Svaret er <b>${fmt(ans)}</b>.`;
     }
     let prompt = `<span class="big-expr">${fmt(a)} ${add ? '+' : '−'} ${fmt(b)}</span>`;
-    if (chance(0.35)) {
+    if (chance(ZOO_P)) {
       prompt = add
         ? pick([
           `Om formiddagen kom der ${fmt(a)} gæster i zoo'en, og om eftermiddagen kom der ${fmt(b)}. Hvor mange gæster kom der i alt?`,
@@ -224,7 +262,7 @@ const gange10 = {
       explain = `${big} er ${s} ${UNIT[z]}. ${s} ${UNIT[z]} × ${other} = ${s * other} ${UNIT[z]} = <b>${fmt(ans)}</b>.`;
     }
     if (chance(0.5)) [a, b] = [b, a];
-    return { prompt: `<span class="big-expr">${fmt(a)} × ${fmt(b)}</span>`, input: 'number', answer: ans, explain };
+    return { prompt: withZoo(chance(ZOO_P) && timesLine(a, b), `${fmt(a)} × ${fmt(b)}`), input: 'number', answer: ans, explain };
   },
 };
 
@@ -244,7 +282,7 @@ const gangeflercifret = {
     const parts = splitPlaces(a);
     const ans = a * b;
     return {
-      prompt: `<span class="big-expr">${a} × ${b}</span>`,
+      prompt: withZoo(chance(ZOO_P) && bigTimesLine(a, b), `${a} × ${b}`),
       input: 'number',
       answer: ans,
       explain: `Del ${a} op: ${parts.map((p) => `${p}×${b}`).join(' + ')} = ${parts.map((p) => fmt(p * b)).join(' + ')} = <b>${fmt(ans)}</b>.`,
@@ -305,7 +343,7 @@ const divtabel = {
     const d = pick([[2, 5, 10], [3, 4, 2, 5], [6, 7, 8, 9]][level - 1]);
     const q = ri(level === 1 ? 2 : 3, 10), a = d * q;
     return {
-      prompt: `<span class="big-expr">${a} : ${d}</span>`,
+      prompt: withZoo(chance(ZOO_P) && divLine(a, d), `${a} : ${d}`),
       input: 'number', answer: q,
       explain: `Tænk: ${d} × ? = ${a}. Da ${d} × ${q} = ${a}, er ${a} : ${d} = <b>${q}</b>.`,
       explainVisual: a <= 60 ? V.groups(a, d) : null,
@@ -324,7 +362,10 @@ const divrest = {
     const [dr, qr] = [[[2, 5], [2, 6]], [[3, 6], [3, 9]], [[6, 9], [4, 10]]][level - 1];
     const d = ri(...dr), q = ri(...qr), r = ri(1, d - 1), a = d * q + r;
     return {
-      prompt: `<span class="big-expr">${a} : ${d}</span>`,
+      prompt: withZoo(chance(ZOO_P) && pick([
+        `${a} fisk deles ligeligt mellem ${d} pingviner. Hvor mange får hver – og hvor mange er der tilbage til Kaj?`,
+        `${a} gulerødder fordeles i ${d} skåle med lige mange i hver. Hvor mange kommer der i hver skål, og hvor mange bliver tilbage?`,
+      ]), `${a} : ${d}`),
       input: 'qr', answer: [q, r],
       explain: `${d} × ${q} = ${d * q}. Der er ${a} − ${d * q} = ${r} tilbage. Så ${a} : ${d} = <b>${q} rest ${r}</b>.`,
     };
@@ -354,7 +395,7 @@ const divflercifret = {
     const explain = rest === 0
       ? `${a} : ${d} = <b>${q}</b>, fordi ${d} × ${q} = ${a}.`
       : `Del op: ${a} = ${big} + ${rest}. ${big} : ${d} = ${big / d} og ${rest} : ${d} = ${rest / d}. I alt <b>${q}</b>.`;
-    return { prompt: `<span class="big-expr">${a} : ${d}</span>`, input: 'number', answer: q, explain };
+    return { prompt: withZoo(chance(ZOO_P) && bigDivLine(a, d), `${a} : ${d}`), input: 'number', answer: q, explain };
   },
 };
 
@@ -688,9 +729,12 @@ const decplusminus = {
       );
       const ans = add ? a + b : a - b;
       const d = (x) => fmtDec(x / 10, 1);
+      const zl = chance(ZOO_P) && (add
+        ? `Pingvinungen vejede ${d(a)} kg og har taget ${d(b)} kg på. Hvad vejer den nu?`
+        : `Sælungen skal have ${d(a)} liter mælk i dag. Den har drukket ${d(b)} liter. Hvor meget mangler den?`);
       return {
-        prompt: `<span class="big-expr">${d(a)} ${add ? '+' : '−'} ${d(b)}</span>`,
-        input: 'number', answer: ans / 10,
+        prompt: withZoo(zl, `${d(a)} ${add ? '+' : '−'} ${d(b)}`),
+        input: 'number', answer: ans / 10, unit: zl ? (add ? 'kg' : 'liter') : undefined,
         explain: `Tænk i tiendedele: ${a} ${add ? '+' : '−'} ${b} = ${ans} tiendedele = <b>${d(ans)}</b>.`,
       };
     }
@@ -798,15 +842,22 @@ const enheder = {
     const [big, small, f] = pick(pool);
     if (level < 3) {
       const n = ri(2, 9);
+      const fwdLine = chance(ZOO_P) && {
+        m: `Girafungen er ${n} m høj. Hvor mange centimeter er det?`,
+        kg: `Pingvinungen vejer ${n} kg. Hvor mange gram er det?`,
+        l: `Sælungen drikker ${n} liter mælk om dagen. Hvor mange ${small} er det?`,
+        km: `Zoo-toget kører ${n} km rundt om zoo'en. Hvor mange meter er det?`,
+        cm: `Haletudsen er ${n} cm lang. Hvor mange millimeter er det?`,
+      }[big];
       if (chance(0.5)) {
         return {
-          prompt: `<span class="big-expr">${n} ${big} = ${box()} ${small}</span>`,
+          prompt: withZoo(fwdLine, `${n} ${big} = ${box()} ${small}`),
           input: 'number', answer: n * f, unit: small,
           explain: `1 ${big} = ${fmt(f)} ${small}, så ${n} ${big} = ${n} × ${fmt(f)} = <b>${fmt(n * f)} ${small}</b>.`,
         };
       }
       return {
-        prompt: `<span class="big-expr">${fmt(n * f)} ${small} = ${box()} ${big}</span>`,
+        prompt: withZoo(chance(ZOO_P) && `Yasmin har målt ${fmt(n * f)} ${small} i klinikken. Hvor mange ${big} er det?`, `${fmt(n * f)} ${small} = ${box()} ${big}`),
         input: 'number', answer: n, unit: big,
         explain: `${fmt(f)} ${small} = 1 ${big}, så ${fmt(n * f)} ${small} = ${fmt(n * f)} : ${fmt(f)} = <b>${n} ${big}</b>.`,
       };
@@ -1170,6 +1221,20 @@ const ukendt = {
 };
 
 // ---------- Områder ----------
+
+// Kodelåse i skattejagten: samme regnestykke, men med en lille historie
+const ukendtCore = ukendt.gen;
+ukendt.gen = (level) => {
+  const p = ukendtCore(level);
+  if (chance(ZOO_P)) {
+    p.prompt = pick([
+      'Kodelåsen på Kajs skattekiste: hvilket tal mangler?',
+      'Skattejagtens næste post er låst. Find tallet, der åbner låsen:',
+      'Liv har tegnet en gåde på skattekortet. Hvilket tal skal stå i feltet?',
+    ]) + p.prompt;
+  }
+  return p;
+};
 
 // Hvert område er et sted i zoo'en (se univers-zoo.md).
 export const AREAS = [
