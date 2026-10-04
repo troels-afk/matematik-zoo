@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261004215017';
-import * as E from './engine.js?v=20261004215017';
-import { today } from './util.js?v=20261004215017';
+import { AREAS, FACTS } from './curriculum.js?v=20261004215709';
+import * as E from './engine.js?v=20261004215709';
+import { today } from './util.js?v=20261004215709';
 
 // Figurernes tegninger: ansigt (talebobler og kort), buste (missionens cirkel) og helfigur (scener).
 // Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -181,6 +181,8 @@ const BABY_EXPR = {
   leopardunge: 'img/babies/leopard',
   tigerunge: 'img/babies/tiger',
   ulveunge: 'img/babies/ulv',
+  bjørneunge: 'img/babies/bjoern',
+  isbjørneunge: 'img/babies/isbjoern',
 };
 
 export const BABIES = {};
