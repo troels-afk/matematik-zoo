@@ -224,7 +224,7 @@ function showAbout(back = showHome) {
 
       <div class="card">
         <h2>Sådan er den lavet</h2>
-        <p>Matematik-Zoo er udviklet i efteråret 2026 af en far til sin datter sammen med AI-assistenten Claude. Udgangspunktet var en gennemgang af eksisterende apps (bl.a. Matematikfessor, DragonBox, Khan Academy, Zearn og Prodigy) og forskningen ovenfor. Tegningerne af dyr og figurer er genereret med ChatGPT.</p>
+        <p>Matematik-Zoo er udviklet i efteråret 2026 sammen med AI-assistenten Claude. Udgangspunktet var en gennemgang af eksisterende apps (bl.a. Matematikfessor, DragonBox, Khan Academy, Zearn og Prodigy) og forskningen ovenfor. Tegningerne af dyr og figurer er genereret med ChatGPT.</p>
         <p>Fremskridt gemmes kun på den enhed, appen bruges på. Der er ingen reklamer, ingen konto og ingen sporing – kun skrifttyperne hentes fra Google Fonts.</p>
       </div>
     </div>`, (e) => { if (e.key === 'Escape') back(); });
