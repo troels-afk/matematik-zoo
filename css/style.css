@@ -513,3 +513,36 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 }
 .baby-banner .baby { width: 62px; height: 62px; }
 .baby-banner .baby > img { width: calc(62% + var(--st) * 6%); }
+
+/* ---------- Større billeder (tegnede unger og figurer) ---------- */
+.baby { width: 78px; height: 78px; }
+.baby::before { inset: 5px; }
+.baby > img { width: calc(64% + var(--st) * 5%); }
+.baby.lg { width: 112px; height: 112px; }
+.baby.lg::before { inset: 6px; }
+.baby-banner { gap: 16px; padding: 10px 18px 10px 10px; }
+.baby-banner .baby { width: 88px; height: 88px; }
+.baby-banner .baby > img { width: calc(66% + var(--st) * 5%); }
+.baby-banner .t { font-size: 1.12rem; }
+.baby .zz { font-size: 1rem; top: -2px; right: -2px; }
+.nursery .babies { gap: 12px; }
+.book { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.avatar { width: 62px; height: 62px; font-size: 34px; }
+.avatar.sm { width: 46px; height: 46px; font-size: 24px; }
+.avatar.lg { width: 84px; height: 84px; font-size: 46px; }
+.bubble::before { top: 22px; }
+.tour-babies .baby { width: 96px; height: 96px; }
+@media (max-width: 760px) {
+  .baby { width: 66px; height: 66px; }
+  .baby-banner .baby { width: 74px; height: 74px; }
+  .avatar { width: 54px; height: 54px; }
+}
+.ani { display: inline-flex; align-items: flex-end; }
+.ani .ani-img { width: 54px; height: 54px; margin-left: -10px; filter: drop-shadow(0 3px 4px rgba(31, 51, 70, .12)); }
+.ani .ani-img:first-child { margin-left: 0; }
+.task-card .top .ani .ani-img { width: 62px; height: 62px; }
+.area .band .ani .ani-img { width: 50px; height: 50px; }
+.hero-ani .ani-img { width: 70px; height: 70px; }
+@media (max-width: 760px) { .task-card .top .ani .ani-img { width: 52px; height: 52px; } }
+.task-card .rec { top: auto; right: auto; bottom: -11px; left: 16px; z-index: 1; box-shadow: 0 2px 6px rgba(31, 51, 70, .15); }
+.task-card .body { padding-top: 18px; }

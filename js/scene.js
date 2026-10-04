@@ -2,7 +2,7 @@
 
 import { esc } from './util.js';
 
-export function zooGate(name, { animals = [], festive = false } = {}) {
+export function zooGate(name, { animals = [], festive = false, art = null } = {}) {
   const len = [...name].length;
   const fs = Math.max(20, Math.min(40, 360 / (0.56 * len)));
   const tree = (x, y, s = 1, c = '#5fb884') => `
@@ -24,6 +24,11 @@ export function zooGate(name, { animals = [], festive = false } = {}) {
   const spots = [[120, 222, 58], [262, 230, 46], [735, 226, 50], [868, 214, 64], [805, 236, 40], [190, 240, 38]];
   const peek = animals.slice(0, spots.length).map((e, i) => {
     const [x, y, s] = spots[i];
+    const src = art && art(e);
+    if (src) {
+      const w = s * 1.45; // tegningerne er lidt luftigere end emoji
+      return `<image href="${src}" x="${x - w / 2}" y="${y - w * 0.82}" width="${w}" height="${w}" class="peek" style="animation-delay:${i * 0.4}s"/>`;
+    }
     return `<text x="${x}" y="${y}" font-size="${s}" text-anchor="middle" class="peek" style="animation-delay:${i * 0.4}s">${e}</text>`;
   }).join('');
   const bunting = festive

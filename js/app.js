@@ -122,6 +122,8 @@ function weekDots(st) {
 }
 
 const levelsOf = (st) => AREAS.map((a) => Z.areaLevel(st, a.id));
+// Dyr som tegning (eller emoji, hvis der ikke findes en tegning)
+const ani = (list) => list.map((e) => { const src = Z.artFor(e); return src ? `<img class="ani-img" src="${src}" alt="" draggable="false">` : `<span>${e}</span>`; }).join('');
 
 // ================= Profiler =================
 
@@ -129,7 +131,7 @@ async function showProfiles() {
   let profiles = [];
   try { profiles = await listProfiles(); } catch { /* vis tom liste */ }
   view(`
-    <section class="hero">${zooGate('Matematik-Zoo', { animals: ['🦒', '🐘', '🦁', '🐧', '🦓'] })}</section>
+    <section class="hero">${zooGate('Matematik-Zoo', { animals: ['🦒', '🐘', '🦁', '🐧', '🦓', '🦊'], art: Z.artFor })}</section>
     <div class="welcome center">
       <h1 style="margin-top:26px">Hvem skal passe zoo'en i dag?</h1>
       <div class="profiles">
@@ -260,7 +262,7 @@ function showHome() {
   const taskCard = (id, i) => {
     const a = areaOf(id), z = Z.ZONES[id], t = Z.taskFor(id), cur = E.currentSkill(st, id);
     return `<button class="task-card ${i === 0 ? 'rec-card' : ''}" data-area="${id}" style="--ac:${a.color}">
-      <div class="top"><span class="big">${a.icon}</span><span class="ani">${z.animals.join('')}</span>${i === 0 ? '<span class="rec">Forslag</span>' : ''}</div>
+      <div class="top"><span class="big">${a.icon}</span><span class="ani">${ani(z.animals)}</span>${i === 0 ? '<span class="rec">Forslag</span>' : ''}</div>
       <div class="body">
         <span class="place">${a.place}</span>
         <span class="title">${t.title}</span>
@@ -272,7 +274,7 @@ function showHome() {
     const lv = levels[i], L = Z.LEVELS[lv];
     const sts = a.skills.map((s) => E.skillStatus(st, s.id));
     return `<button class="area l${lv}" data-place="${a.id}" style="--ac:${a.color}">
-      <div class="band"><span class="big">${a.icon}</span><span class="ani">${lv ? Z.ZONES[a.id].animals.slice(0, Math.min(lv, 3)).join('') : ''}</span></div>
+      <div class="band"><span class="big">${a.icon}</span><span class="ani">${lv ? ani(Z.ZONES[a.id].animals.slice(0, Math.min(lv, 3))) : ''}</span></div>
       <div class="inner">
         <span class="nm">${a.place}</span><span class="sub">${a.name}</span>
         <span class="lvl">${L.icon} ${L.name}</span>
@@ -288,7 +290,7 @@ function showHome() {
 
   view(`
     <section class="hero">
-      ${zooGate(zname, { animals: peek, festive: stars === AREAS.length })}
+      ${zooGate(zname, { animals: peek, festive: stars === AREAS.length, art: Z.artFor })}
       <div class="hero-bar">
         <span class="me-chip"><span class="avatar">${meAvatar(st.name)}</span>${esc(st.name)}</span>
         <div class="row" style="gap:8px">
@@ -399,7 +401,7 @@ function showPlace(areaId) {
         <h1 style="margin:0">${a.place}</h1>
         <div class="muted" style="font-weight:700">${a.name} · ${z.blurb}</div>
       </div>
-      <div class="center"><div style="font-size:1.8rem;letter-spacing:2px">${lv ? z.animals.slice(0, Math.min(lv, 3)).join('') : '🚧'}</div><span class="lvl" style="--ac:${a.color}">${L.icon} ${L.name}</span></div>
+      <div class="center"><div class="ani hero-ani">${lv ? ani(z.animals.slice(0, Math.min(lv, 3))) : '🚧'}</div><span class="lvl" style="--ac:${a.color}">${L.icon} ${L.name}</span></div>
     </section>
     <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);

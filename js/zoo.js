@@ -24,11 +24,11 @@ export const ZONES = {
     tasks: ['Bestil blade til giraferne', 'Regn ugens foder ud til elefanterne', 'Hjælp Nora med den store foderbestilling'],
   },
   division: {
-    animals: ['🐒', '🦍', '🦧'], who: 'nora', blurb: 'Maden fordeles ligeligt – resten går til Kaj',
+    animals: ['🐒', '🐿️', '🦫'], who: 'nora', blurb: 'Maden fordeles ligeligt – resten går til Kaj',
     tasks: ['Fordel bananerne ligeligt mellem aberne', 'Gør madskålene klar til abehuset', 'Del frugten ud – Kaj holder øje med resten'],
   },
   brok: {
-    animals: ['🦭', '🐻‍❄️', '🐳'], who: 'nora', blurb: 'Bassiner, fiskespande og pingvinunger',
+    animals: ['🦭', '🐻‍❄️', '🦦'], who: 'nora', blurb: 'Bassiner, fiskespande og pingvinunger',
     tasks: ['Fyld pingvinbassinet op', 'Del fiskespandene mellem pingvinerne', 'Hjælp Nora med sælernes madplan'],
   },
   decimal: {
@@ -209,4 +209,10 @@ export function goodnight(state) {
     { who: 'kaj', text: 'Farvel, farvel! Jeg passer på resterne i nat 🦜' },
     { who: 'nora', text: 'Ungerne er puttet. Tak for hjælpen i dag! 💛' },
   ], 'night' + state.sessions.length);
+}
+
+// Tegning til et dyr ud fra dets emoji (bruges på kort, kortet over zoo'en og porten)
+export function artFor(emoji) {
+  for (const b of Object.values(BABIES)) if (b.emoji === emoji && b.img) return b.img;
+  return null;
 }
