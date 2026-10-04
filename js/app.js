@@ -78,7 +78,10 @@ function migrate(st) {
 
 // ---------- Små byggeklodser ----------
 
-const avatar = (who, size = '') => `<span class="avatar ${size} who-${who}" aria-hidden="true">${Z.CAST[who].emoji}</span>`;
+const avatar = (who, size = '') => {
+  const c = Z.CAST[who];
+  return `<span class="avatar ${size} who-${who} ${c.img ? 'has-img' : ''}" aria-hidden="true">${c.img ? `<img src="${c.img}" alt="" draggable="false">` : c.emoji}</span>`;
+};
 const say = (who, text) => `
   <div class="say">${avatar(who)}
     <div class="bubble"><span class="who">${Z.CAST[who].name} · ${Z.CAST[who].role}</span><span class="txt">${text}</span></div>
@@ -90,7 +93,27 @@ function baby(key, size = '') {
   const due = box >= 0 && S.state.facts[key].due <= today();
   const cls = box < 0 ? 'new' : box >= 5 ? 'gold' : '';
   const title = box < 0 ? 'Ikke født endnu' : `${b.name} (${b.kind}) – ${Z.STAGES[box]}`;
-  return `<span class="baby ${size} ${cls}" style="--st:${Math.max(0, box)}" title="${esc(title)}"><span>${b.emoji}</span>${due ? '<i class="zz">🍼</i>' : ''}</span>`;
+  const art = b.img ? `<img src="${b.img}" alt="" draggable="false">` : `<span>${b.emoji}</span>`;
+  return `<span class="baby ${size} ${cls} ${b.img ? 'has-img' : ''}" style="--st:${Math.max(0, box)}" title="${esc(title)}">${art}${due ? '<i class="zz">🍼</i>' : ''}</span>`;
+}
+
+// Lad en unge reagere: 'happy' (hop + hjerter), 'think' (hovedvip), 'grow' (pop + stjerner)
+function babyReact(el, kind) {
+  if (!el) return;
+  el.classList.remove('idle', 'react-happy', 'react-think', 'react-grow');
+  void el.offsetWidth;
+  el.classList.add(`react-${kind}`);
+  const fx = { happy: ['💛', '💛'], grow: ['✨', '⭐', '✨'], think: [] }[kind];
+  fx.forEach((e, i) => {
+    const s = document.createElement('i');
+    s.className = 'fx';
+    s.textContent = e;
+    s.style.setProperty('--dx', `${-50 + (i - (fx.length - 1) / 2) * 90}%`);
+    s.style.animationDelay = `${i * 0.08}s`;
+    el.appendChild(s);
+    setTimeout(() => s.remove(), 1400);
+  });
+  setTimeout(() => { el.classList.remove(`react-${kind}`); el.classList.add('idle'); }, 1000);
 }
 
 function weekDots(st) {
@@ -161,7 +184,7 @@ function showIntroTour(done = showHome) {
   const someBabies = FACTS.slice(0, 6).map((f, i) => `<span class="baby" style="--st:${i}"><span>${Z.BABIES[f.key].emoji}</span></span>`).join('');
   const pages = [
     {
-      art: '<div class="tour-art">🦒🐘🦁🐧🦓</div>',
+      art: Z.CAST.bodil.bust ? `<img class="tour-portrait" src="${Z.CAST.bodil.bust}" alt="Bodil">` : '<div class="tour-art">🦒🐘🦁🐧🦓</div>',
       title: `Velkommen til ${esc(zname)}!`,
       body: say('bodil', `Zoo'en har været lukket hele vinteren, og jeg har brug for en ny zoo-leder. Det er dig, ${esc(st.name)}!`),
     },
@@ -537,7 +560,8 @@ function renderTask(block, task) {
   let banner = '';
   if (task.kind === 'warm') {
     const b = Z.BABIES[task.fact];
-    banner = `<div class="baby-banner">${baby(task.fact)}
+    if (b.expr) [b.expr.think, b.expr.cheer].forEach((src) => { new Image().src = src; }); // forhåndsindlæs udtryk
+    banner = `<div class="baby-banner">${baby(task.fact).replace('class="baby ', 'class="baby idle ')}
       <div><div class="t">${b.name} vil have flaske</div><div class="s">Opvarmning ${run.ti + 1}/${block.count} · gangetabellen – bagefter går vi til ${areaOf(run.sess.area).place}</div></div></div>`;
   }
   const help = (task.kind === 'main' || task.kind === 'practice') ? `<button class="link small" id="help">💡 Hjælp</button>` : '';
@@ -706,6 +730,18 @@ function answer(given, choiceIdx) {
   run.results.push({ kind: task.kind, id: task.fact || task.skill, correct });
   save();
   sfx(correct ? (grew && grew.includes('voksede') ? 'grow' : 'correct') : 'wrong');
+  if (task.kind === 'warm') {
+    const kind = !correct ? 'think' : grew && grew.includes('voksede') ? 'grow' : 'happy';
+    const el = $('.baby-banner .baby');
+    if (el) {
+      el.outerHTML = baby(task.fact); // ny størrelse/ring efter svaret
+      const nb = $('.baby-banner .baby');
+      // Har ungen udtryk: jubler ved rigtigt svar, tænker ved forkert
+      const ex = Z.BABIES[task.fact].expr;
+      if (ex) nb.querySelector('img').src = correct ? ex.cheer : ex.think;
+      babyReact(nb, kind);
+    }
+  }
 
   if (p.input === 'choice') {
     $$('.choice').forEach((b, i) => {
@@ -1104,4 +1140,4 @@ function showParent() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, show: { home: showHome, book: showBook, profiles: showProfiles, tour: showIntroTour, set: showPracticeSet, practice: startPractice } };
+window.__mo = { S, E, Z, babyReact, show: { home: showHome, book: showBook, profiles: showProfiles, tour: showIntroTour, set: showPracticeSet, practice: startPractice } };

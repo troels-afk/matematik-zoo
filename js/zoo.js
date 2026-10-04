@@ -6,7 +6,7 @@ import * as E from './engine.js';
 import { today } from './util.js';
 
 export const CAST = {
-  bodil: { name: 'Bodil', role: 'Zoo-direktør', emoji: '👵🏼' },
+  bodil: { name: 'Bodil', role: 'Zoo-direktør', emoji: '👵🏼', img: 'img/cast/bodil-face.webp', bust: 'img/cast/bodil.webp' },
   kaj: { name: 'Kaj', role: 'Papegøje', emoji: '🦜' },
   nora: { name: 'Nora', role: 'Dyrepasser-elev', emoji: '👧🏼' },
   liv: { name: 'Liv', role: 'Laver skilte og kort', emoji: '👧🏻' },
@@ -86,10 +86,68 @@ const BABY_LIST = [
   ['🐊', 'krokodilleunge', 'Krølle'], ['🦎', 'firbenunge', 'Fie'], ['🐬', 'delfinunge', 'Dina'], ['🦚', 'påfugleunge', 'Pippa'],
   ['🦡', 'grævlingeunge', 'Gry'],
 ];
+// Tegnede billeder (genereret, fritlagt med tools/prep_image.py). Unger uden billede bruger emoji.
+const BABY_IMAGES = {
+  løveunge: 'img/babies/loeve.webp',
+  kaninunge: 'img/babies/kanin.webp',
+  kid: 'img/babies/ged.webp',
+  lam: 'img/babies/lam.webp',
+  føl: 'img/babies/foel.webp',
+  ælling: 'img/babies/aelling.webp',
+  pingvinunge: 'img/babies/pingvin.webp',
+  sælunge: 'img/babies/sael.webp',
+  pindsvineunge: 'img/babies/pindsvin.webp',
+  egernunge: 'img/babies/egern.webp',
+  odderunge: 'img/babies/odder.webp',
+  flamingounge: 'img/babies/flamingo.webp',
+  skildpaddeunge: 'img/babies/skildpadde.webp',
+  haletudse: 'img/babies/froe.webp',
+  uglunge: 'img/babies/ugle.webp',
+  svaneunge: 'img/babies/svane.webp',
+  bæverunge: 'img/babies/baever.webp',
+  ræveunge: 'img/babies/raev.webp',
+  vaskebjørneunge: 'img/babies/vaskebjoern.webp',
+  koalaunge: 'img/babies/koala.webp',
+  kængurunge: 'img/babies/kaenguru.webp',
+  dovendyrunge: 'img/babies/dovendyr.webp',
+  abeunge: 'img/babies/abe.webp',
+  lamaunge: 'img/babies/lama.webp',
+  kamelunge: 'img/babies/kamel.webp',
+  zebraføl: 'img/babies/zebra.webp',
+  girafunge: 'img/babies/giraf.webp',
+  elefantunge: 'img/babies/elefant.webp',
+  flodhesteunge: 'img/babies/flodhest.webp',
+  næsehornsunge: 'img/babies/naesehorn.webp',
+  pandaunge: 'img/babies/panda.webp',
+  tigerunge: 'img/babies/tiger.webp',
+  leopardunge: 'img/babies/leopard.webp',
+  ulveunge: 'img/babies/ulv.webp',
+  bjørneunge: 'img/babies/bjoern.webp',
+  isbjørneunge: 'img/babies/isbjoern.webp',
+};
+
+// Unger med tre udtryk (glad / tænker / jubler). Det glade bruges også som standardbillede.
+const BABY_EXPR = {
+  kaninunge: 'img/babies/kanin',
+  kid: 'img/babies/ged',
+  lam: 'img/babies/lam',
+  ælling: 'img/babies/aelling',
+  føl: 'img/babies/foel',
+  pingvinunge: 'img/babies/pingvin',
+  pindsvineunge: 'img/babies/pindsvin',
+  sælunge: 'img/babies/sael',
+  egernunge: 'img/babies/egern',
+};
+
 export const BABIES = {};
 FACTS.forEach((f, i) => {
   const [emoji, kind, name] = BABY_LIST[i];
-  BABIES[f.key] = { emoji, kind, name, fact: f };
+  const ex = BABY_EXPR[kind];
+  BABIES[f.key] = {
+    emoji, kind, name, fact: f,
+    img: ex ? `${ex}-glad.webp` : BABY_IMAGES[kind] || null,
+    expr: ex ? { happy: `${ex}-glad.webp`, think: `${ex}-taenker.webp`, cheer: `${ex}-jubler.webp` } : null,
+  };
 });
 
 export const STAGES = ['Nyfødt', 'Lille', 'Ung', 'Stor', 'Næsten voksen', 'Voksen'];
