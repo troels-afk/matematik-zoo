@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004200226';
-import * as E from './engine.js?v=20261004200226';
-import * as Z from './zoo.js?v=20261004200226';
-import { zooGate } from './scene.js?v=20261004200226';
-import { zooMap } from './map.js?v=20261004200226';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004200226';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004200226';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004200226';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004201654';
+import * as E from './engine.js?v=20261004201654';
+import * as Z from './zoo.js?v=20261004201654';
+import { zooGate } from './scene.js?v=20261004201654';
+import { zooMap } from './map.js?v=20261004201654';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004201654';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004201654';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004201654';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -358,24 +358,28 @@ function showHome() {
     due: fs.due,
     bodil: Z.CAST.bodil.bust,
   };
-  const first = tasks.find((t) => !t.done) || tasks[0];
+  const open = tasks.filter((t) => !t.done);
+  if (!open.some((t) => t.area === S.mission)) S.mission = (open[0] || tasks[0]).area;
+  const mission = tasks.find((t) => t.area === S.mission);
+  const first = mission;
+  const todayLog = st.zoo.today?.date === today() ? st.zoo.today : null;
 
   view(`
+    <div class="home-top">
+      <span class="me-chip"><span class="avatar">${meAvatar(st.name)}</span>${esc(st.name)}</span>
+      <div class="row" style="gap:8px">
+        <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">📝 <span>Øvebanen</span></button>
+        <button class="icon-btn" id="help" aria-label="Sådan spiller du">?</button>
+        <button class="icon-btn" id="snd" aria-label="Lyd til/fra">${st.settings.sound ? '🔊' : '🔇'}</button>
+      </div>
+    </div>
+
+    ${doneToday ? missionDone(st, todayLog) : missionCard(st, mission, open)}
+
+    <div class="section-title"><h2>Din zoo</h2><span class="muted small">Tryk på et område for at øve noget bestemt</span></div>
     <section class="map-wrap">
       <div class="map-scroll">${zooMap(mapData)}</div>
-      <div class="hero-bar">
-        <span class="me-chip"><span class="avatar">${meAvatar(st.name)}</span>${esc(st.name)}</span>
-        <div class="row" style="gap:8px">
-          <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">📝 <span>Øvebanen</span></button>
-          <button class="icon-btn" id="help" aria-label="Sådan spiller du">?</button>
-          <button class="icon-btn" id="snd" aria-label="Lyd til/fra">${st.settings.sound ? '🔊' : '🔇'}</button>
-        </div>
-      </div>
     </section>
-    <div class="map-bar">
-      <button class="btn big" id="start">${doneToday ? '▶ Tag en vagt mere' : '▶ Start dagens vagt'}</button>
-      <span class="muted">${doneToday ? '✓ Du har passet zoo\'en i dag – flot!' : `Tryk på ${Z.CAST[first.who].name} eller en af de andre med <b>!</b> – eller på et område, du vil øve.`}</span>
-    </div>
     <div class="footer-links">
       <button class="link" id="switch">Skift profil</button>
       <button class="link" id="about">Om appen</button>
@@ -392,7 +396,10 @@ function showHome() {
   };
   svgEl.addEventListener('click', (e) => { const t = e.target.closest('.m-tap'); if (t) act(t); });
   svgEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { const t = e.target.closest('.m-tap'); if (t) { e.preventDefault(); act(t); } } });
-  on('#start', 'click', () => { sfx('tap'); taskSheet(first); });
+  on('#start', 'click', () => { sfx('tap'); runSession(mission.area); });
+  on('[data-mission]', 'click', (e) => { sfx('tap'); S.mission = e.currentTarget.dataset.mission; showHome(); });
+  on('#again', 'click', () => { sfx('tap'); taskSheet(first); });
+  on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
   on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
   on('#help', 'click', () => showIntroTour());
   on('#about', 'click', () => showAbout());
@@ -405,6 +412,61 @@ function showHome() {
   });
   on('#switch', 'click', () => { try { localStorage.removeItem('mr_last'); } catch { /* */ } showProfiles(); });
   on('#parent', 'click', parentGate);
+}
+
+// Dagens mission: hvem har brug for hjælp, hvad skal der ske, og én knap
+function missionCard(st, t, open) {
+  const a = areaOf(t.area), z = Z.ZONES[t.area], c = Z.CAST[t.who];
+  const cur = E.currentSkill(st, t.area);
+  const art = z.animals.map((e) => Z.artFor(e)).find(Boolean);
+  const portrait = c.bust || c.img
+    ? `<img class="mission-face" src="${c.bust || c.img}" alt="${c.name}">`
+    : `<span class="mission-emoji" aria-hidden="true">${c.emoji}</span>`;
+  const others = open.filter((x) => x.area !== t.area);
+  return `
+    <section class="mission card">
+      <div class="mission-art">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}</div>
+      <div class="mission-body">
+        <span class="kicker">Dagens mission</span>
+        <h1>${t.title}</h1>
+        <p class="mission-need"><b>${c.name}</b> har brug for din hjælp i ${a.icon} <b>${a.place}</b>.</p>
+        <ol class="mission-steps">
+          <li><span class="n">1</span><span><b>Morgenrunde</b> · giv ungerne i Babyhuset flaske</span></li>
+          <li><span class="n">2</span><span><b>${a.place}</b> · ${cur ? SKILLS[cur].name.toLowerCase() : 'repetition'}</span></li>
+          <li><span class="n">3</span><span><b>Runde i zoo'en</b> · et par blandede opgaver</span></li>
+        </ol>
+        <div class="mission-go">
+          <button class="btn big" id="start">Start missionen</button>
+          <span class="muted small">ca. 15 minutter</span>
+        </div>
+        ${others.length ? `<div class="mission-others"><span class="muted small">Andre der har brug for hjælp:</span>
+          ${others.map((o) => `<button class="chip-btn" data-mission="${o.area}">${avatar(o.who, 'sm')}${Z.CAST[o.who].name} · ${areaOf(o.area).place}</button>`).join('')}</div>` : ''}
+      </div>
+    </section>`;
+}
+
+function missionDone(st, log) {
+  const a = log ? areaOf(log.area) : null;
+  const wins = log?.wins?.length ? log.wins : [];
+  const items = [
+    ...(a ? [{ e: a.icon, t: `Du hjalp i ${a.place}` }] : []),
+    ...wins.slice(0, 4),
+    ...(log?.diff > 0 ? [{ e: '🎟️', t: `+${fmt(log.diff)} gæster om dagen` }] : []),
+  ];
+  return `
+    <section class="mission done card">
+      <div class="mission-art"><span class="mission-emoji" aria-hidden="true">🌙</span></div>
+      <div class="mission-body">
+        <span class="kicker">✓ Dagens mission er klaret</span>
+        <h1>Godt arbejde, ${esc(st.name)}!</h1>
+        <p class="mission-need">Det skete i zoo'en i dag:</p>
+        <ul class="wins">${(items.length ? items : [{ e: '💛', t: 'Dyrene er passet, og zoo\'en sover godt i nat' }]).map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>
+        <div class="mission-go">
+          <button class="btn ghost" id="again">Tag en vagt mere</button>
+          <button class="link" id="see-baby">Se Babyhuset</button>
+        </div>
+      </div>
+    </section>`;
 }
 
 function taskSheet(t) {
@@ -937,7 +999,6 @@ function finish() {
   logRun(run);
   const after = snapshot(st), b = run.before;
   st.zoo.bestGuests = Math.max(st.zoo.bestGuests || 0, after.guests);
-  save(true);
 
   const wins = [];
   let bigWin = false;
@@ -965,6 +1026,16 @@ function finish() {
   if (grew.length) wins.push({ e: '🍼', t: `${names(grew)} voksede` });
   const n = run.results.length;
   const backSet = PRACTICE_SETS.find((x) => x.id === run.sess.area);
+  if (run.mode === 'daily') {
+    // Til forsidens "Dagens mission er klaret" (lægges oven i tidligere vagter i dag)
+    const prev = st.zoo.today?.date === today() ? st.zoo.today : null;
+    st.zoo.today = {
+      date: today(), area: run.sess.area,
+      wins: [...wins, ...(prev?.wins || [])].slice(0, 6),
+      diff: (prev?.diff || 0) + (after.guests - b.guests),
+    };
+  }
+  save(true);
   S.run = null;
   const night = Z.goodnight(st);
   const diff = after.guests - b.guests;

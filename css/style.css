@@ -610,3 +610,37 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .crib.sleep .baby > img { filter: saturate(.7); opacity: .8; }
 .goal-line { display: grid; gap: 8px; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
+
+/* ---------- Dagens mission (forsidens hovedfokus) ---------- */
+.home-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.home-top .me-chip { background: var(--card); box-shadow: var(--shadow); color: var(--ink); }
+.mission { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 26px; align-items: center; padding: 26px 28px;
+  background: linear-gradient(135deg, var(--sun-soft), var(--card) 60%); border: 2px solid color-mix(in srgb, var(--sun) 45%, transparent); }
+.mission .mission-art { position: relative; width: 220px; height: 220px; border-radius: 50%; background: var(--card);
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--sun) 35%, transparent); display: grid; place-items: center; }
+.mission-face { width: 92%; height: auto; border-radius: 50%; }
+.mission-emoji { font-size: 110px; line-height: 1; }
+.mission-animal { position: absolute; right: -14px; bottom: -6px; width: 104px; height: 104px; filter: drop-shadow(0 6px 10px rgba(31, 51, 70, .18)); animation: bob 3s ease-in-out infinite; }
+.mission-body { display: grid; gap: 12px; min-width: 0; }
+.mission-body h1 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); margin: 0; }
+.mission-need { font-size: 1.15rem; margin: 0; }
+.mission-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.mission-steps li { display: flex; gap: 12px; align-items: center; font-weight: 700; }
+.mission-steps .n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary-ink); font: 600 .95rem var(--font-head); flex: none; }
+.mission-go { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+.mission-go .btn.big { min-width: 240px; }
+.mission-others { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 6px; border-top: 1px dashed var(--line); }
+.chip-btn { display: inline-flex; align-items: center; gap: 8px; padding: 4px 14px 4px 4px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); font: 600 .9rem var(--font-head); color: var(--ink); }
+.chip-btn .avatar.sm { width: 32px; height: 32px; font-size: 18px; box-shadow: none; }
+.chip-btn:hover { border-color: var(--primary); }
+.mission.done { background: linear-gradient(135deg, var(--primary-soft), var(--card) 60%); border-color: color-mix(in srgb, var(--primary) 35%, transparent); }
+.mission.done .kicker { color: var(--primary-ink); }
+.mission.done .wins li { background: var(--card); }
+@media (max-width: 760px) {
+  .mission { grid-template-columns: 1fr; justify-items: center; text-align: left; padding: 20px; }
+  .mission .mission-art { width: 150px; height: 150px; }
+  .mission-animal { width: 76px; height: 76px; }
+  .mission-emoji { font-size: 76px; }
+  .mission-body { justify-self: stretch; }
+  .mission-go .btn.big { width: 100%; min-width: 0; }
+}
