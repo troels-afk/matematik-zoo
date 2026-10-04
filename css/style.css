@@ -562,32 +562,99 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .footer-links { gap: 12px; flex-wrap: wrap; }
 
 /* ---------- Zoo-kortet (forsiden) ---------- */
-.map-wrap { position: relative; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg); background: #a9d99b; }
-.map-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.zoo-map-svg { display: block; width: 100%; min-width: 720px; height: auto; }
-.map-wrap .hero-bar { position: absolute; inset: 12px 12px auto 12px; }
+/* Grundkortet er landskabet; områderne ligger ovenpå som knapper med procent-placering.
+   cqw = procent af kortets bredde, så skilte og figurer skalerer med kortet. */
+.map-wrap { position: relative; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg); background: #9fcf8f; }
+.map-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.zoo-map { position: relative; width: 100%; min-width: 700px; aspect-ratio: 1672 / 941; container-type: inline-size; overflow: hidden; -webkit-user-select: none; user-select: none; }
+.zm-base { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
+.zoo-map img { -webkit-user-drag: none; }
+/* :where giver nulstillingen ingen vægt, så skilte og figurer beholder deres egen stil */
+:where(.zoo-map button) { position: absolute; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.zoo-map button:focus { outline: none; }
+.zoo-map button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; border-radius: 18px; box-shadow: 0 0 0 6px rgba(31, 51, 70, .55); }
 .m-tap { cursor: pointer; }
-.m-tap:hover .m-ground { filter: brightness(1.04); }
-.m-tap:focus { outline: none; }
-.m-tap:focus-visible .m-ground, .m-tap:focus-visible circle:first-of-type { stroke: #1f3346; stroke-width: 4; }
-.m-sign { font: 600 17px var(--font-head); fill: #4a3220; }
-.m-small { font: 700 13px var(--font-body); fill: #4a3220; }
-.m-gate { font-family: var(--font-head); font-weight: 600; fill: #1f3346; }
-.m-board { font: 600 12px var(--font-head); fill: #e9f5ee; }
-.m-badge { font: 600 16px var(--font-head); fill: #fff; }
-.zoo-map-svg .bob { animation: bob 3s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom center; }
-.m-bang { animation: m-bang 1.6s ease-in-out infinite; transform-box: fill-box; }
-.m-cloud { animation: m-drift 70s linear infinite; }
-.m-cloud.c2 { animation-duration: 95s; animation-delay: -40s; }
-.m-cloud.c3 { animation-duration: 120s; animation-delay: -80s; }
-.m-leaf { animation: m-fall 12s linear infinite; }
-.m-fly { animation: m-flutter 6s ease-in-out infinite; transform-box: fill-box; }
-.m-glow { animation: m-glow 2.4s ease-in-out infinite; }
 @keyframes m-bang { 50% { transform: translateY(-6px); } }
-@keyframes m-drift { from { transform: translateX(-300px); } to { transform: translateX(1500px); } }
-@keyframes m-fall { 0% { transform: translate(0, -60px) rotate(0); opacity: 0; } 10% { opacity: .9; } 100% { transform: translate(120px, 1000px) rotate(540deg); opacity: 0; } }
-@keyframes m-flutter { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(18px, -10px); } 50% { transform: translate(36px, 4px); } 75% { transform: translate(14px, 12px); } }
-@keyframes m-glow { 50% { opacity: .35; } }
+
+/* Områderne: hele billedets felt er klikbart, ikke kun selve tegningen */
+.zm-area { display: block; }
+.zm-ov { position: relative; display: block; width: 100%; height: 100%; object-fit: contain; transform-origin: 50% 75%; transition: transform .2s ease, filter .2s ease, opacity .2s ease; }
+@media (hover: hover) { .zm-area:hover .zm-ov { transform: scale(1.035); filter: brightness(1.06) drop-shadow(0 8px 12px rgba(31, 51, 70, .28)); } }
+.zm-area:active .zm-ov { transform: scale(.97); filter: brightness(.93); transition-duration: .06s; }
+/* Under opbygning: dæmpede farver (ingen gennemsigtighed, så grundkortet ikke skinner igennem) */
+.zm-area.lv-0 .zm-ov { filter: saturate(.3) brightness(1.04) contrast(.92); }
+@media (hover: hover) { .zm-area.lv-0:hover .zm-ov { filter: saturate(.6) brightness(1.06); } }
+.zm-area.lv-0:active .zm-ov { filter: grayscale(.6) brightness(.98); }
+/* Populær, stjerne og guld: varmt lys bag tegningen og små stjerner */
+.zm-glow { position: absolute; inset: -4% -2% 2%; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, rgba(255, 236, 160, .55), rgba(255, 236, 160, 0)); }
+.lv-3 .zm-glow { background: radial-gradient(closest-side, rgba(255, 214, 90, .7), rgba(255, 214, 90, 0)); }
+.lv-4 .zm-glow { background: radial-gradient(closest-side, rgba(255, 196, 40, .85), rgba(255, 196, 40, 0)); animation: zm-pulse 3.2s ease-in-out infinite; }
+.zm-spark { position: absolute; z-index: 1; width: 4.5%; aspect-ratio: 1; background: #ffd75e; pointer-events: none;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: twinkle 2s ease-in-out infinite; }
+.zm-spark.s1 { top: 8%; left: 18%; }
+.zm-spark.s2 { top: 3%; left: 70%; width: 3.5%; animation-delay: .6s; }
+.zm-spark.s3 { top: 30%; left: 88%; animation-delay: 1.2s; }
+.zm-spark.s4 { top: 26%; left: 5%; width: 3.5%; animation-delay: .3s; }
+.zm-spark.s5 { top: 1%; left: 45%; animation-delay: .9s; }
+@keyframes zm-pulse { 50% { opacity: .6; } }
+
+/* Navneskilte: kort navn og evt. et lille statustegn */
+.zm-label { z-index: 3; transform: translate(-50%, -50%); white-space: nowrap; padding: .2em .75em; border-radius: 99px;
+  background: rgba(255, 251, 242, .95); border: 2px solid #d4b07a; color: #4a3220; font: 600 clamp(10px, 1.3cqw, 15px)/1.25 var(--font-head);
+  box-shadow: 0 2px 6px rgba(31, 51, 70, .2); transition: scale .15s ease; }
+.zm-label .sym { font-size: .9em; }
+.zm-label.lv-0 { background: rgba(244, 239, 230, .94); color: #6d5c4a; border-color: #cbbba3; }
+.zm-label.lv-4 { border-color: #f2b632; box-shadow: 0 0 0 2px rgba(255, 210, 90, .6), 0 2px 6px rgba(31, 51, 70, .2); }
+@media (hover: hover) { .zm-label:hover { scale: 1.06; } }
+.zm-label:active { scale: .95; }
+
+/* Porten: zoo'ens navn med en flagguirlande – et flag pr. område med en stjerne */
+.zm-gate { position: absolute; z-index: 2; transform: translate(-50%, -50%); display: grid; justify-items: center; pointer-events: none; }
+.zm-flags { display: flex; gap: .3cqw; margin-bottom: .2cqw; }
+.zm-flags i { display: block; width: 1.1cqw; height: 1.3cqw; background: #ff8a65; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.zm-flags i.b { background: #ffc94d; }
+.zm-zooname { max-width: 16cqw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: .15em .9em; border-radius: 10px;
+  background: #fffaf0; border: 2px solid #8a6640; color: #2c4a3c; font: 600 clamp(11px, 1.5cqw, 17px)/1.25 var(--font-head); box-shadow: 0 3px 8px rgba(31, 51, 70, .25); }
+
+/* Babyhuset og Bodil ved indgangen */
+.zm-baby { z-index: 2; width: 8.5cqw; transform: translate(-50%, -50%); display: grid; justify-items: center; }
+.zm-baby img { width: 100%; height: auto; filter: drop-shadow(0 4px 6px rgba(31, 51, 70, .25)); transition: scale .2s ease; }
+.zm-badge { position: absolute; top: -2%; right: -16%; padding: .1em .5em; border-radius: 99px; border: 2px solid #fff; background: #8fa3b5; color: #fff;
+  font: 600 clamp(10px, 1.1cqw, 13px)/1.3 var(--font-head); white-space: nowrap; animation: m-bang 2.6s ease-in-out infinite; }
+.zm-badge.due { background: #ff8a65; }
+.zm-name { margin-top: -8%; padding: .12em .7em; border-radius: 99px; background: rgba(255, 251, 242, .95); border: 2px solid #d4b07a; color: #4a3220;
+  font: 600 clamp(10px, 1.2cqw, 14px)/1.25 var(--font-head); white-space: nowrap; }
+.zm-bodil { z-index: 2; width: 7cqw; transform: translate(-50%, -50%); }
+.zm-bodil img { display: block; width: 100%; height: auto; filter: drop-shadow(0 4px 6px rgba(31, 51, 70, .25)); animation: bob 3s ease-in-out infinite; transition: scale .2s ease; }
+@media (hover: hover) { .zm-baby:hover img, .zm-bodil:hover img { scale: 1.06; } }
+.zm-baby:active img, .zm-bodil:active img { scale: .94; }
+
+/* Missionens figur med "!" */
+.zm-who { z-index: 4; width: 5.2cqw; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: #ffede6;
+  box-shadow: 0 0 0 .35cqw #fff, 0 4px 10px rgba(31, 51, 70, .35); transition: scale .15s ease; }
+.zm-who img, .zm-who .emo { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; font-size: 3cqw; }
+.zm-bang { position: absolute; top: -36%; right: -30%; display: grid; place-items: center; width: 2.6cqw; aspect-ratio: 1; border-radius: 50%; border: 2px solid #fff;
+  background: #ff8a65; color: #fff; font: 700 clamp(11px, 1.5cqw, 17px)/1 var(--font-head); animation: m-bang 2.6s ease-in-out infinite; }
+@media (hover: hover) { .zm-who:hover { scale: 1.08; } }
+.zm-who:active { scale: .92; }
+
+/* Gæster og ugens dage */
+.zm-info { position: absolute; z-index: 2; transform: translate(-50%, -50%); display: flex; align-items: center; gap: .6em; white-space: nowrap; padding: .25em .9em;
+  border-radius: 99px; background: rgba(31, 51, 70, .74); color: #fff; font: 600 clamp(10px, 1.15cqw, 14px)/1.3 var(--font-head); pointer-events: none; }
+.zm-sep { width: 1px; height: 1em; background: rgba(255, 255, 255, .45); }
+.zm-dots { display: inline-flex; gap: .3em; }
+.zm-dots i { width: .6em; height: .6em; border-radius: 50%; border: 2px solid #ffc94d; }
+.zm-dots i.on { background: #ffc94d; }
+
+/* Blade eller sne efter årstiden */
+.zm-fall { position: absolute; inset: 0; z-index: 5; overflow: hidden; pointer-events: none; }
+.zm-fall i { position: absolute; top: -3%; width: 1cqw; height: .6cqw; border-radius: 0 100% 0 100%; opacity: 0; animation: zm-fall 12s linear infinite; }
+.zm-fall i.snow { width: .6cqw; height: .6cqw; border-radius: 50%; }
+@keyframes zm-fall { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 10% { opacity: .9; } 100% { transform: translate(8cqw, 60cqw) rotate(540deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .zm-fall { display: none; }
+  .zm-spark, .lv-4 .zm-glow, .zm-bang, .zm-badge, .zm-bodil img { animation: none; }
+}
 .map-bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
 .map-bar .muted { flex: 1; min-width: 220px; font-weight: 700; }
 
@@ -643,7 +710,6 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .mission-body { justify-self: stretch; }
   .mission-go .btn.big { width: 100%; min-width: 0; }
 }
-.m-bang { animation-duration: 2.6s; }
 .mission-steps .topic { display: inline-block; margin-left: 6px; font: 600 .74rem var(--font-head); color: var(--ink-2); background: var(--card-2); border: 1px solid var(--line); border-radius: 99px; padding: 1px 9px; vertical-align: 2px; }
 .sheet-next { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--sun-soft); font-weight: 700; }
 

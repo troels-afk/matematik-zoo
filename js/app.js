@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004215709';
-import * as E from './engine.js?v=20261004215709';
-import * as Z from './zoo.js?v=20261004215709';
-import { zooGate } from './scene.js?v=20261004215709';
-import { zooMap } from './map.js?v=20261004215709';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004215709';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004215709';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004215709';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004221910';
+import * as E from './engine.js?v=20261004221910';
+import * as Z from './zoo.js?v=20261004221910';
+import { zooGate } from './scene.js?v=20261004221910';
+import { zooMap } from './map.js?v=20261004221910';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004221910';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004221910';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004221910';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -354,9 +354,6 @@ function showHome() {
   const fs = E.factSummary(st);
   const tasks = dailyTasks(st);
   const doneToday = tasks.some((t) => t.done) || st.sessions.some((x) => x.date === today() && x.mode !== 'practice');
-  const introduced = FACTS.filter((f) => E.factBox(st, f.key) >= 0)
-    .map((f) => ({ f, due: st.facts[f.key].due <= today() }))
-    .sort((a, b) => (b.due - a.due) || E.factBox(st, b.f.key) - E.factBox(st, a.f.key));
   const openTasks = tasks.filter((t) => !t.done);
   if (!openTasks.some((t) => t.area === S.mission)) S.mission = (openTasks[0] || tasks[0]).area;
   const mapData = {
@@ -364,9 +361,8 @@ function showHome() {
     guests: Z.guestsPerDay(st),
     stars: levels.filter((l) => l >= 3).length,
     week: { n: E.weekSessions(st), goal: E.WEEK_GOAL, label: `Uge ${isoWeek()}` },
-    areas: AREAS.map((a, i) => ({ id: a.id, place: a.place, level: levels[i], animals: Z.ZONES[a.id].animals.map((e) => ({ emoji: e, art: Z.artFor(e) })) })),
+    areas: AREAS.map((a, i) => ({ id: a.id, place: a.place, level: levels[i], levelName: Z.LEVELS[levels[i]].name })),
     tasks: doneToday ? [] : tasks.filter((t) => t.area === S.mission).map((t) => ({ area: t.area, done: false, active: true, who: { ...Z.CAST[t.who], id: t.who } })),
-    babies: introduced.map(({ f, due }) => ({ art: Z.BABIES[f.key].img, emoji: Z.BABIES[f.key].emoji, awake: due })),
     due: fs.due,
     bodil: Z.CAST.bodil.bust,
   };
@@ -397,7 +393,7 @@ function showHome() {
       <button class="link" id="parent">Forælder</button>
     </div>`);
 
-  const svgEl = $('.zoo-map-svg');
+  const mapEl = $('.zoo-map');
   const act = (t) => {
     sfx('tap');
     if (t.dataset.task) {
@@ -408,8 +404,10 @@ function showHome() {
     else if (t.dataset.baby) babySheet();
     else if (t.dataset.bodil) bodilSheet(levels, first);
   };
-  svgEl.addEventListener('click', (e) => { const t = e.target.closest('.m-tap'); if (t) act(t); });
-  svgEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { const t = e.target.closest('.m-tap'); if (t) { e.preventDefault(); act(t); } } });
+  mapEl.addEventListener('click', (e) => { const t = e.target.closest('.m-tap'); if (t) act(t); });
+  // På smalle skærme kan kortet scrolles sidelæns: start med missionens figur i midten
+  const scroller = $('.map-scroll'), who = $('.zm-who');
+  if (who && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = who.offsetLeft - scroller.clientWidth / 2;
   on('#start', 'click', () => { sfx('tap'); runSession(mission.area, mission); });
   on('#again', 'click', () => { sfx('tap'); taskSheet(first); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
