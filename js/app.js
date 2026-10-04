@@ -179,6 +179,58 @@ async function openProfile(id) {
 // Første gang: vis introen, ellers direkte til zoo'en
 const startScreen = () => (S.state.zoo.introSeen ? showHome() : showIntroTour());
 
+// ================= Om appen: baggrund, pensum og forskning =================
+
+function showAbout(back = showHome) {
+  const skillCount = AREAS.reduce((n, a) => n + a.skills.length, 0);
+  const rows = AREAS.map((a) => `<tr><td>${a.icon} ${a.place}</td><td>${a.name}</td><td>${a.skills.map((sk) => sk.name).join(', ')}</td></tr>`).join('');
+  const principle = (icon, title, body, src) => `
+    <div class="card principle">
+      <div class="pr-ic">${icon}</div>
+      <div><h3>${title}</h3><p>${body}</p>${src ? `<p class="src">${src}</p>` : ''}</div>
+    </div>`;
+  view(`
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Tilbage</span></div>
+    <section class="area-hero" style="--ac:var(--c-maal)">
+      <span class="big">📚</span>
+      <div style="flex:1;min-width:220px"><h1 style="margin:0">Om appen</h1>
+        <div class="muted" style="font-weight:700">Hvorfor Matematik-Zoo er bygget, som den er: pensum, forskning og de valg, vi har truffet.</div></div>
+    </section>
+
+    <div class="about stack">
+      <div class="card">
+        <h2>Formålet</h2>
+        <p>Appen skal hjælpe en elev i 4. klasse med at komme struktureret igennem <b>hele årets matematikpensum</b> – lidt hver dag, uden pres og uden reklamer. Zoo'en er rammen, der gør det sjovt at komme tilbage, men det er matematikken, der får zoo'en til at vokse.</p>
+      </div>
+
+      <div class="card">
+        <h2>Pensum</h2>
+        <p>Indholdet følger de fire kompetenceområder i Fælles Mål for matematik (tal og algebra, geometri og måling, statistik og sandsynlighed samt matematiske kompetencer) og er struktureret som i lærebogssystemet KonteXt+ 4. Det giver ${skillCount} færdigheder fordelt på ${AREAS.length} områder i zoo'en – plus gangetabellen i Babyhuset.</p>
+        <div class="table-wrap"><table><thead><tr><th>Sted i zoo'en</th><th>Emne</th><th>Færdigheder</th></tr></thead><tbody>${rows}
+          <tr><td>🍼 Babyhuset</td><td>Gangetabellen</td><td>De 36 gangestykker fra 2 til 9</td></tr></tbody></table></div>
+        <p class="small muted">Hver færdighed har tre niveauer. Øvebanen rummer desuden lektiepakker lavet ud fra konkrete lektieark.</p>
+      </div>
+
+      <h2 class="section-title" style="margin-bottom:0">Det bygger appen på</h2>
+      ${principle('🔁', 'Spredt gentagelse', 'Gangestykker huskes bedre, når man henter dem frem med voksende mellemrum. Hver unge i Babyhuset er et gangestykke i et "Leitner-system": den kommer igen efter 1, 2, 4, 7 og 14 dage, så længe den huskes – og hurtigt igen, hvis den driller.', 'Kilde: forskning i genkaldelse og spaced repetition (fx Rohrer).')}
+      ${principle('🔀', 'Blandede opgaver', 'Opgavetyper blandes i stedet for at komme i lange blokke. I et studie med 4.-klasseelever fik de, der øvede blandet, 77 % rigtige dagen efter mod 38 % for dem, der øvede én type ad gangen.', 'Kilde: Taylor & Rohrer (2010).')}
+      ${principle('🎯', 'Sværhedsgrad der passer', 'Hver færdighed har tre niveauer. Appen går op efter 3 rigtige i træk og ned efter 2 forkerte, så eleven typisk rammer 80–90 % rigtige. En færdighed er "sikker" ved 8 af 10 rigtige og "mestret", når den sidder på to forskellige dage.', 'Kilde: mestringslæring, Education Endowment Foundation.')}
+      ${principle('🧱', 'Fra konkret til abstrakt', 'Nye emner starter med en tegning eller et gennemregnet eksempel trin for trin – tallinjer, brøkstænger, positionstabeller – før der regnes med tal alene.', 'Kilde: konkret–billede–abstrakt (CPA) og EEF\'s vejledning om matematikundervisning.')}
+      ${principle('💬', 'Forklaringer i stedet for kryds', 'Ved et forkert svar vises den rigtige løsning med en strategi, fx "7 × 8 = 7 × 7 + 7". Opgaven kommer igen senere. Uddybende feedback virker bedre end bare rigtigt/forkert.', 'Kilde: Shute (2008) om formativ feedback.')}
+      ${principle('🦁', 'Matematikken er selve spillet', 'Historien om zoo\'en ligger mellem opgaverne, og regnestykkerne handler om zoo\'ens dyr og gæster. Når matematikken er selve aktiviteten, lærer børn mere og spiller længere, end når den bare er en adgangsbillet til et spil.', 'Kilde: Habgood & Ainsworth (Zombie Division); Walkington (2013) om personlige tekstopgaver.')}
+      ${principle('🌱', 'Ingen straf og ingen belønninger udefra', 'Der er ingen liv, point-fradrag, ranglister, butik eller valuta. Belønningen er, at ungerne vokser og zoo\'en bliver større. Ydre belønninger kan svække lysten til at lære, og straf for fejl kan skabe matematikangst.', 'Kilde: Deci, Koestner & Ryan (1999).')}
+      ${principle('⏱️', 'Tid uden pres', 'Tidtagning findes kun i den valgfrie "Slå din rekord" – og kun på gangestykker, der allerede sidder. Træningen tager ca. 15 minutter, og målet er 4 dage om ugen.', 'Kilde: What Works Clearinghouse (2021) om flydende regnefærdighed.')}
+      ${principle('👨‍👧', 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
+
+      <div class="card">
+        <h2>Sådan er den lavet</h2>
+        <p>Matematik-Zoo er udviklet i efteråret 2026 af en far til sin datter sammen med AI-assistenten Claude. Udgangspunktet var en gennemgang af eksisterende apps (bl.a. Matematikfessor, DragonBox, Khan Academy, Zearn og Prodigy) og forskningen ovenfor. Tegningerne af dyr og figurer er genereret med ChatGPT.</p>
+        <p>Fremskridt gemmes kun på den enhed, appen bruges på. Der er ingen reklamer, ingen konto og ingen sporing – kun skrifttyperne hentes fra Google Fonts.</p>
+      </div>
+    </div>`, (e) => { if (e.key === 'Escape') back(); });
+  on('#back', 'click', back);
+}
+
 // ================= Intro: sådan spiller du =================
 
 function showIntroTour(done = showHome) {
@@ -341,6 +393,7 @@ function showHome() {
 
     <div class="footer-links">
       <button class="link" id="switch">Skift profil</button>
+      <button class="link" id="about">Om appen</button>
       <button class="link" id="parent">Forælder</button>
     </div>`);
 
@@ -350,6 +403,7 @@ function showHome() {
   on('#sprint', 'click', startSprint);
   on('#help', 'click', () => showIntroTour());
   on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
+  on('#about', 'click', () => showAbout());
   on('#snd', 'click', () => {
     st.settings.sound = !st.settings.sound;
     setSound(st.settings.sound);
@@ -1050,7 +1104,8 @@ function showParent() {
 
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button>
-      <div><h1 style="margin:0">Forældreoverblik</h1><span class="muted">${esc(st.name)} · ${esc(Z.zooName(st))}</span></div></div>
+      <div style="flex:1"><h1 style="margin:0">Forældreoverblik</h1><span class="muted">${esc(st.name)} · ${esc(Z.zooName(st))}</span></div>
+      <button class="btn ghost" id="about-p">📚 Om appen</button></div>
 
     <div class="grid2">
       <div class="card stack">
@@ -1128,6 +1183,7 @@ function showParent() {
     toast('Navnet er gemt');
   });
   on('#back', 'click', showHome);
+  on('#about-p', 'click', () => showAbout(showParent));
   on('#del', 'click', async () => {
     if (!(await ask(`Slet ${esc(st.name)}s profil og alt fremskridt?`, 'Slet', 'Annullér'))) return;
     if (!(await ask('Er du helt sikker?', 'Ja, slet', 'Annullér'))) return;
@@ -1155,4 +1211,4 @@ function showParent() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, babyReact, show: { home: showHome, book: showBook, profiles: showProfiles, tour: showIntroTour, set: showPracticeSet, practice: startPractice } };
+window.__mo = { S, E, Z, babyReact, show: { home: showHome, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice } };

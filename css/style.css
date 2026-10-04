@@ -548,3 +548,15 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .task-card .body { padding-top: 18px; }
 .icon-btn.pill { width: auto; padding: 0 14px; gap: 6px; display: inline-flex; align-items: center; font: 600 .95rem var(--font-head); color: #1f3346; }
 @media (max-width: 520px) { .icon-btn.pill span { display: none; } .icon-btn.pill { padding: 0; width: 48px; justify-content: center; } }
+
+/* ---------- Om appen ---------- */
+.about { margin-top: 16px; max-width: 860px; }
+.about .card h2 { margin-bottom: .5em; }
+.about .card p + p { margin-top: .6em; }
+.about table td:first-child { white-space: nowrap; font-weight: 700; }
+.principle { display: flex; gap: 16px; align-items: flex-start; }
+.principle .pr-ic { width: 52px; height: 52px; border-radius: 16px; background: var(--lav-soft); display: grid; place-items: center; font-size: 1.6rem; flex: none; }
+.principle h3 { margin: 0 0 4px; }
+.principle p { margin: 0; }
+.principle .src { margin-top: 6px; font-size: .82rem; color: var(--ink-2); font-style: italic; }
+.footer-links { gap: 12px; flex-wrap: wrap; }
