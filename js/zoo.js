@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261004205649';
-import * as E from './engine.js?v=20261004205649';
-import { today } from './util.js?v=20261004205649';
+import { AREAS, FACTS } from './curriculum.js?v=20261004210050';
+import * as E from './engine.js?v=20261004210050';
+import { today } from './util.js?v=20261004210050';
 
 export const CAST = {
   bodil: { name: 'Bodil', role: 'Zoo-direktør', emoji: '👵🏼', img: 'img/cast/bodil-face.webp', bust: 'img/cast/bodil.webp' },
@@ -149,6 +149,9 @@ const BABY_EXPR = {
   kængurunge: 'img/babies/kaenguru',
   koalaunge: 'img/babies/koala',
   dovendyrunge: 'img/babies/dovendyr',
+  kamelunge: 'img/babies/kamel',
+  lamaunge: 'img/babies/lama',
+  abeunge: 'img/babies/abe',
 };
 
 export const BABIES = {};
