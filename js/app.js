@@ -1,12 +1,12 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004194636';
-import * as E from './engine.js?v=20261004194636';
-import * as Z from './zoo.js?v=20261004194636';
-import { zooGate } from './scene.js?v=20261004194636';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004194636';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004194636';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004194636';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004194714';
+import * as E from './engine.js?v=20261004194714';
+import * as Z from './zoo.js?v=20261004194714';
+import { zooGate } from './scene.js?v=20261004194714';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004194714';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004194714';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004194714';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -222,6 +222,111 @@ function showAbout(back = showHome) {
       ${principle('⏱️', 'Tid uden pres', 'Tidtagning findes kun i den valgfrie "Slå din rekord" – og kun på gangestykker, der allerede sidder. Træningen tager ca. 15 minutter, og målet er 4 dage om ugen.', 'Kilde: What Works Clearinghouse (2021) om flydende regnefærdighed.')}
       ${principle('👨‍👧', 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
 
+    </div>`, (e) => { if (e.key === 'Escape') back(); });
+  on('#back', 'click', back);
+}
+
+// ================= Intro: sådan spiller du =================
+
+function showIntroTour(done = showHome) {
+  const st = S.state, zname = Z.zooName(st);
+  const someBabies = FACTS.slice(0, 6).map((f, i) => `<span class="baby" style="--st:${i}"><span>${Z.BABIES[f.key].emoji}</span></span>`).join('');
+  const pages = [
+    {
+      art: Z.CAST.bodil.bust ? `<img class="tour-portrait" src="${Z.CAST.bodil.bust}" alt="Bodil">` : '<div class="tour-art">🦒🐘🦁🐧🦓</div>',
+      title: `Velkommen til ${esc(zname)}!`,
+      body: say('bodil', `Zoo'en har været lukket hele vinteren, og jeg har brug for en ny zoo-leder. Det er dig, ${esc(st.name)}!`),
+    },
+    {
+      art: `<div class="tour-icons">${AREAS.map((a) => `<span style="--ac:${a.color}">${a.icon}</span>`).join('')}</div>`,
+      title: 'Målet: den store åbningsdag',
+      body: say('bodil', `Zoo'en har ${AREAS.length} områder. Hvert område bliver bedre, når du bliver god til noget matematik – så flytter der nye dyr ind og kommer flere gæster. Når alle ${AREAS.length} områder har fået en ⭐, holder vi åbningsfest!`),
+    },
+    {
+      art: `<ol class="plan">
+        <li><span class="n">1</span><div><div class="t">🍼 Morgenrunde i Babyhuset</div><div class="d">Giv ungerne flaske – gangetabellen</div></div></li>
+        <li><span class="n">2</span><div><div class="t">🦒 Dagens opgave</div><div class="d">Hjælp Nora, Liv eller Yasmin med en opgave i zoo'en</div></div></li>
+        <li><span class="n">3</span><div><div class="t">🧭 Runde i zoo'en</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div></li>
+      </ol>`,
+      title: 'Sådan går en dag',
+      body: say('nora', 'Det tager cirka 15 minutter. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
+    },
+    {
+      art: `<div class="tour-babies">${someBabies}</div>`,
+      title: 'Ungerne i Babyhuset',
+      body: say('nora', `Hvert gangestykke er en dyreunge. Når du husker gangestykket – også dagen efter – vokser ungen, til den er voksen. Kan du få alle ${FACTS.length} unger voksne?`),
+    },
+    {
+      art: '<div class="tour-art">🦜</div>',
+      title: 'Bare rolig!',
+      body: say('kaj', 'Regner du forkert, sker der ikke noget. Du får en forklaring, og opgaven kommer igen senere. Og går en division ikke op, så er resten MIN!'),
+    },
+  ];
+  let i = 0;
+  const finish = () => { st.zoo.introSeen = true; save(); done(); };
+  const render = () => {
+    const p = pages[i], last = i === pages.length - 1;
+    view(`
+      <div class="card sheet tour stack">
+        <div class="spread"><span class="kicker">Sådan spiller du · ${i + 1}/${pages.length}</span><button class="link small" id="skip">Spring over</button></div>
+        <div class="tour-visual">${p.art}</div>
+        <h1 class="center">${p.title}</h1>
+        ${p.body}
+        <div class="tour-dots">${pages.map((_, j) => `<i class="${j === i ? 'on' : ''}"></i>`).join('')}</div>
+        <div class="row" style="justify-content:center">
+          ${i ? '<button class="btn ghost big" id="prev">←</button>' : ''}
+          <button class="btn big" id="next">${last ? 'Åbn porten!' : 'Næste'}</button>
+        </div>
+      </div>`, (e) => {
+      if (e.key === 'Enter' || e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft' && i) { i--; render(); }
+      else if (e.key === 'Escape') finish();
+    });
+    on('#next', 'click', next);
+    on('#prev', 'click', () => { i--; render(); });
+    on('#skip', 'click', finish);
+  };
+  const next = () => { sfx('tap'); if (i === pages.length - 1) finish(); else { i++; render(); } };
+  render();
+}
+
+// ================= Forsiden: zoo'en =================
+
+function showHome() {
+  const st = S.state;
+  const zname = Z.zooName(st);
+  const levels = levelsOf(st);
+  const residents = AREAS.flatMap((a, i) => Z.ZONES[a.id].animals.slice(0, Math.min(levels[i], 2)));
+  const peek = residents.length ? residents : ['🦒'];
+  const fs = E.factSummary(st);
+  const guests = Z.guestsPerDay(st);
+  const stars = levels.filter((l) => l >= 3).length;
+  const open = levels.filter((l) => l >= 1).length;
+  const msg = Z.homeMessage(st);
+  const sugg = E.suggestAreas(st, 3);
+  const doneToday = st.sessions.some((s) => s.date === today() && s.mode !== 'practice');
+
+  const taskCard = (id, i) => {
+    const a = areaOf(id), z = Z.ZONES[id], t = Z.taskFor(id), cur = E.currentSkill(st, id);
+    return `<button class="task-card ${i === 0 ? 'rec-card' : ''}" data-area="${id}" style="--ac:${a.color}">
+      <div class="top"><span class="big">${a.icon}</span><span class="ani">${ani(z.animals)}</span>${i === 0 ? '<span class="rec">Forslag</span>' : ''}</div>
+      <div class="body">
+        <span class="place">${a.place}</span>
+        <span class="title">${t.title}</span>
+        <span class="foot">${avatar(t.who, 'sm')}<span class="who"><b>${Z.CAST[t.who].name}</b><br>${cur ? SKILLS[cur].name : 'Repetition'}</span><span class="go" aria-hidden="true">→</span></span>
+      </div>
+    </button>`;
+  };
+  const tile = (a, i) => {
+    const lv = levels[i], L = Z.LEVELS[lv];
+    const sts = a.skills.map((s) => E.skillStatus(st, s.id));
+    return `<button class="area l${lv}" data-place="${a.id}" style="--ac:${a.color}">
+      <div class="band"><span class="big">${a.icon}</span><span class="ani">${lv ? ani(Z.ZONES[a.id].animals.slice(0, Math.min(lv, 3))) : ''}</span></div>
+      <div class="inner">
+        <span class="nm">${a.place}</span><span class="sub">${a.name}</span>
+        <span class="lvl">${L.icon} ${L.name}</span>
+        <div class="pips">${sts.map((x) => `<span class="pip ${x}"></span>`).join('')}</div>
+      </div>
     </button>`;
   };
   const introduced = FACTS.filter((f) => E.factBox(st, f.key) >= 0)
