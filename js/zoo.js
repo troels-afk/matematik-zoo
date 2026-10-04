@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261004202112';
-import * as E from './engine.js?v=20261004202112';
-import { today } from './util.js?v=20261004202112';
+import { AREAS, FACTS } from './curriculum.js?v=20261004202246';
+import * as E from './engine.js?v=20261004202246';
+import { today } from './util.js?v=20261004202246';
 
 export const CAST = {
   bodil: { name: 'Bodil', role: 'Zoo-direktør', emoji: '👵🏼', img: 'img/cast/bodil-face.webp', bust: 'img/cast/bodil.webp' },
@@ -16,39 +16,39 @@ export const CAST = {
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)
 export const ZONES = {
   tal: {
-    animals: ['🦩', '🦢', '🦆'], who: 'bodil', blurb: 'Indgangen, billetlugen og flamingosøen',
+    animals: ['🦩', '🦢', '🦆'], who: 'bodil', blurb: 'Indgangen, billetlugen og flamingosøen', step: 'tæl gæster og billetter',
     tasks: ['Tæl dagens gæster i billetlugen', 'Lav besøgsrapporten til Bodil', 'Der er kø ved billetlugen – hjælp til!'],
   },
   gange: {
-    animals: ['🦒', '🐘', '🦛'], who: 'nora', blurb: 'Her bestilles foder til de store dyr',
+    animals: ['🦒', '🐘', '🦛'], who: 'nora', blurb: 'Her bestilles foder til de store dyr', step: 'regn foderet ud til de store dyr',
     tasks: ['Bestil blade til giraferne', 'Regn ugens foder ud til elefanterne', 'Hjælp Nora med den store foderbestilling'],
   },
   division: {
-    animals: ['🐒', '🐿️', '🦫'], who: 'nora', blurb: 'Maden fordeles ligeligt – resten går til Kaj',
+    animals: ['🐒', '🐿️', '🦫'], who: 'nora', blurb: 'Maden fordeles ligeligt – resten går til Kaj', step: 'fordel maden ligeligt mellem dyrene',
     tasks: ['Fordel bananerne ligeligt mellem aberne', 'Gør madskålene klar til abehuset', 'Del frugten ud – Kaj holder øje med resten'],
   },
   brok: {
-    animals: ['🦭', '🐻‍❄️', '🦦'], who: 'nora', blurb: 'Bassiner, fiskespande og pingvinunger',
+    animals: ['🦭', '🐻‍❄️', '🦦'], who: 'nora', blurb: 'Bassiner, fiskespande og pingvinunger', step: 'del fisk og bassiner i brøkdele',
     tasks: ['Fyld pingvinbassinet op', 'Del fiskespandene mellem pingvinerne', 'Hjælp Nora med sælernes madplan'],
   },
   decimal: {
-    animals: ['🦔', '🐢', '🦥'], who: 'yasmin', blurb: 'Dyrene vejes, måles og får medicin',
+    animals: ['🦔', '🐢', '🦥'], who: 'yasmin', blurb: 'Dyrene vejes, måles og får medicin', step: 'vej og mål dyrene i klinikken',
     tasks: ['Vej den nye surikatunge', 'Tjek om pindsvinet har taget på', 'Hjælp Yasmin med at måle medicin op'],
   },
   geometri: {
-    animals: ['🦓', '🦏', '🐪'], who: 'liv', blurb: 'Hegn, anlæg og nye indhegninger',
+    animals: ['🦓', '🦏', '🐪'], who: 'liv', blurb: 'Hegn, anlæg og nye indhegninger', step: 'mål hegn og anlæg op',
     tasks: ['Byg et nyt hegn til zebraerne', 'Tegn det nye næsehorn-anlæg', 'Hjælp Liv med at måle anlæggene op'],
   },
   maaling: {
-    animals: ['🦁', '🐯', '🐆'], who: 'nora', blurb: 'Fodringstider, shows og åbningstider',
+    animals: ['🦁', '🐯', '🐆'], who: 'nora', blurb: 'Fodringstider, shows og åbningstider', step: 'hold styr på tider og mål',
     tasks: ['Lav fodringsplanen for rovdyrene', 'Tjek zoo-uret før løvefodringen', 'Hold styr på tiderne til sæl-showet'],
   },
   data: {
-    animals: ['🐼', '🐨', '🦘'], who: 'liv', blurb: 'Hvad synes gæsterne? Tæl, spørg og tegn diagrammer',
+    animals: ['🐼', '🐨', '🦘'], who: 'liv', blurb: 'Hvad synes gæsterne? Tæl, spørg og tegn diagrammer', step: 'tæl og tegn diagrammer over gæsterne',
     tasks: ['Find gæsternes yndlingsdyr', 'Lav et diagram til opslagstavlen', 'Hjælp Liv med gæsteundersøgelsen'],
   },
   algebra: {
-    animals: ['🦊', '🦝', '🦉'], who: 'kaj', blurb: 'Pote-spor og kodelåse til gæsternes skattejagt',
+    animals: ['🦊', '🦝', '🦉'], who: 'kaj', blurb: 'Pote-spor og kodelåse til gæsternes skattejagt', step: 'knæk koder og følg pote-spor',
     tasks: ['Lav en skattejagt til gæsterne', 'Knæk koden til Kajs skattekiste', "Følg pote-sporet gennem zoo'en"],
   },
 };

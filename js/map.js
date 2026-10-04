@@ -2,7 +2,7 @@
 // Fremgang vises i verden: byggehegn → dyr flytter ind → gæster → flag → guldskær.
 // Bygningerne er tegnet enkelt her; AREA_ART kan pege på genererede tegninger, der så bruges i stedet.
 
-import { esc } from './util.js?v=20261004202112';
+import { esc } from './util.js?v=20261004202246';
 
 export const W = 1200, H = 960;
 

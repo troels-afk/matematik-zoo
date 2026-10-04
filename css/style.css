@@ -645,3 +645,4 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .mission-go .btn.big { width: 100%; min-width: 0; }
 }
 .m-bang { animation-duration: 2.6s; }
+.mission-steps .topic { display: inline-block; margin-left: 6px; font: 600 .74rem var(--font-head); color: var(--ink-2); background: var(--card-2); border: 1px solid var(--line); border-radius: 99px; padding: 1px 9px; vertical-align: 2px; }

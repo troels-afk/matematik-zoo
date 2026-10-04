@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004202112';
-import * as E from './engine.js?v=20261004202112';
-import * as Z from './zoo.js?v=20261004202112';
-import { zooGate } from './scene.js?v=20261004202112';
-import { zooMap } from './map.js?v=20261004202112';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004202112';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004202112';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004202112';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004202246';
+import * as E from './engine.js?v=20261004202246';
+import * as Z from './zoo.js?v=20261004202246';
+import { zooGate } from './scene.js?v=20261004202246';
+import { zooMap } from './map.js?v=20261004202246';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004202246';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004202246';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004202246';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -437,7 +437,7 @@ function missionCard(st, t, open) {
         <p class="mission-need"><b>${c.name}</b> har brug for din hjælp i ${a.icon} <b>${a.place}</b>.</p>
         <ol class="mission-steps">
           <li><span class="n">1</span><span><b>Morgenrunde</b> · giv ungerne i Babyhuset flaske</span></li>
-          <li><span class="n">2</span><span><b>${a.place}</b> · ${cur ? SKILLS[cur].name.toLowerCase() : 'repetition'}</span></li>
+          <li><span class="n">2</span><span><b>${a.place}</b> · ${z.step} <span class="topic">${cur ? SKILLS[cur].name : 'repetition'}</span></span></li>
           <li><span class="n">3</span><span><b>Runde i zoo'en</b> · et par blandede opgaver</span></li>
         </ol>
         <div class="mission-go">
@@ -478,7 +478,7 @@ function taskSheet(t) {
   const a = areaOf(t.area), cur = E.currentSkill(S.state, t.area);
   openSheet(`
     ${say(t.who, `<b>${t.title}</b> – kan du hjælpe mig? Vi starter med morgenrunden i Babyhuset.`)}
-    <div class="sheet-plan"><span>🍼 Morgenrunde</span><span>→</span><span>${a.icon} ${a.place}${cur ? ` · ${SKILLS[cur].name}` : ''}</span><span>→</span><span>🧭 Runde i zoo'en</span></div>
+    <div class="sheet-plan"><span>🍼 Morgenrunde</span><span>→</span><span>${a.icon} ${a.place} · ${Z.ZONES[t.area].step}</span><span>→</span><span>🧭 Runde i zoo'en</span></div>
     <div class="row" style="justify-content:flex-end">
       <button class="btn ghost" data-close>Senere</button>
       <button class="btn" id="go-task">Start dagens vagt</button>
