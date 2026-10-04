@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004202632';
-import * as E from './engine.js?v=20261004202632';
-import * as Z from './zoo.js?v=20261004202632';
-import { zooGate } from './scene.js?v=20261004202632';
-import { zooMap } from './map.js?v=20261004202632';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004202632';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004202632';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004202632';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004203116';
+import * as E from './engine.js?v=20261004203116';
+import * as Z from './zoo.js?v=20261004203116';
+import { zooGate } from './scene.js?v=20261004203116';
+import { zooMap } from './map.js?v=20261004203116';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004203116';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004203116';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004203116';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
