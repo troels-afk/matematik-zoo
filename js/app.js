@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004204106';
-import * as E from './engine.js?v=20261004204106';
-import * as Z from './zoo.js?v=20261004204106';
-import { zooGate } from './scene.js?v=20261004204106';
-import { zooMap } from './map.js?v=20261004204106';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004204106';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004204106';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004204106';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004204259';
+import * as E from './engine.js?v=20261004204259';
+import * as Z from './zoo.js?v=20261004204259';
+import { zooGate } from './scene.js?v=20261004204259';
+import { zooMap } from './map.js?v=20261004204259';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004204259';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004204259';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004204259';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -355,7 +355,7 @@ function showHome() {
     stars: levels.filter((l) => l >= 3).length,
     week: { n: E.weekSessions(st), goal: E.WEEK_GOAL, label: `Uge ${isoWeek()}` },
     areas: AREAS.map((a, i) => ({ id: a.id, place: a.place, level: levels[i], animals: Z.ZONES[a.id].animals.map((e) => ({ emoji: e, art: Z.artFor(e) })) })),
-    tasks: tasks.map((t) => ({ area: t.area, done: t.done, active: !doneToday && t.area === S.mission, who: { ...Z.CAST[t.who], id: t.who } })),
+    tasks: doneToday ? [] : tasks.filter((t) => t.area === S.mission).map((t) => ({ area: t.area, done: false, active: true, who: { ...Z.CAST[t.who], id: t.who } })),
     babies: introduced.map(({ f, due }) => ({ art: Z.BABIES[f.key].img, emoji: Z.BABIES[f.key].emoji, awake: due })),
     due: fs.due,
     bodil: Z.CAST.bodil.bust,
@@ -392,8 +392,7 @@ function showHome() {
     sfx('tap');
     if (t.dataset.task) {
       // Før træningen: figuren bliver dagens mission øverst. Efter: vis opgaven i et ark.
-      if (!doneToday) { S.mission = t.dataset.task; showHome(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-      else taskSheet(tasks.find((x) => x.area === t.dataset.task));
+      taskSheet(tasks.find((x) => x.area === t.dataset.task));
     }
     else if (t.dataset.area) areaSheet(t.dataset.area);
     else if (t.dataset.baby) babySheet();
@@ -402,7 +401,6 @@ function showHome() {
   svgEl.addEventListener('click', (e) => { const t = e.target.closest('.m-tap'); if (t) act(t); });
   svgEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { const t = e.target.closest('.m-tap'); if (t) { e.preventDefault(); act(t); } } });
   on('#start', 'click', () => { sfx('tap'); runSession(mission.area, mission); });
-  on('[data-mission]', 'click', (e) => { sfx('tap'); S.mission = e.currentTarget.dataset.mission; showHome(); });
   on('#again', 'click', () => { sfx('tap'); taskSheet(first); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
   on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
@@ -427,7 +425,6 @@ function missionCard(st, t, open) {
   const portrait = c.bust || c.img
     ? `<img class="mission-face" src="${c.bust || c.img}" alt="${c.name}">`
     : `<span class="mission-emoji" aria-hidden="true">${c.emoji}</span>`;
-  const others = open.filter((x) => x.area !== t.area);
   return `
     <section class="mission card">
       <div class="mission-art">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}</div>
@@ -444,8 +441,7 @@ function missionCard(st, t, open) {
           <button class="btn big" id="start">Start missionen</button>
           <span class="muted small">ca. 15 minutter</span>
         </div>
-        ${others.length ? `<div class="mission-others"><span class="muted small">Vil du hellere hjælpe en anden i dag?</span>
-          ${others.map((o) => `<button class="chip-btn" data-mission="${o.area}">${avatar(o.who, 'sm')}${Z.CAST[o.who].name} · ${areaOf(o.area).place}</button>`).join('')}</div>` : ''}
+
       </div>
     </section>`;
 }
