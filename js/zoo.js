@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261004202246';
-import * as E from './engine.js?v=20261004202246';
-import { today } from './util.js?v=20261004202246';
+import { AREAS, FACTS } from './curriculum.js?v=20261004202447';
+import * as E from './engine.js?v=20261004202447';
+import { today } from './util.js?v=20261004202447';
 
 export const CAST = {
   bodil: { name: 'Bodil', role: 'Zoo-direktør', emoji: '👵🏼', img: 'img/cast/bodil-face.webp', bust: 'img/cast/bodil.webp' },
@@ -55,7 +55,7 @@ export const ZONES = {
 
 // Områdets niveau – vokser med mestring af pensum
 export const LEVELS = [
-  { name: 'Kommer snart', icon: '🚧' },
+  { name: 'Under opbygning', icon: '🚧' },
   { name: 'Åben', icon: '🌱' },
   { name: 'Populær', icon: '💚' },
   { name: 'Stjerne-område', icon: '⭐' },
@@ -218,4 +218,17 @@ export function goodnight(state) {
 export function artFor(emoji) {
   for (const b of Object.values(BABIES)) if (b.emoji === emoji && b.img) return b.img;
   return null;
+}
+
+// Hvad skal der til for områdets næste niveau? (vises i arket på kortet)
+export function nextStep(state, area) {
+  const p = E.areaProgress(state, area.id);
+  const lv = areaLevel(state, area.id);
+  const firstOpen = area.skills.find((s) => !['sikker', 'mestret'].includes(E.skillStatus(state, s.id)));
+  const more = (n) => (n === 1 ? '1 færdighed mere' : `${n} færdigheder mere`);
+  if (lv === 0) return `Bliv sikker i "${firstOpen.name}" for at åbne ${area.place}.`;
+  if (lv === 1) return `Bliv sikker i ${more(Math.ceil(p.total / 2) - p.done)} for at gøre ${area.place} populær.`;
+  if (lv === 2) return `Bliv sikker i ${more(p.total - p.done)} for at give ${area.place} en stjerne.`;
+  if (lv === 3) return `Mestr alle færdigheder (sikker på to forskellige dage) for at gøre ${area.place} til et guld-område.`;
+  return `${area.place} er et guld-område – flot! Øv gerne videre, så det bliver ved med at sidde.`;
 }

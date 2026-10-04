@@ -2,7 +2,7 @@
 // Fremgang vises i verden: byggehegn → dyr flytter ind → gæster → flag → guldskær.
 // Bygningerne er tegnet enkelt her; AREA_ART kan pege på genererede tegninger, der så bruges i stedet.
 
-import { esc } from './util.js?v=20261004202246';
+import { esc } from './util.js?v=20261004202447';
 
 export const W = 1200, H = 960;
 
@@ -95,7 +95,8 @@ export function zooMap(d) {
     if (lv === 0) {
       if (p.kind !== 'island') g += `<rect x="${x - w / 2}" y="${y - h / 2 - 10}" width="${w}" height="${h}" rx="34" fill="#f6f3ec" opacity=".55"/>`;
       g += `<path d="M${x - 92} ${y + 46} h184" stroke="#e6a23c" stroke-width="10"/><path d="M${x - 92} ${y + 46} h184" stroke="#1f3346" stroke-width="10" stroke-dasharray="14 14"/>`;
-      g += `<text x="${x}" y="${y + 8}" text-anchor="middle" class="m-sign" style="fill:#5a6b7b">🚧 Kommer snart</text>`;
+      g += `<text x="${x}" y="${y - 2}" text-anchor="middle" class="m-sign" style="fill:#5a6b7b">🚧 Under opbygning</text>`;
+      g += `<text x="${x}" y="${y + 20}" text-anchor="middle" class="m-small" style="fill:#5a6b7b">Øv her for at åbne</text>`;
     }
     g += sign(x, y + h / 2 + 8, a.place, Math.max(120, a.place.length * 10.5));
     s += g + '</g>';

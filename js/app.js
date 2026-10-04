@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004202246';
-import * as E from './engine.js?v=20261004202246';
-import * as Z from './zoo.js?v=20261004202246';
-import { zooGate } from './scene.js?v=20261004202246';
-import { zooMap } from './map.js?v=20261004202246';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004202246';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004202246';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004202246';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004202447';
+import * as E from './engine.js?v=20261004202447';
+import * as Z from './zoo.js?v=20261004202447';
+import { zooGate } from './scene.js?v=20261004202447';
+import { zooMap } from './map.js?v=20261004202447';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004202447';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004202447';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004202447';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -500,6 +500,7 @@ function areaSheet(areaId) {
   openSheet(`
     <div class="sheet-head"><span class="sheet-ic">${a.icon}</span><div><h2 style="margin:0">${a.place}</h2><span class="muted">${a.name} · ${L.icon} ${L.name}</span></div>
       <span class="ani" style="margin-left:auto">${lv ? ani(z.animals.slice(0, Math.min(lv, 3))) : ''}</span></div>
+    <p class="sheet-next">${lv < 4 ? '🎯' : '🌟'} ${Z.nextStep(st, a)}</p>
     <div class="sheet-skills">${rows}</div>`, (el) => {
     el.querySelectorAll('[data-practice]').forEach((b) => b.addEventListener('click', () => { closeSheet(); startPractice(b.dataset.practice); }));
     el.querySelectorAll('[data-intro]').forEach((b) => b.addEventListener('click', () => { closeSheet(); showIntro(b.dataset.intro, showHome, 'Tilbage'); }));
