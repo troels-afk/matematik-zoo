@@ -1,12 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004194947';
-import * as E from './engine.js?v=20261004194947';
-import * as Z from './zoo.js?v=20261004194947';
-import { zooGate } from './scene.js?v=20261004194947';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004194947';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004194947';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004194947';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004200226';
+import * as E from './engine.js?v=20261004200226';
+import * as Z from './zoo.js?v=20261004200226';
+import { zooGate } from './scene.js?v=20261004200226';
+import { zooMap } from './map.js?v=20261004200226';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004200226';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004200226';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261004200226';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -292,52 +293,76 @@ function showIntroTour(done = showHome) {
 
 // ================= Forsiden: zoo'en =================
 
+// ---------- Ark nedefra (bruges på zoo-kortet) ----------
+let sheetEl = null;
+function openSheet(html, bind) {
+  if (!sheetEl) {
+    sheetEl = document.createElement('div');
+    sheetEl.className = 'sheet';
+    sheetEl.setAttribute('role', 'dialog');
+    document.body.appendChild(sheetEl);
+  }
+  sheetEl.innerHTML = `<div class="grab"></div><button class="sheet-x" aria-label="Luk">✕</button>${html}`;
+  requestAnimationFrame(() => sheetEl.classList.add('open'));
+  sheetEl.querySelector('.sheet-x').addEventListener('click', closeSheet);
+  sheetEl.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeSheet));
+  bind?.(sheetEl);
+  (sheetEl.querySelector('.btn:not(.ghost)') || sheetEl.querySelector('.btn'))?.focus({ preventScroll: true });
+}
+function closeSheet() { sheetEl?.classList.remove('open'); }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheetEl?.classList.contains('open')) closeSheet(); }, true);
+
+function isoWeek(d = new Date()) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+}
+
+// Dagens opgaver: én figur pr. foreslået område (aldrig den samme figur to gange)
+function dailyTasks(st) {
+  const sugg = E.suggestAreas(st, 3);
+  const used = new Set();
+  const doneAreas = new Set(st.sessions.filter((x) => x.date === today() && x.mode !== 'practice').map((x) => x.area));
+  return sugg.map((areaId) => {
+    let who = Z.ZONES[areaId].who;
+    if (who === 'bodil' || used.has(who)) who = ['nora', 'liv', 'yasmin', 'kaj'].find((w) => !used.has(w));
+    used.add(who);
+    const others = Object.values(Z.CAST).map((c) => c.name).filter((n) => n !== Z.CAST[who].name);
+    const titles = Z.ZONES[areaId].tasks.filter((t) => !others.some((n) => t.includes(n)));
+    const title = Z.dayPick(titles.length ? titles : Z.ZONES[areaId].tasks, areaId);
+    return { area: areaId, who, title, done: doneAreas.has(areaId) };
+  });
+}
+
 function showHome() {
+  closeSheet();
   const st = S.state;
   const zname = Z.zooName(st);
   const levels = levelsOf(st);
-  const residents = AREAS.flatMap((a, i) => Z.ZONES[a.id].animals.slice(0, Math.min(levels[i], 2)));
-  const peek = residents.length ? residents : ['🦒'];
   const fs = E.factSummary(st);
-  const guests = Z.guestsPerDay(st);
-  const stars = levels.filter((l) => l >= 3).length;
-  const open = levels.filter((l) => l >= 1).length;
-  const msg = Z.homeMessage(st);
-  const sugg = E.suggestAreas(st, 3);
-  const doneToday = st.sessions.some((s) => s.date === today() && s.mode !== 'practice');
-
-  const taskCard = (id, i) => {
-    const a = areaOf(id), z = Z.ZONES[id], t = Z.taskFor(id), cur = E.currentSkill(st, id);
-    return `<button class="task-card ${i === 0 ? 'rec-card' : ''}" data-area="${id}" style="--ac:${a.color}">
-      <div class="top"><span class="big">${a.icon}</span><span class="ani">${ani(z.animals)}</span>${i === 0 ? '<span class="rec">Forslag</span>' : ''}</div>
-      <div class="body">
-        <span class="place">${a.place}</span>
-        <span class="title">${t.title}</span>
-        <span class="foot">${avatar(t.who, 'sm')}<span class="who"><b>${Z.CAST[t.who].name}</b><br>${cur ? SKILLS[cur].name : 'Repetition'}</span><span class="go" aria-hidden="true">→</span></span>
-      </div>
-    </button>`;
-  };
-  const tile = (a, i) => {
-    const lv = levels[i], L = Z.LEVELS[lv];
-    const sts = a.skills.map((s) => E.skillStatus(st, s.id));
-    return `<button class="area l${lv}" data-place="${a.id}" style="--ac:${a.color}">
-      <div class="band"><span class="big">${a.icon}</span><span class="ani">${lv ? ani(Z.ZONES[a.id].animals.slice(0, Math.min(lv, 3))) : ''}</span></div>
-      <div class="inner">
-        <span class="nm">${a.place}</span><span class="sub">${a.name}</span>
-        <span class="lvl">${L.icon} ${L.name}</span>
-        <div class="pips">${sts.map((x) => `<span class="pip ${x}"></span>`).join('')}</div>
-      </div>
-    </button>`;
-  };
+  const tasks = dailyTasks(st);
+  const doneToday = tasks.some((t) => t.done) || st.sessions.some((x) => x.date === today() && x.mode !== 'practice');
   const introduced = FACTS.filter((f) => E.factBox(st, f.key) >= 0)
-    .sort((a, b) => (st.facts[a.key].due <= today() ? 0 : 1) - (st.facts[b.key].due <= today() ? 0 : 1) || E.factBox(st, b.key) - E.factBox(st, a.key));
-  const nursery = introduced.length
-    ? introduced.slice(0, 12).map((f) => baby(f.key)).join('')
-    : `<span class="muted">Babyhuset er tomt endnu. De første unger bliver født i morgenrunden.</span>`;
+    .map((f) => ({ f, due: st.facts[f.key].due <= today() }))
+    .sort((a, b) => (b.due - a.due) || E.factBox(st, b.f.key) - E.factBox(st, a.f.key));
+  const mapData = {
+    zooName: zname,
+    guests: Z.guestsPerDay(st),
+    stars: levels.filter((l) => l >= 3).length,
+    week: { n: E.weekSessions(st), goal: E.WEEK_GOAL, label: `Uge ${isoWeek()}` },
+    areas: AREAS.map((a, i) => ({ id: a.id, place: a.place, level: levels[i], animals: Z.ZONES[a.id].animals.map((e) => ({ emoji: e, art: Z.artFor(e) })) })),
+    tasks: tasks.map((t) => ({ area: t.area, done: t.done, who: { ...Z.CAST[t.who], id: t.who } })),
+    babies: introduced.map(({ f, due }) => ({ art: Z.BABIES[f.key].img, emoji: Z.BABIES[f.key].emoji, awake: due })),
+    due: fs.due,
+    bodil: Z.CAST.bodil.bust,
+  };
+  const first = tasks.find((t) => !t.done) || tasks[0];
 
   view(`
-    <section class="hero">
-      ${zooGate(zname, { animals: peek, festive: stars === AREAS.length, art: Z.artFor })}
+    <section class="map-wrap">
+      <div class="map-scroll">${zooMap(mapData)}</div>
       <div class="hero-bar">
         <span class="me-chip"><span class="avatar">${meAvatar(st.name)}</span>${esc(st.name)}</span>
         <div class="row" style="gap:8px">
@@ -347,57 +372,29 @@ function showHome() {
         </div>
       </div>
     </section>
-    <div class="stats">
-      <div class="stat"><span class="ic" style="background:var(--sun-soft)">🎟️</span><div><div class="v">${fmt(guests)}</div><div class="l">gæster om dagen</div></div></div>
-      <div class="stat"><span class="ic" style="background:var(--lav-soft)">⭐</span><div><div class="v">${stars}/${AREAS.length}</div><div class="l">stjerne-områder</div></div></div>
-      <div class="stat"><span class="ic" style="background:var(--coral-soft)">🍼</span><div><div class="v">${fs.introduced}/${fs.total}</div><div class="l">unger i Babyhuset</div></div></div>
-      <div class="stat"><span class="ic" style="background:var(--primary-soft)">📅</span><div>${weekDots(st)}<div class="l" style="margin-top:4px">dage denne uge</div></div></div>
+    <div class="map-bar">
+      <button class="btn big" id="start">${doneToday ? '▶ Tag en vagt mere' : '▶ Start dagens vagt'}</button>
+      <span class="muted">${doneToday ? '✓ Du har passet zoo\'en i dag – flot!' : `Tryk på ${Z.CAST[first.who].name} eller en af de andre med <b>!</b> – eller på et område, du vil øve.`}</span>
     </div>
-
-    <section class="today">${say(msg.who, msg.text)}</section>
-
-    <section class="card goal">
-      <div class="goal-ic">🎯</div>
-      <div style="flex:1;min-width:220px">
-        <div class="head" style="font-size:1.1rem;margin:0">Målet: giv alle ${AREAS.length} områder en ⭐</div>
-        <div class="muted small" style="font-weight:700">Så holder ${esc(zname)} den store åbningsdag. Du bliver bedre i matematik – og zoo'en vokser.</div>
-        <div class="goal-bar"><i style="width:${(100 * levels.reduce((s, l) => s + Math.min(l, 3), 0)) / (3 * AREAS.length)}%"></i></div>
-      </div>
-      <div class="goal-num"><b>${stars}</b>/${AREAS.length} ⭐</div>
-    </section>
-
-    <div class="section-title">
-      <div><span class="start-here">${doneToday ? '✓ Klaret i dag' : 'Start her'}</span><h2>Dagens træning</h2></div>
-      <span class="muted small">Vælg én opgave</span>
-    </div>
-    <p class="section-help">${doneToday
-      ? 'Du har allerede passet zoo\'en i dag – flot! Du må gerne tage en opgave mere.'
-      : 'Hver træning har tre dele: <b>🍼 morgenrunde</b> i Babyhuset → <b>dagens opgave</b> → <b>🧭 runde i zoo\'en</b>. Ca. 15 minutter.'}</p>
-    <div class="tasks">${sugg.map(taskCard).join('')}</div>
-
-    <div class="section-title"><h2>🍼 Babyhuset</h2><button class="link" id="book">Dyrebogen →</button></div>
-    <p class="section-help">Hvert gangestykke er en dyreunge. Ungerne vokser, når du husker deres gangestykke i morgenrunden – også dagen efter. 🍼 = vil have flaske i dag.</p>
-    <section class="card nursery">
-      <div class="babies">${nursery}</div>
-      ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
-    </section>
-
-    <div class="section-title"><h2>Zoo-kortet</h2><span class="muted small">${open} af ${AREAS.length} områder er åbne</span></div>
-    <p class="section-help">Her ser du, hvordan zoo'en vokser: 🚧 kommer snart → 🌱 åben → 💚 populær → ⭐ stjerne → 🌟 guld. Tryk på et område for at øve noget bestemt.</p>
-    <div class="zoo-map">${AREAS.map(tile).join('')}</div>
-
     <div class="footer-links">
       <button class="link" id="switch">Skift profil</button>
       <button class="link" id="about">Om appen</button>
       <button class="link" id="parent">Forælder</button>
     </div>`);
 
-  on('.task-card', 'click', (e) => { sfx('tap'); startSession(e.currentTarget.dataset.area); });
-  on('.area', 'click', (e) => { sfx('tap'); showPlace(e.currentTarget.dataset.place); });
-  on('#book', 'click', showBook);
-  on('#sprint', 'click', startSprint);
-  on('#help', 'click', () => showIntroTour());
+  const svgEl = $('.zoo-map-svg');
+  const act = (t) => {
+    sfx('tap');
+    if (t.dataset.task) taskSheet(tasks.find((x) => x.area === t.dataset.task));
+    else if (t.dataset.area) areaSheet(t.dataset.area);
+    else if (t.dataset.baby) babySheet();
+    else if (t.dataset.bodil) bodilSheet(levels, first);
+  };
+  svgEl.addEventListener('click', (e) => { const t = e.target.closest('.m-tap'); if (t) act(t); });
+  svgEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { const t = e.target.closest('.m-tap'); if (t) { e.preventDefault(); act(t); } } });
+  on('#start', 'click', () => { sfx('tap'); taskSheet(first); });
   on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
+  on('#help', 'click', () => showIntroTour());
   on('#about', 'click', () => showAbout());
   on('#snd', 'click', () => {
     st.settings.sound = !st.settings.sound;
@@ -408,6 +405,70 @@ function showHome() {
   });
   on('#switch', 'click', () => { try { localStorage.removeItem('mr_last'); } catch { /* */ } showProfiles(); });
   on('#parent', 'click', parentGate);
+}
+
+function taskSheet(t) {
+  const a = areaOf(t.area), cur = E.currentSkill(S.state, t.area);
+  openSheet(`
+    ${say(t.who, `<b>${t.title}</b> – kan du hjælpe mig? Vi starter med morgenrunden i Babyhuset.`)}
+    <div class="sheet-plan"><span>🍼 Morgenrunde</span><span>→</span><span>${a.icon} ${a.place}${cur ? ` · ${SKILLS[cur].name}` : ''}</span><span>→</span><span>🧭 Runde i zoo'en</span></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn ghost" data-close>Senere</button>
+      <button class="btn" id="go-task">Start dagens vagt</button>
+    </div>`, (el) => el.querySelector('#go-task').addEventListener('click', () => { closeSheet(); runSession(t.area); }));
+}
+
+function areaSheet(areaId) {
+  const st = S.state, a = areaOf(areaId), z = Z.ZONES[areaId];
+  const lv = Z.areaLevel(st, areaId), L = Z.LEVELS[lv];
+  const label = { ny: 'Ny', øver: 'Øver', sikker: 'Sikker ⭐', mestret: 'Mestret 🌟' };
+  const rows = a.skills.map((sk, i) => {
+    const status = E.skillStatus(st, sk.id), unlocked = E.isUnlocked(st, sk.id);
+    return `<div class="sheet-skill">
+      <div style="min-width:0"><b>${sk.name}</b> <span class="st ${status}">${label[status]}</span><div class="muted small">${sk.desc}</div></div>
+      ${unlocked ? `<div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ghost sm" data-intro="${sk.id}" aria-label="Forklaring">💡</button><button class="btn sm" data-practice="${sk.id}">Øv</button></div>`
+        : `<span class="muted small">🔒 efter "${a.skills[i - 1].name}"</span>`}
+    </div>`;
+  }).join('');
+  openSheet(`
+    <div class="sheet-head"><span class="sheet-ic">${a.icon}</span><div><h2 style="margin:0">${a.place}</h2><span class="muted">${a.name} · ${L.icon} ${L.name}</span></div>
+      <span class="ani" style="margin-left:auto">${lv ? ani(z.animals.slice(0, Math.min(lv, 3))) : ''}</span></div>
+    <div class="sheet-skills">${rows}</div>`, (el) => {
+    el.querySelectorAll('[data-practice]').forEach((b) => b.addEventListener('click', () => { closeSheet(); startPractice(b.dataset.practice); }));
+    el.querySelectorAll('[data-intro]').forEach((b) => b.addEventListener('click', () => { closeSheet(); showIntro(b.dataset.intro, showHome, 'Tilbage'); }));
+  });
+}
+
+function babySheet() {
+  const st = S.state, fs = E.factSummary(st);
+  const list = FACTS.filter((f) => E.factBox(st, f.key) >= 0)
+    .map((f) => ({ f, due: st.facts[f.key].due <= today() }))
+    .sort((a, b) => (b.due - a.due) || E.factBox(st, b.f.key) - E.factBox(st, a.f.key));
+  const cribs = list.length
+    ? list.slice(0, 15).map(({ f, due }) => `<div class="crib ${due ? '' : 'sleep'}">${baby(f.key)}<span>${Z.BABIES[f.key].name}${due ? ' 🍼' : ' 💤'}</span></div>`).join('')
+    : '<p class="muted">Babyhuset er tomt endnu. De første unger bliver født i morgenrunden.</p>';
+  openSheet(`
+    <div class="sheet-head"><span class="sheet-ic">🍼</span><div><h2 style="margin:0">Babyhuset</h2>
+      <span class="muted">${fs.introduced} af ${fs.total} unger født · ${fs.due ? `${fs.due} vil have flaske i dag` : 'alle sover sødt'}</span></div></div>
+    <div class="cribs">${cribs}</div>
+    <div class="row" style="justify-content:flex-end">
+      ${sprintEligible(st) ? '<button class="btn ghost" id="sb-sprint">⚡ Slå din rekord</button>' : ''}
+      <button class="btn" id="sb-book">📖 Dyrebogen</button>
+    </div>`, (el) => {
+    el.querySelector('#sb-book').addEventListener('click', () => { closeSheet(); showBook(); });
+    el.querySelector('#sb-sprint')?.addEventListener('click', () => { closeSheet(); startSprint(); });
+  });
+}
+
+function bodilSheet(levels, first) {
+  const st = S.state, msg = Z.homeMessage(st);
+  const stars = levels.filter((l) => l >= 3).length;
+  openSheet(`
+    ${say('bodil', msg.who === 'bodil' ? msg.text : `Godt at se dig, ${esc(st.name)}!`)}
+    <div class="goal-line"><span>🎯 <b>${stars} af ${AREAS.length}</b> områder har fået en stjerne. Når alle har, holder vi åbningsfest!</span>
+      <div class="goal-bar"><i style="width:${(100 * levels.reduce((s, l) => s + Math.min(l, 3), 0)) / (3 * AREAS.length)}%"></i></div></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-close>Tak, Bodil</button><button class="btn" id="b-go">Start dagens vagt</button></div>`,
+  (el) => el.querySelector('#b-go').addEventListener('click', () => taskSheet(first)));
 }
 
 function sprintEligible(st) {
@@ -546,6 +607,12 @@ function snapshot(st) {
 }
 
 const blockIcon = (b, areaId) => (b.kind === 'warm' ? '🍼' : b.kind === 'review' ? '🧭' : areaOf(areaId).icon);
+
+function runSession(areaId) {
+  const sess = E.buildSession(S.state, areaId);
+  S.run = { mode: 'daily', sess, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
+  goBlock();
+}
 
 // Startskærm: dagens plan, så man kan fortryde før regnestykkerne begynder
 function startSession(areaId) {

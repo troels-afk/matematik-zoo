@@ -560,3 +560,53 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .principle p { margin: 0; }
 .principle .src { margin-top: 6px; font-size: .82rem; color: var(--ink-2); font-style: italic; }
 .footer-links { gap: 12px; flex-wrap: wrap; }
+
+/* ---------- Zoo-kortet (forsiden) ---------- */
+.map-wrap { position: relative; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg); background: #a9d99b; }
+.map-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.zoo-map-svg { display: block; width: 100%; min-width: 720px; height: auto; }
+.map-wrap .hero-bar { position: absolute; inset: 12px 12px auto 12px; }
+.m-tap { cursor: pointer; }
+.m-tap:hover .m-ground { filter: brightness(1.04); }
+.m-tap:focus { outline: none; }
+.m-tap:focus-visible .m-ground, .m-tap:focus-visible circle:first-of-type { stroke: #1f3346; stroke-width: 4; }
+.m-sign { font: 600 17px var(--font-head); fill: #4a3220; }
+.m-small { font: 700 13px var(--font-body); fill: #4a3220; }
+.m-gate { font-family: var(--font-head); font-weight: 600; fill: #1f3346; }
+.m-board { font: 600 12px var(--font-head); fill: #e9f5ee; }
+.m-badge { font: 600 16px var(--font-head); fill: #fff; }
+.zoo-map-svg .bob { animation: bob 3s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom center; }
+.m-bang { animation: m-bang 1.6s ease-in-out infinite; transform-box: fill-box; }
+.m-cloud { animation: m-drift 70s linear infinite; }
+.m-cloud.c2 { animation-duration: 95s; animation-delay: -40s; }
+.m-cloud.c3 { animation-duration: 120s; animation-delay: -80s; }
+.m-leaf { animation: m-fall 12s linear infinite; }
+.m-fly { animation: m-flutter 6s ease-in-out infinite; transform-box: fill-box; }
+.m-glow { animation: m-glow 2.4s ease-in-out infinite; }
+@keyframes m-bang { 50% { transform: translateY(-6px); } }
+@keyframes m-drift { from { transform: translateX(-300px); } to { transform: translateX(1500px); } }
+@keyframes m-fall { 0% { transform: translate(0, -60px) rotate(0); opacity: 0; } 10% { opacity: .9; } 100% { transform: translate(120px, 1000px) rotate(540deg); opacity: 0; } }
+@keyframes m-flutter { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(18px, -10px); } 50% { transform: translate(36px, 4px); } 75% { transform: translate(14px, 12px); } }
+@keyframes m-glow { 50% { opacity: .35; } }
+.map-bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
+.map-bar .muted { flex: 1; min-width: 220px; font-weight: 700; }
+
+/* ---------- Ark nedefra ---------- */
+.sheet { position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 110%); width: min(680px, calc(100% - 24px)); max-height: 82vh; overflow-y: auto;
+  background: var(--card); color: var(--ink); border-radius: 26px 26px 0 0; padding: 18px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, .18); transition: transform .32s cubic-bezier(.2, .8, .2, 1); z-index: 25; display: grid; gap: 14px; }
+.sheet.open { transform: translate(-50%, 0); }
+.sheet .grab { width: 44px; height: 5px; border-radius: 99px; background: var(--line); justify-self: center; margin-top: -6px; }
+.sheet-x { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 12px; background: var(--card-2); color: var(--ink-2); font-size: 1rem; }
+.sheet-head { display: flex; align-items: center; gap: 14px; padding-right: 44px; }
+.sheet-ic { width: 54px; height: 54px; border-radius: 16px; background: var(--sun-soft); display: grid; place-items: center; font-size: 1.8rem; flex: none; }
+.sheet-plan { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font: 600 .92rem var(--font-head); color: var(--ink-2); }
+.sheet-plan span:not(:nth-child(even)) { background: var(--card-2); border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; }
+.sheet-skills { display: grid; gap: 8px; }
+.sheet-skill { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--card-2); border: 1px solid var(--line-2); }
+.btn.sm { min-height: 44px; padding: 0 16px; font-size: .98rem; border-radius: 13px; }
+.cribs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.crib { display: grid; justify-items: center; gap: 4px; font: 600 .82rem var(--font-head); color: var(--ink-2); text-align: center; }
+.crib.sleep .baby > img { filter: saturate(.7); opacity: .8; }
+.goal-line { display: grid; gap: 8px; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
