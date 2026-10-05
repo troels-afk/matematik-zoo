@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005135513';
-import * as E from './engine.js?v=20261005135513';
-import { today } from './util.js?v=20261005135513';
+import { AREAS, FACTS } from './curriculum.js?v=20261005144835';
+import * as E from './engine.js?v=20261005144835';
+import { today } from './util.js?v=20261005144835';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.

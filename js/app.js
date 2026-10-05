@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005135513';
-import * as E from './engine.js?v=20261005135513';
-import * as Z from './zoo.js?v=20261005135513';
-import { zooGate } from './scene.js?v=20261005135513';
-import { zooMap } from './map.js?v=20261005135513';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005135513';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005135513';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005135513';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005144835';
+import * as E from './engine.js?v=20261005144835';
+import * as Z from './zoo.js?v=20261005144835';
+import { zooGate } from './scene.js?v=20261005144835';
+import { zooMap } from './map.js?v=20261005144835';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005144835';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005144835';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005144835';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -251,7 +251,7 @@ function showIntroTour(done = showHome) {
         <li><span class="n">3</span><div><div class="t">Runde i zoo'en</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div><span class="ico">${ui('round')}</span></li>
       </ol>`,
       title: 'Sådan går en dag',
-      body: say('nora', 'Det tager cirka 15 minutter. Bagefter kan du øve frit i områderne på kortet. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
+      body: say('nora', 'Én mission om dagen – det tager cirka 15 minutter. Bagefter kan du øve frit i områderne på kortet. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
     },
     {
       art: `<div class="tour-babies">${someBabies}</div>`,
@@ -266,6 +266,13 @@ function showIntroTour(done = showHome) {
   ];
   let i = 0;
   const finish = () => { st.zoo.introSeen = true; save(); done(); };
+  // Første gang: "Start min første mission" starter dagens anbefalede mission (samme som forsiden ville vise)
+  const startFirstMission = async () => {
+    st.zoo.introSeen = true;
+    await save(true);
+    const m = todaysMission(st);
+    runSession(m.area, m);
+  };
   const keys = (e) => {
     if (e.key === 'Enter' || e.key === 'ArrowRight') next();
     else if (e.key === 'ArrowLeft' && i) { i--; render(); }
@@ -310,7 +317,7 @@ function showIntroTour(done = showHome) {
     on('#prev', 'click', () => { i--; render(); });
     on('#skip', 'click', finish);
   };
-  const next = () => { sfx('tap'); if (i === pages.length - 1) finish(); else { i++; render(); } };
+  const next = () => { sfx('tap'); if (i < pages.length - 1) { i++; render(); } else if (firstTime) startFirstMission(); else finish(); };
   render();
 }
 
@@ -365,6 +372,13 @@ function dailyTasks(st) {
   });
 }
 
+// Dagens mission: den anbefalede opgave blandt dagens forslag (S.mission huskes, så den ikke skifter undervejs)
+function todaysMission(st, tasks = dailyTasks(st)) {
+  const open = tasks.filter((t) => !t.done);
+  if (!open.some((t) => t.area === S.mission)) S.mission = (open[0] || tasks[0]).area;
+  return tasks.find((t) => t.area === S.mission);
+}
+
 function showHome() {
   if (reloadWhenIdle) { location.reload(); return; }
   closeSheet();
@@ -375,8 +389,7 @@ function showHome() {
   const tasks = dailyTasks(st);
   const log = todayLog(st);
   const doneToday = !!log?.mission;
-  const openTasks = tasks.filter((t) => !t.done);
-  if (!openTasks.some((t) => t.area === S.mission)) S.mission = (openTasks[0] || tasks[0]).area;
+  const mission = todaysMission(st, tasks);
   const mapData = {
     zooName: zname,
     guests: Z.guestsPerDay(st),
@@ -387,8 +400,6 @@ function showHome() {
     due: fs.due,
     bodil: Z.CAST.bodil.bust,
   };
-  const open = openTasks;
-  const mission = tasks.find((t) => t.area === S.mission);
   const first = mission;
   const freshBonus = Z.updateBonus(st);
   if (freshBonus.length) save();
@@ -405,7 +416,7 @@ function showHome() {
       </div>
     </div>
 
-    ${doneToday ? missionDone(log) : missionCard(st, mission, open)}
+    ${doneToday ? missionDone(log) : missionCard(st, mission)}
 
     <div class="section-title"><h2>Din zoo</h2><span class="muted small">${doneToday ? 'Tryk på et område for at øve noget bestemt' : '🔒 Klar dagens mission – så kan du øve frit i områderne'}</span></div>
     <section class="map-wrap">
@@ -439,7 +450,7 @@ function showHome() {
   const scroller = $('.map-scroll'), who = $('.zm-who');
   if (who && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = who.offsetLeft - scroller.clientWidth / 2;
   on('#start', 'click', () => { sfx('tap'); runSession(mission.area, mission); });
-  on('#again', 'click', () => { sfx('tap'); taskSheet(first); });
+  on('#to-map', 'click', () => { sfx('tap'); $('.map-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
   on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
   on('#help', 'click', () => showIntroTour());
@@ -496,7 +507,7 @@ function missionDoneHtml(t) {
 }
 
 // Dagens mission: hvem har brug for hjælp, hvad skal der ske, og én knap
-function missionCard(st, t, open) {
+function missionCard(st, t) {
   const a = areaOf(t.area), z = Z.ZONES[t.area], c = Z.CAST[t.who];
   const cur = E.currentSkill(st, t.area);
   return `
@@ -529,12 +540,12 @@ function missionDone(log) {
       ${missionScene(t, 'success')}
       <div class="mission-body">
         <span class="kicker with-ic">${ui('opgave')}${esc(t.title)} <span class="ok">✓</span></span>
-        <h1>Mission klaret!</h1>
+        <h1>Dagens mission er klaret!</h1>
         <p class="mission-need">${missionDoneHtml(t)}</p>
         ${chips.length ? `<ul class="payoff-extras">${chips.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
-        <p class="free-open">🔓 Fri træning er åben i dag – tryk på et område på kortet.</p>
+        <p class="free-open">🔓 Fri træning er åben i dag – vælg et område på kortet. En ny mission venter i morgen.</p>
         <div class="mission-go">
-          <button class="btn ghost" id="again">Tag en vagt mere</button>
+          <button class="btn big" id="to-map">Øv frit på kortet</button>
           <button class="link" id="see-baby">Se Babyhuset</button>
         </div>
       </div>
@@ -598,14 +609,16 @@ function bonusSheet(fresh) {
 }
 
 function bodilSheet(levels, first) {
-  const st = S.state, msg = Z.homeMessage(st);
+  const st = S.state, msg = Z.homeMessage(st), done = freePlayOpen(st); // én mission om dagen
   const stars = levels.filter((l) => l >= 3).length;
   openSheet(`
     ${say('bodil', msg.who === 'bodil' ? msg.text : `Godt at se dig, ${esc(st.name)}!`)}
     <div class="goal-line"><span>🎯 <b>${stars} af ${AREAS.length}</b> områder har fået en stjerne. Når alle har, holder vi åbningsfest!</span>
       <div class="goal-bar"><i style="width:${(100 * levels.reduce((s, l) => s + Math.min(l, 3), 0)) / (3 * AREAS.length)}%"></i></div></div>
-    <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-close>Tak, Bodil</button><button class="btn" id="b-go">Start dagens vagt</button></div>`,
-  (el) => el.querySelector('#b-go').addEventListener('click', () => taskSheet(first)));
+    <div class="row" style="justify-content:flex-end">${done
+      ? '<button class="btn" data-close>Tak, Bodil</button>'
+      : '<button class="btn ghost" data-close>Tak, Bodil</button><button class="btn" id="b-go">Start dagens vagt</button>'}</div>`,
+  (el) => el.querySelector('#b-go')?.addEventListener('click', () => taskSheet(first)));
 }
 
 function sprintEligible(st) {
@@ -815,6 +828,7 @@ function snapshot(st) {
 const blockIcon = (b) => ui(b.kind === 'warm' ? 'baby' : b.kind === 'review' ? 'round' : 'area');
 
 function runSession(areaId, mission = null) {
+  if (freePlayOpen(S.state)) return showHome(); // én mission om dagen – derefter fri træning
   const sess = E.buildSession(S.state, areaId);
   const m = mission ? { who: mission.who, title: mission.title } : null;
   S.run = { mode: 'daily', sess, mission: m, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
