@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261004221910';
-import * as E from './engine.js?v=20261004221910';
-import * as Z from './zoo.js?v=20261004221910';
-import { zooGate } from './scene.js?v=20261004221910';
-import { zooMap } from './map.js?v=20261004221910';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261004221910';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261004221910';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261004221910';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005075541';
+import * as E from './engine.js?v=20261005075541';
+import * as Z from './zoo.js?v=20261005075541';
+import { zooGate } from './scene.js?v=20261005075541';
+import { zooMap } from './map.js?v=20261005075541';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005075541';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005075541';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005075541';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -373,10 +373,11 @@ function showHome() {
 
   view(`
     <div class="home-top">
-      <span class="me-chip"><span class="avatar">${meAvatar(st.name)}</span>${esc(st.name)}</span>
+      <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="row" style="gap:8px">
         <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">${ui('oeve')}<span>Øvebanen</span></button>
-        <button class="icon-btn" id="help" aria-label="Sådan spiller du">?</button>
+        <button class="icon-btn" id="help" title="Sådan spiller du" aria-label="Sådan spiller du">?</button>
+        <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.5" fill="currentColor"/></svg></button>
         <button class="icon-btn snd ${st.settings.sound ? '' : 'off'}" id="snd" aria-label="Lyd" aria-pressed="${st.settings.sound}">${ui('lyd')}</button>
       </div>
     </div>
@@ -388,8 +389,6 @@ function showHome() {
       <div class="map-scroll">${zooMap(mapData)}</div>
     </section>
     <div class="footer-links">
-      <button class="link" id="switch">Skift profil</button>
-      <button class="link" id="about">Om appen</button>
       <button class="link" id="parent">Forælder</button>
     </div>`);
 

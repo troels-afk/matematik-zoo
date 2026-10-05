@@ -681,7 +681,23 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 
 /* ---------- Dagens mission (forsidens hovedfokus) ---------- */
 .home-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
-.home-top .me-chip { background: var(--card); box-shadow: var(--shadow); color: var(--ink); }
+.home-top .me-chip { background: var(--card); box-shadow: var(--shadow); color: var(--ink); border: 0; cursor: pointer; transition: background .15s ease, transform .1s ease; }
+/* Navnet er også knappen til at skifte profil */
+.me-swap { width: 16px; height: 16px; margin-left: 2px; color: var(--ink-3); flex: none; }
+@media (hover: hover) { .home-top .me-chip:hover { background: var(--card-2); } .home-top .me-chip:hover .me-swap { color: var(--primary-ink); } }
+.home-top .me-chip:active { transform: scale(.96); }
+.home-top .me-chip { min-width: 0; }
+.me-chip .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.info-ic { width: 24px; height: 24px; }
+.footer-links { justify-content: center; }
+/* Fire knapper øverst til højre: lidt mindre på smalle telefoner, så navnet stadig kan være der */
+@media (max-width: 420px) {
+  .home-top { gap: 8px; }
+  .home-top .row { gap: 6px !important; flex: none; }
+  .home-top .icon-btn, .home-top .icon-btn.pill { width: 42px; height: 42px; border-radius: 12px; }
+  .home-top .icon-btn .ui-ic { width: 32px; height: 32px; }
+  .home-top .me-chip { padding-right: 10px; gap: 6px; }
+}
 /* --art styrer billedets størrelse: figuren i cirklen og dyret, der kigger frem */
 .mission { --art: clamp(260px, 32vw, 340px); display: grid; grid-template-columns: var(--art) minmax(0, 1fr); gap: 32px; align-items: center; padding: 26px 28px;
   background: linear-gradient(135deg, var(--sun-soft), var(--card) 60%); border: 2px solid color-mix(in srgb, var(--sun) 45%, transparent); }
