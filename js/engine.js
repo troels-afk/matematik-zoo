@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261005093257';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261005093257';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261005095712';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261005095712';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -126,10 +126,6 @@ export function suggestAreas(state, n = 3) {
 }
 
 // ---------- Gangetabellen ----------
-
-export function factState(state, key) {
-  return state.facts[key];
-}
 
 export function factBox(state, key) {
   return state.facts[key]?.box ?? -1; // -1 = ikke introduceret (æg der ikke er lagt)

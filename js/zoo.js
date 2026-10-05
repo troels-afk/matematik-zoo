@@ -1,13 +1,13 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005093257';
-import * as E from './engine.js?v=20261005093257';
-import { today } from './util.js?v=20261005093257';
+import { AREAS, FACTS } from './curriculum.js?v=20261005095712';
+import * as E from './engine.js?v=20261005095712';
+import { today } from './util.js?v=20261005095712';
 
-// Figurernes tegninger: ansigt (talebobler og kort), buste (missionens cirkel) og helfigur (scener).
-// Emojien bruges kun som reserve, hvis en tegning mangler.
-const art = (id) => ({ img: `img/cast/${id}-face.webp`, bust: `img/cast/${id}-bust.webp`, full: `img/cast/${id}.webp` });
+// Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
+// Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
+const art = (id) => ({ img: `img/cast/${id}-face.webp`, full: `img/cast/${id}.webp` });
 
 export const CAST = {
   bodil: { name: 'Bodil', role: 'Zoo-direktør', emoji: '👵🏼', img: 'img/cast/bodil-face.webp', bust: 'img/cast/bodil.webp' },
@@ -133,44 +133,10 @@ const BABY_LIST = [
   ['🐊', 'krokodilleunge', 'Krølle'], ['🦎', 'firbenunge', 'Fie'], ['🐬', 'delfinunge', 'Dina'], ['🦚', 'påfugleunge', 'Pippa'],
   ['🦡', 'grævlingeunge', 'Gry'],
 ];
-// Tegnede billeder (genereret, fritlagt med tools/prep_image.py). Unger uden billede bruger emoji.
+// Unger, der endnu kun har én tegning (genereret, fritlagt med tools/prep_image.py).
+// Når en unge får sine tre udtryk (tools/add_batch.py), flyttes den til BABY_EXPR.
 const BABY_IMAGES = {
   løveunge: 'img/babies/loeve.webp',
-  kaninunge: 'img/babies/kanin.webp',
-  kid: 'img/babies/ged.webp',
-  lam: 'img/babies/lam.webp',
-  føl: 'img/babies/foel.webp',
-  ælling: 'img/babies/aelling.webp',
-  pingvinunge: 'img/babies/pingvin.webp',
-  sælunge: 'img/babies/sael.webp',
-  pindsvineunge: 'img/babies/pindsvin.webp',
-  egernunge: 'img/babies/egern.webp',
-  odderunge: 'img/babies/odder.webp',
-  flamingounge: 'img/babies/flamingo.webp',
-  skildpaddeunge: 'img/babies/skildpadde.webp',
-  haletudse: 'img/babies/froe.webp',
-  uglunge: 'img/babies/ugle.webp',
-  svaneunge: 'img/babies/svane.webp',
-  bæverunge: 'img/babies/baever.webp',
-  ræveunge: 'img/babies/raev.webp',
-  vaskebjørneunge: 'img/babies/vaskebjoern.webp',
-  koalaunge: 'img/babies/koala.webp',
-  kængurunge: 'img/babies/kaenguru.webp',
-  dovendyrunge: 'img/babies/dovendyr.webp',
-  abeunge: 'img/babies/abe.webp',
-  lamaunge: 'img/babies/lama.webp',
-  kamelunge: 'img/babies/kamel.webp',
-  zebraføl: 'img/babies/zebra.webp',
-  girafunge: 'img/babies/giraf.webp',
-  elefantunge: 'img/babies/elefant.webp',
-  flodhesteunge: 'img/babies/flodhest.webp',
-  næsehornsunge: 'img/babies/naesehorn.webp',
-  pandaunge: 'img/babies/panda.webp',
-  tigerunge: 'img/babies/tiger.webp',
-  leopardunge: 'img/babies/leopard.webp',
-  ulveunge: 'img/babies/ulv.webp',
-  bjørneunge: 'img/babies/bjoern.webp',
-  isbjørneunge: 'img/babies/isbjoern.webp',
 };
 
 // Unger med tre udtryk (glad / tænker / jubler). Det glade bruges også som standardbillede.
@@ -314,7 +280,6 @@ export function goodnight(state) {
   ], 'night' + state.sessions.length);
 }
 
-// Tegning til et dyr ud fra dets emoji (bruges på kort, kortet over zoo'en og porten)
 // Scenen for en bestemt opgave: dyret følger opgaven (fx elefantungen ved elefanternes foder),
 // med tre udtryk: happy (start), think (i gang) og cheer (klaret). full = helfigur, hvis den passer.
 export function sceneFor(areaId, title) {
@@ -370,10 +335,16 @@ export const ACTIVITIES = {
 };
 export const activityName = (skill) => ACTIVITIES[skill.id]?.name || skill.name;
 
+// Dyret, der flytter ind, når et område når niveau 1, 2 eller 3: "en girafunge"
+export function newcomer(areaId, level) {
+  const b = animalFor(ZONES[areaId].animals[level - 1]);
+  return b ? withArticle(b.kind) : 'et nyt dyr';
+}
+
 // Områdets næste mål i zoo-sprog: hvilket dyr flytter ind ved næste niveau
 export function nextGoal(state, area) {
   const p = E.areaProgress(state, area.id), lv = areaLevel(state, area.id);
-  const animal = (i) => { const b = animalFor(ZONES[area.id].animals[i]); return b ? withArticle(b.kind) : 'et nyt dyr'; };
+  const animal = (i) => newcomer(area.id, i + 1);
   const more = (n) => (n === 1 ? '1 aktivitet mere' : `${n} aktiviteter mere`);
   const up = (n) => `${LEVELS[n].icon} ${LEVELS[n].name}`;
   if (lv === 0) {
@@ -399,20 +370,8 @@ export function animalFor(emoji) {
 }
 export const withArticle = (kind) => `${/(føl|lam|kid)$/.test(kind) ? 'et' : 'en'} ${kind}`;
 
+// Tegningen af et dyr ud fra dets emoji (porten på profilvalget og "Mission klaret!")
 export function artFor(emoji) {
   for (const b of Object.values(BABIES)) if (b.emoji === emoji && b.img) return b.img;
   return null;
-}
-
-// Hvad skal der til for områdets næste niveau? (vises i arket på kortet)
-export function nextStep(state, area) {
-  const p = E.areaProgress(state, area.id);
-  const lv = areaLevel(state, area.id);
-  const firstOpen = area.skills.find((s) => !['sikker', 'mestret'].includes(E.skillStatus(state, s.id)));
-  const more = (n) => (n === 1 ? '1 færdighed mere' : `${n} færdigheder mere`);
-  if (lv === 0) return `Bliv sikker i "${firstOpen.name}" for at åbne ${area.place}.`;
-  if (lv === 1) return `Bliv sikker i ${more(Math.ceil(p.total / 2) - p.done)} for at gøre ${area.place} populær.`;
-  if (lv === 2) return `Bliv sikker i ${more(p.total - p.done)} for at give ${area.place} en stjerne.`;
-  if (lv === 3) return `Mestr alle færdigheder (sikker på to forskellige dage) for at gøre ${area.place} til et guld-område.`;
-  return `${area.place} er et guld-område – flot! Øv gerne videre, så det bliver ved med at sidde.`;
 }

@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005093257';
-import * as E from './engine.js?v=20261005093257';
-import * as Z from './zoo.js?v=20261005093257';
-import { zooGate } from './scene.js?v=20261005093257';
-import { zooMap } from './map.js?v=20261005093257';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005093257';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005093257';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005093257';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005095712';
+import * as E from './engine.js?v=20261005095712';
+import * as Z from './zoo.js?v=20261005095712';
+import { zooGate } from './scene.js?v=20261005095712';
+import { zooMap } from './map.js?v=20261005095712';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005095712';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005095712';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005095712';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -101,8 +101,7 @@ function baby(key, size = '') {
   const due = box >= 0 && S.state.facts[key].due <= today();
   const cls = box < 0 ? 'new' : box >= 5 ? 'gold' : '';
   const title = box < 0 ? 'Ikke født endnu' : `${b.name} (${b.kind}) – ${Z.STAGES[box]}`;
-  const art = b.img ? `<img src="${b.img}" alt="" draggable="false">` : `<span>${b.emoji}</span>`;
-  return `<span class="baby ${size} ${cls} ${b.img ? 'has-img' : ''}" style="--st:${Math.max(0, box)}" title="${esc(title)}">${art}${due ? '<i class="zz">🍼</i>' : ''}</span>`;
+  return `<span class="baby ${size} ${cls} has-img" style="--st:${Math.max(0, box)}" title="${esc(title)}"><img src="${b.img}" alt="" draggable="false">${due ? '<i class="zz">🍼</i>' : ''}</span>`;
 }
 
 // Lad en unge reagere: 'happy' (hop + hjerter), 'think' (hovedvip), 'grow' (pop + stjerner)
@@ -130,7 +129,6 @@ function weekDots(st) {
 }
 
 const levelsOf = (st) => AREAS.map((a) => Z.areaLevel(st, a.id));
-// Dyr som tegning (eller emoji, hvis der ikke findes en tegning)
 
 // ================= Profiler =================
 
@@ -241,11 +239,11 @@ function showIntroTour(done = showHome) {
   const st = S.state, zname = Z.zooName(st);
   const someBabies = FACTS.slice(0, 6).map((f, i) => {
     const b = Z.BABIES[f.key];
-    return `<span class="baby ${b.img ? 'has-img' : ''}" style="--st:${i}">${b.img ? `<img src="${b.img}" alt="" draggable="false">` : `<span>${b.emoji}</span>`}</span>`;
+    return `<span class="baby has-img" style="--st:${i}"><img src="${b.img}" alt="" draggable="false"></span>`;
   }).join('');
   const pages = [
     {
-      art: Z.CAST.bodil.bust ? `<img class="tour-portrait" src="${Z.CAST.bodil.bust}" alt="Bodil">` : '<div class="tour-art">🦒🐘🦁🐧🦓</div>',
+      art: `<img class="tour-portrait" src="${Z.CAST.bodil.bust}" alt="Bodil">`,
       title: `Velkommen til ${esc(zname)}!`,
       body: say('bodil', `Zoo'en har været lukket hele vinteren, og jeg har brug for en ny zoo-leder. Det er dig, ${esc(st.name)}!`),
     },
@@ -323,6 +321,9 @@ function openSheet(html, bind) {
 function closeSheet() { sheetEl?.classList.remove('open'); }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheetEl?.classList.contains('open')) closeSheet(); }, true);
 
+// Dagens missioner: { date, area (den seneste), done: [områder klaret i dag], mission, chips }
+const todayLog = (st) => (st.zoo.today?.date === today() ? st.zoo.today : null);
+
 function isoWeek(d = new Date()) {
   const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const day = t.getUTCDay() || 7;
@@ -334,7 +335,9 @@ function isoWeek(d = new Date()) {
 // Dagens opgaver: hvert foreslået område med sin egen faste figur, så historien hænger sammen
 function dailyTasks(st) {
   const sugg = E.suggestAreas(st, 3);
-  const doneAreas = new Set(st.sessions.filter((x) => x.date === today() && x.mode !== 'practice').map((x) => x.area));
+  // Kun missioner, der er gjort færdige i dag – et stop midtvejs lader missionen stå åben
+  const log = todayLog(st);
+  const doneAreas = new Set(log ? log.done || [log.area] : []);
   return sugg.map((areaId) => {
     const z = Z.ZONES[areaId], who = z.who;
     // opgaver, der nævner en anden hjælper ved navn, passer ikke til figuren
@@ -353,7 +356,8 @@ function showHome() {
   const levels = levelsOf(st);
   const fs = E.factSummary(st);
   const tasks = dailyTasks(st);
-  const doneToday = tasks.some((t) => t.done) || st.sessions.some((x) => x.date === today() && x.mode !== 'practice');
+  const log = todayLog(st);
+  const doneToday = !!log?.mission;
   const openTasks = tasks.filter((t) => !t.done);
   if (!openTasks.some((t) => t.area === S.mission)) S.mission = (openTasks[0] || tasks[0]).area;
   const mapData = {
@@ -369,7 +373,6 @@ function showHome() {
   const open = openTasks;
   const mission = tasks.find((t) => t.area === S.mission);
   const first = mission;
-  const todayLog = st.zoo.today?.date === today() ? st.zoo.today : null;
   const freshBonus = Z.updateBonus(st);
   if (freshBonus.length) save();
 
@@ -385,7 +388,7 @@ function showHome() {
       </div>
     </div>
 
-    ${doneToday ? missionDone(st, todayLog) : missionCard(st, mission, open)}
+    ${doneToday ? missionDone(log) : missionCard(st, mission, open)}
 
     <div class="section-title"><h2>Din zoo</h2><span class="muted small">Tryk på et område for at øve noget bestemt</span></div>
     <section class="map-wrap">
@@ -440,7 +443,7 @@ function missionScene(t, state = 'intro', size = 'hero', opts = {}) {
   if (size === 'thumb') {
     return sc ? `<span class="mt-scene" aria-hidden="true"><img class="mts-bg" src="${sc.bg}" alt="" draggable="false"><img class="mts-ani" src="${sc.face[FACE[state]]}" alt="" draggable="false"></span>` : '';
   }
-  if (!hasScene(t)) return missionCircle(t, state);
+  if (!hasScene(t)) return '';
   const animal = sc.full
     ? `<img class="ms-animal full" src="${sc.full}" alt="" draggable="false">`
     : `<img class="ms-animal cub" src="${sc.face[FACE[state]]}" alt="" draggable="false">`;
@@ -451,16 +454,6 @@ function missionScene(t, state = 'intro', size = 'hero', opts = {}) {
       <img class="ms-who" src="${c.full}" alt="" draggable="false">
       ${line ? `<span class="ms-say" aria-hidden="true">${line}</span>` : ''}${state === 'success' ? PARTY : ''}
     </div>`;
-}
-
-// Reserve, hvis figuren ikke har en helfigur: figur og unge i en cirkel
-function missionCircle(t, state) {
-  const z = Z.ZONES[t.area], c = Z.CAST[t.who], after = state === 'success';
-  const art = z.animals.map((e) => Z.artFor(e)).find(Boolean);
-  const portrait = c.bust || c.img
-    ? `<img class="mission-face" src="${c.bust || c.img}" alt="${c.name}">`
-    : `<span class="mission-emoji" aria-hidden="true">${c.emoji}</span>`;
-  return `<div class="mission-art who-${t.who} ${after ? 'after' : ''}">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}${after ? PARTY : ''}</div>`;
 }
 
 // "Giraferne har spist alle bladene. <b>Nora</b> skal regne ud …"
@@ -500,12 +493,11 @@ function missionCard(st, t, open) {
     </section>`;
 }
 
-function missionDone(st, log) {
-  // Efter dagens mission: samme scene som ved starten, nu i "efter"-tilstand
-  if (log?.mission) {
-    const t = { area: log.area, who: log.mission.who, title: log.mission.title };
-    const chips = (log.chips || []).slice(0, 3);
-    return `
+// Efter dagens mission: samme scene som ved starten, nu i "efter"-tilstand
+function missionDone(log) {
+  const t = { area: log.area, who: log.mission.who, title: log.mission.title };
+  const chips = (log.chips || []).slice(0, 3);
+  return `
     <section class="mission card done ${hasScene(t) ? 'has-scene' : ''}">
       ${missionScene(t, 'success')}
       <div class="mission-body">
@@ -513,28 +505,6 @@ function missionDone(st, log) {
         <h1>Mission klaret!</h1>
         <p class="mission-need">${missionDoneHtml(t)}</p>
         ${chips.length ? `<ul class="payoff-extras">${chips.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
-        <div class="mission-go">
-          <button class="btn ghost" id="again">Tag en vagt mere</button>
-          <button class="link" id="see-baby">Se Babyhuset</button>
-        </div>
-      </div>
-    </section>`;
-  }
-  const a = log ? areaOf(log.area) : null;
-  const wins = log?.wins?.length ? log.wins : [];
-  const items = [
-    ...(a ? [{ e: a.icon, t: `Du hjalp i ${a.place}` }] : []),
-    ...wins.slice(0, 4),
-    ...(log?.diff > 0 ? [{ e: '🎟️', t: `+${fmt(log.diff)} gæster om dagen` }] : []),
-  ];
-  return `
-    <section class="mission done card">
-      <div class="mission-art"><span class="mission-emoji" aria-hidden="true">🌙</span></div>
-      <div class="mission-body">
-        <span class="kicker">✓ Dagens mission er klaret</span>
-        <h1>Godt arbejde, ${esc(st.name)}!</h1>
-        <p class="mission-need">Det skete i zoo'en i dag:</p>
-        <ul class="wins">${(items.length ? items : [{ e: '💛', t: 'Dyrene er passet, og zoo\'en sover godt i nat' }]).map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>
         <div class="mission-go">
           <button class="btn ghost" id="again">Tag en vagt mere</button>
           <button class="link" id="see-baby">Se Babyhuset</button>
@@ -800,33 +770,6 @@ function missionTrack(run, block) {
     <div class="mt-main"><div class="mt-title">${ui('opgave')}Mission: <b>${esc(title)}</b></div><ol class="mt-steps">${steps}</ol></div></div>`;
 }
 
-// Startskærm: dagens plan, så man kan fortryde før regnestykkerne begynder
-function startSession(areaId) {
-  const a = areaOf(areaId), t = Z.taskFor(areaId);
-  const sess = E.buildSession(S.state, areaId);
-  const steps = sess.blocks.filter((b) => b.count).map((b, i) => `
-    <li><span class="n">${i + 1}</span>
-      <div><div class="t">${b.title}</div><div class="d">${b.sub} · ${b.count} opgaver</div></div>
-      <span class="ico">${blockIcon(b)}</span></li>`).join('');
-  view(`
-    <div class="card sheet stack">
-      <div class="kicker">${a.icon} ${a.place}</div>
-      <h1>${t.title}</h1>
-      ${say(t.who, pick(['Kan du hjælpe mig?', 'Godt du kom! Vi starter i Babyhuset og går så i gang.', 'Klar? Ungerne skal have flaske først.']))}
-      <ol class="plan">${steps}</ol>
-      <div class="row" style="justify-content:center">
-        <button class="btn ghost big" id="back">← Tilbage</button>
-        <button class="btn big" id="go">Start</button>
-      </div>
-    </div>`, (e) => { if (e.key === 'Enter') begin(); else if (e.key === 'Escape') showHome(); });
-  const begin = () => {
-    S.run = { mode: 'daily', sess, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
-    goBlock();
-  };
-  on('#go', 'click', begin);
-  on('#back', 'click', showHome);
-}
-
 function startPractice(skillId) {
   const s = ALL_SKILLS[skillId], a = areaOf(s.area);
   const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub: Z.ACTIVITIES[skillId]?.name || s.name, count: s.practice ? 10 : 8, skill: skillId }] };
@@ -861,9 +804,6 @@ function goBlock() {
   on('#go', 'click', showTask);
   on('#quit', 'click', quitSession);
 }
-
-function totalTasks(run) { return run.sess.blocks.reduce((n, b) => n + (b.count || 0), 0); }
-function doneTasks(run) { return run.sess.blocks.slice(0, run.bi).reduce((n, b) => n + (b.count || 0), 0) + run.ti; }
 
 function showTask() {
   const run = S.run, block = run.sess.blocks[run.bi];
@@ -1155,9 +1095,9 @@ function logRun(run) {
 
 const LEVEL_WIN = [
   null,
-  (a, z) => `${a.place} har åbnet! ${z.animals[0]} er flyttet ind`,
-  (a, z) => `${a.place} er blevet populær – ${z.animals[1]} er flyttet ind`,
-  (a, z) => `${a.place} har fået en stjerne! ${z.animals[2]} er flyttet ind`,
+  (a) => `${a.place} har åbnet – ${Z.newcomer(a.id, 1)} er flyttet ind`,
+  (a) => `${a.place} er blevet populær – ${Z.newcomer(a.id, 2)} er flyttet ind`,
+  (a) => `${a.place} har fået en stjerne – ${Z.newcomer(a.id, 3)} er flyttet ind`,
   (a) => `${a.place} er blevet et guld-område!`,
 ];
 
@@ -1172,7 +1112,7 @@ function finish() {
   let bigWin = false;
   AREAS.forEach((a, i) => {
     for (let lv = b.levels[i] + 1; lv <= after.levels[i]; lv++) {
-      wins.push({ e: Z.LEVELS[lv].icon, t: LEVEL_WIN[lv](a, Z.ZONES[a.id]) });
+      wins.push({ e: Z.LEVELS[lv].icon, t: LEVEL_WIN[lv](a) });
       bigWin = true;
     }
   });
@@ -1199,12 +1139,10 @@ function finish() {
   if (run.mode === 'daily') {
     const res = missionResults(st, run, b, after, born, grew, bonus);
     // Til forsidens "Mission klaret" (lægges oven i tidligere vagter i dag)
-    const prev = st.zoo.today?.date === today() ? st.zoo.today : null;
+    const prev = todayLog(st);
     st.zoo.today = {
-      date: today(), area: run.sess.area,
+      date: today(), area: run.sess.area, done: [...new Set([...(prev ? prev.done || [prev.area] : []), run.sess.area])],
       mission: { who: res.t.who, title: res.t.title }, chips: [res.mainChip, ...res.extras].slice(0, 3),
-      wins: [...wins, ...(prev?.wins || [])].slice(0, 6),
-      diff: (prev?.diff || 0) + (after.guests - b.guests),
     };
     save(true);
     S.run = null;
@@ -1248,10 +1186,7 @@ function missionResults(st, run, b, after, born, grew, bonus = []) {
   const m = run.mission || Z.taskFor(area);
   const t = { area, who: m.who, title: m.title };
   const cap = (s) => s[0].toUpperCase() + s.slice(1);
-  const moved = (a, lv) => {
-    const an = Z.animalFor(Z.ZONES[a.id].animals[lv - 1]);
-    return `${cap(an ? Z.withArticle(an.kind) : 'et nyt dyr')} er flyttet ind`;
-  };
+  const moved = (a, lv) => `${cap(Z.newcomer(a.id, lv))} er flyttet ind`;
   const ups = [];
   AREAS.forEach((a, i) => { for (let lv = b.levels[i] + 1; lv <= after.levels[i]; lv++) ups.push({ a, lv }); });
   ups.sort((x, y) => (y.a.id === area) - (x.a.id === area));
@@ -1279,8 +1214,8 @@ function missionResults(st, run, b, after, born, grew, bonus = []) {
     mainChip = { e: '🎟️', t: `+${fmt(diff)} gæster om dagen` };
   } else {
     const a = areaOf(area), p = E.areaProgress(st, area), L = Z.LEVELS[Z.areaLevel(st, area)];
-    main = { kind: 'progress', icon: 'area', kicker: `${a.place} · ${L.icon} ${L.name}`, title: `${p.done} af ${p.total} færdigheder er sikre`, sub: Z.nextStep(st, a), pct: Math.round((100 * p.done) / p.total) };
-    mainChip = { e: L.icon, t: `${p.done} af ${p.total} færdigheder sikre i ${a.place}` };
+    main = { kind: 'progress', icon: 'area', kicker: `${a.place} · ${L.icon} ${L.name}`, title: `${p.done} af ${p.total} aktiviteter er klaret`, sub: Z.nextGoal(st, a), pct: Math.round((100 * p.done) / p.total) };
+    mainChip = { e: L.icon, t: `${p.done} af ${p.total} aktiviteter klaret i ${a.place}` };
   }
 
   const extras = ups.filter((u) => u !== up).map(upChip);
