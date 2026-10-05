@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261005081751';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261005081751';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261005083145';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261005083145';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -296,6 +296,12 @@ export function logSession(state, entry) {
 }
 
 // Fulde uger i træk (≥ WEEK_GOAL dage) – indbyggede fridage, så en sygedag ikke ødelægger noget
+// Hele uger (mandag–søndag) med mindst WEEK_GOAL øvedage – mandagens dato, ældste først
+export function fullWeeks(state) {
+  const byWeek = {};
+  for (const s of state.sessions) (byWeek[weekStart(s.date)] ||= new Set()).add(s.date);
+  return Object.keys(byWeek).filter((w) => byWeek[w].size >= WEEK_GOAL).sort();
+}
 export function fullWeeksStreak(state) {
   const byWeek = {};
   for (const s of state.sessions) {

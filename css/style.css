@@ -881,3 +881,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .avatar.has-img.who-liv, .mission-art.who-liv { background: var(--lav-soft); }
 .avatar.has-img.who-yasmin, .mission-art.who-yasmin { background: var(--sky-soft); }
 .avatar.has-img.who-kaj, .mission-art.who-kaj { background: var(--primary-soft); }
+
+/* ---------- Bonus-unger (én pr. hel uge) ---------- */
+.bonus-sec { display: grid; gap: 10px; padding: 12px 14px; border-radius: 16px; background: var(--sun-soft); }
+.bonus-sec .cribs { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }

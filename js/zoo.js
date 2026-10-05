@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005081751';
-import * as E from './engine.js?v=20261005081751';
-import { today } from './util.js?v=20261005081751';
+import { AREAS, FACTS } from './curriculum.js?v=20261005083145';
+import * as E from './engine.js?v=20261005083145';
+import { today } from './util.js?v=20261005083145';
 
 // Figurernes tegninger: ansigt (talebobler og kort), buste (missionens cirkel) og helfigur (scener).
 // Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -183,6 +183,15 @@ const BABY_EXPR = {
   ulveunge: 'img/babies/ulv',
   bjørneunge: 'img/babies/bjoern',
   isbjørneunge: 'img/babies/isbjoern',
+  bisonkalv: 'img/babies/bison',
+  delfinunge: 'img/babies/delfin',
+  firbenunge: 'img/babies/firben',
+  gorillaunge: 'img/babies/gorilla',
+  grævlingeunge: 'img/babies/graevling',
+  hjortekalv: 'img/babies/hjort',
+  krokodilleunge: 'img/babies/krokodille',
+  orangutangunge: 'img/babies/orangutang',
+  påfugleunge: 'img/babies/paafugl',
 };
 
 export const BABIES = {};
@@ -195,6 +204,27 @@ FACTS.forEach((f, i) => {
     expr: ex ? { happy: `${ex}-glad.webp`, think: `${ex}-taenker.webp`, cheer: `${ex}-jubler.webp` } : null,
   };
 });
+
+// Bonus-unger: de sidste dyr i listen (efter de 36 gangestykker). Én flytter ind i Babyhuset
+// for hver hel uge med mindst 4 øvedage. Belønner vanen – ændrer ikke gangestykkerne eller progressionen.
+export const BONUS = BABY_LIST.slice(FACTS.length).map(([emoji, kind, name]) => {
+  const ex = BABY_EXPR[kind];
+  return { emoji, kind, name, img: ex ? `${ex}-glad.webp` : null, cheer: ex ? `${ex}-jubler.webp` : null };
+});
+
+// Giv bonus-unger for hele uger, der ikke er belønnet endnu (også uger fra før bonus-ungerne fandtes)
+export function updateBonus(state) {
+  const got = (state.zoo.bonus ||= []);
+  const fresh = [];
+  for (const w of E.fullWeeks(state)) {
+    if (got.length >= BONUS.length) break;
+    if (got.some((b) => b.week === w)) continue;
+    got.push({ kind: BONUS[got.length].kind, week: w });
+    fresh.push(BONUS[got.length - 1]);
+  }
+  return fresh;
+}
+export const bonusOf = (state) => (state.zoo.bonus || []).map((b) => ({ ...BONUS.find((x) => x.kind === b.kind), week: b.week }));
 
 export const STAGES = ['Nyfødt', 'Lille', 'Ung', 'Stor', 'Næsten voksen', 'Voksen'];
 

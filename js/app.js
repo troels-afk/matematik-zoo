@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005081751';
-import * as E from './engine.js?v=20261005081751';
-import * as Z from './zoo.js?v=20261005081751';
-import { zooGate } from './scene.js?v=20261005081751';
-import { zooMap } from './map.js?v=20261005081751';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005081751';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005081751';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005081751';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005083145';
+import * as E from './engine.js?v=20261005083145';
+import * as Z from './zoo.js?v=20261005083145';
+import { zooGate } from './scene.js?v=20261005083145';
+import { zooMap } from './map.js?v=20261005083145';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005083145';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005083145';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005083145';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -373,6 +373,8 @@ function showHome() {
   const mission = tasks.find((t) => t.area === S.mission);
   const first = mission;
   const todayLog = st.zoo.today?.date === today() ? st.zoo.today : null;
+  const freshBonus = Z.updateBonus(st);
+  if (freshBonus.length) save();
 
   view(`
     <div class="home-top">
@@ -425,6 +427,7 @@ function showHome() {
   });
   on('#switch', 'click', () => { try { localStorage.removeItem('mr_last'); } catch { /* */ } showProfiles(); });
   on('#parent', 'click', parentGate);
+  if (freshBonus.length) setTimeout(() => bonusSheet(freshBonus), 400);
 }
 
 // Missionens billede: en scene (Z.SCENES) eller figur + unge i en cirkel.
@@ -567,6 +570,7 @@ function babySheet() {
     <div class="sheet-head"><span class="sheet-ic art">${ui('baby')}</span><div><h2 style="margin:0">Babyhuset</h2>
       <span class="muted">${fs.introduced} af ${fs.total} unger født · ${fs.due ? `${fs.due} vil have flaske i dag` : 'alle sover sødt'}</span></div></div>
     <div class="cribs">${cribs}</div>
+    ${bonusBlock(st)}
     <div class="row" style="justify-content:flex-end">
       ${sprintEligible(st) ? '<button class="btn ghost" id="sb-sprint">⚡ Slå din rekord</button>' : ''}
       <button class="btn" id="sb-book">📖 Dyrebogen</button>
@@ -574,6 +578,28 @@ function babySheet() {
     el.querySelector('#sb-book').addEventListener('click', () => { closeSheet(); showBook(); });
     el.querySelector('#sb-sprint')?.addEventListener('click', () => { closeSheet(); startSprint(); });
   });
+}
+
+// Bonus-unger: én pr. hel uge med WEEK_GOAL øvedage (vises i Babyhuset-arket)
+function bonusBlock(st) {
+  const got = Z.bonusOf(st), n = E.weekSessions(st);
+  return `<div class="bonus-sec">
+      <div class="spread"><b>Bonus-unger</b><span class="muted small">${got.length} af ${Z.BONUS.length}</span></div>
+      ${got.length ? `<div class="cribs">${got.map((x) => `<div class="crib"><span class="baby has-img idle"><img src="${x.img}" alt="" draggable="false"></span><span>${x.name}</span></div>`).join('')}</div>` : ''}
+      <p class="small muted" style="margin:0">${got.length < Z.BONUS.length
+        ? `En ny bonus-unge flytter ind, hver gang du øver ${E.WEEK_GOAL} dage i samme uge. Denne uge: ${Math.min(n, E.WEEK_GOAL)} af ${E.WEEK_GOAL}.`
+        : 'Alle bonus-unger er flyttet ind. Flot!'}</p>
+    </div>`;
+}
+
+// Når der er kommet bonus-unger, siden appen sidst var åben (fx uger fra før de fandtes)
+function bonusSheet(fresh) {
+  openSheet(`
+    <div class="sheet-head"><span class="sheet-ic art">${ui('baby')}</span><div><h2 style="margin:0">${fresh.length === 1 ? 'En ny bonus-unge!' : `${fresh.length} nye bonus-unger!`}</h2>
+      <span class="muted">For hver uge, hvor du øver ${E.WEEK_GOAL} dage, flytter en ny unge ind i Babyhuset.</span></div></div>
+    <div class="cribs">${fresh.map((x) => `<div class="crib"><span class="baby lg has-img react-grow"><img src="${x.cheer || x.img}" alt="" draggable="false"></span><span>${x.name}<br><span class="muted">${x.kind}</span></span></div>`).join('')}</div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-close>Velkommen!</button></div>`);
+  sfx('level');
 }
 
 function bodilSheet(levels, first) {
@@ -1110,6 +1136,7 @@ const LEVEL_WIN = [
 function finish() {
   const run = S.run, st = S.state;
   logRun(run);
+  const bonus = Z.updateBonus(st); // en hel uge med 4 øvedage giver en bonus-unge
   const after = snapshot(st), b = run.before;
   st.zoo.bestGuests = Math.max(st.zoo.bestGuests || 0, after.guests);
 
@@ -1137,10 +1164,11 @@ function finish() {
   };
   if (born.length) wins.push({ e: born.slice(0, 3).map((f) => Z.BABIES[f.key].emoji).join(''), t: `${born.length === 1 ? 'En ny unge er født' : `${born.length} nye unger er født`}: ${names(born)}` });
   if (grew.length) wins.push({ e: '🍼', t: `${names(grew)} voksede` });
+  bonus.forEach((x) => wins.unshift({ e: '🍼', t: `Ugens unge: ${x.name} (${x.kind}) er flyttet ind i Babyhuset` }));
   const n = run.results.length;
   const backSet = PRACTICE_SETS.find((x) => x.id === run.sess.area);
   if (run.mode === 'daily') {
-    const res = missionResults(st, run, b, after, born, grew);
+    const res = missionResults(st, run, b, after, born, grew, bonus);
     // Til forsidens "Mission klaret" (lægges oven i tidligere vagter i dag)
     const prev = st.zoo.today?.date === today() ? st.zoo.today : null;
     st.zoo.today = {
@@ -1184,7 +1212,7 @@ function finish() {
 
 // Hvad kom der ud af missionen? Det vigtigste først: nyt dyr > guld-område > flere gæster >
 // fremgang i området. Derefter højst 3 små ekstra resultater.
-function missionResults(st, run, b, after, born, grew) {
+function missionResults(st, run, b, after, born, grew, bonus = []) {
   const area = run.sess.area;
   const m = run.mission || Z.taskFor(area);
   const t = { area, who: m.who, title: m.title };
@@ -1207,6 +1235,11 @@ function missionResults(st, run, b, after, born, grew) {
     const L = Z.LEVELS[up.lv], emoji = Z.ZONES[up.a.id].animals[up.lv - 1];
     main = { kind: 'animal', art: Z.artFor(emoji), emoji, kicker: `Ny beboer i ${up.a.place}!`, title: moved(up.a, up.lv), sub: `${L.icon} Nyt niveau: ${L.name}` };
     mainChip = upChip(up);
+  } else if (bonus.length) {
+    const nb = bonus[0];
+    main = { kind: 'animal', art: nb.cheer || nb.img, emoji: nb.emoji, kicker: 'Ugens unge!', title: `${nb.name} er flyttet ind i Babyhuset`,
+      sub: `${cap(Z.withArticle(nb.kind))} – fordi du har øvet ${E.WEEK_GOAL} dage i denne uge` };
+    mainChip = { e: '🍼', t: `${nb.name} er flyttet ind i Babyhuset` };
   } else if (up) {
     main = { kind: 'level', emoji: '🌟', kicker: 'Nyt niveau!', title: `${up.a.place} er blevet et guld-område`, sub: 'Alt sidder – også dagen efter.' };
     mainChip = upChip(up);
@@ -1220,6 +1253,7 @@ function missionResults(st, run, b, after, born, grew) {
   }
 
   const extras = ups.filter((u) => u !== up).map(upChip);
+  bonus.filter((x) => main.title !== `${x.name} er flyttet ind i Babyhuset`).forEach((x) => extras.unshift({ e: '🍼', t: `Ugens unge: ${x.name} er flyttet ind` }));
   const ids = Object.keys(ALL_SKILLS);
   const mastered = ids.filter((id) => after.status[id] === 'mestret' && b.status[id] !== 'mestret');
   const secure = ids.filter((id) => after.status[id] === 'sikker' && !['sikker', 'mestret'].includes(b.status[id]));
@@ -1284,7 +1318,15 @@ function showBook() {
       <div><h1 style="margin:0">📖 Dyrebogen</h1><span class="muted">Hver unge er et gangestykke. De vokser, når du husker dem – også dagen efter.</span></div></div>
     <div class="card" style="margin-bottom:16px">${say('nora', `${fs.introduced} af ${fs.total} unger er født. ${fs.due ? `${fs.due} vil have flaske i dag 🍼` : 'Alle er mætte lige nu.'} ${st.records.sprint ? `Din rekord: ${st.records.sprint} ⚡` : ''}`)}</div>
     <div class="book">${items}</div>
-    <div class="legend">${Z.STAGES.map((s, i) => `<span>${'●'.repeat(i + 1)} ${s}</span>`).join('')}<span>🍼 = vil have flaske</span></div>`,
+    <div class="legend">${Z.STAGES.map((s, i) => `<span>${'●'.repeat(i + 1)} ${s}</span>`).join('')}<span>🍼 = vil have flaske</span></div>
+    <div class="section-title"><h2>Bonus-unger</h2><span class="muted small">Én flytter ind for hver uge med ${E.WEEK_GOAL} øvedage</span></div>
+    <div class="book">${Z.BONUS.map((x) => {
+      const g = Z.bonusOf(st).find((b) => b.kind === x.kind);
+      return g
+        ? `<div class="book-item"><span class="baby lg has-img"><img src="${x.img}" alt="" draggable="false"></span><span class="nm">${x.name}</span><span class="kind">${x.kind}</span><span class="fact">Uge ${isoWeek(new Date(g.week))}</span></div>`
+        : `<div class="book-item locked"><span class="baby lg new has-img"><img src="${x.img}" alt="" draggable="false"></span><span class="nm faint">???</span><span class="fact">Øv ${E.WEEK_GOAL} dage i en uge</span></div>`;
+    }).join('')}</div>
+    `,
   (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
 }
@@ -1446,6 +1488,7 @@ function showParent() {
         <div>📅 ${E.weekSessions(st)} af ${E.WEEK_GOAL} dage denne uge · ${E.fullWeeksStreak(st)} fulde uger i træk</div>
         <div>🧭 ${sikre} af ${totalSkills} færdigheder er sikre</div>
         <div>🍼 Gangetabel: ${fs.solid} af ${fs.total} sidder godt (${fs.introduced} introduceret, ${fs.gold} voksne)</div>
+        <div>🎁 Bonus-unger: ${Z.bonusOf(st).length} af ${Z.BONUS.length} (én pr. uge med ${E.WEEK_GOAL} øvedage)</div>
         <div>📚 ${st.sessions.length} sessioner i alt${E.daysSinceLast(st) != null ? ` · sidst for ${E.daysSinceLast(st)} dag(e) siden` : ''}</div>
       </div>
       <div class="card stack">
