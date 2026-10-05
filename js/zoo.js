@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005144835';
-import * as E from './engine.js?v=20261005144835';
-import { today } from './util.js?v=20261005144835';
+import { AREAS, FACTS } from './curriculum.js?v=20261005151324';
+import * as E from './engine.js?v=20261005151324';
+import { today } from './util.js?v=20261005151324';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -30,6 +30,21 @@ export const SCENES = {
   maaling: { bg: 'img/map/07-rovdyrsomraade.webp', cub: ['tigerunge', 'løveunge', 'tigerunge'], alt: 'Rovdyrområdet' },
   data: { bg: 'img/map/08-data-plaza.webp', cub: 'pandaunge', alt: 'Data-pladsen' },
   algebra: { bg: 'img/map/09-skattejagt.webp', cub: 'ræveunge', alt: 'Skattejagten i skoven' },
+};
+
+// Opgaveskærmenes scene pr. område (udsnit af Batch 1, img/task/): kun miljø – opgaven står altid under.
+// pos = to placeringer af udsnittet (object-position), så opgaverne i en træning ikke ser ens ud.
+// Billederne viser Liv; i områder med en anden figur er udsnittet kun dyr og ting.
+export const TASK_SCENES = {
+  tal: { src: 'img/task/tal.webp', pos: ['28% 45%', '78% 45%'] },
+  gange: { src: 'img/task/gange.webp', pos: ['55% 18%', '75% 92%'] },
+  division: { src: 'img/task/division.webp', pos: ['65% 35%', '40% 45%'] },
+  brok: { src: 'img/task/brok.webp', pos: ['40% 40%', '75% 45%'] },
+  decimal: { src: 'img/task/decimal.webp', pos: ['8% 30%', '78% 75%'] },
+  geometri: { src: 'img/task/geometri.webp', pos: ['60% 12%', '45% 92%'] },
+  maaling: { src: 'img/task/maaling.webp', pos: ['25% 40%', '70% 40%'] },
+  data: { src: 'img/task/data.webp', pos: ['30% 30%', '80% 60%'] },
+  algebra: { src: 'img/task/algebra.webp', pos: ['40% 25%', '45% 60%'] },
 };
 
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)

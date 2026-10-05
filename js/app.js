@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005144835';
-import * as E from './engine.js?v=20261005144835';
-import * as Z from './zoo.js?v=20261005144835';
-import { zooGate } from './scene.js?v=20261005144835';
-import { zooMap } from './map.js?v=20261005144835';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005144835';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005144835';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005144835';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005151324';
+import * as E from './engine.js?v=20261005151324';
+import * as Z from './zoo.js?v=20261005151324';
+import { zooGate } from './scene.js?v=20261005151324';
+import { zooMap } from './map.js?v=20261005151324';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005151324';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005151324';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005151324';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -661,7 +661,7 @@ function showPlace(areaId) {
         ${free ? '' : '<p class="rec-lock">🔒 Fri træning åbner, når dagens mission er klaret.</p>'}
       </div>
       <div class="rec-go">
-        ${free ? `<button class="btn big" data-practice="${rec.id}">Start aktivitet</button>` : '<button class="btn big" id="to-mission">Gå til dagens mission</button>'}
+        ${free ? `<button class="btn big" data-practice="${rec.id}">Øv nu</button>` : '<button class="btn big" id="to-mission">Gå til dagens mission</button>'}
         <button class="link" data-intro="${rec.id}">Se hvordan</button>
       </div>
     </section>`;
@@ -684,7 +684,7 @@ function showPlace(areaId) {
         <span class="act-desc">${act.desc}</span>
         <span class="act-skill">${sk.name}</span>
       </div>
-      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button>${free ? `<button class="btn sm" data-practice="${sk.id}">Start</button>` : ''}</div>
+      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button>${free ? `<button class="btn sm" data-practice="${sk.id}">Øv</button>` : ''}</div>
     </li>`;
   }).join('');
   view(`
@@ -832,6 +832,7 @@ function runSession(areaId, mission = null) {
   const sess = E.buildSession(S.state, areaId);
   const m = mission ? { who: mission.who, title: mission.title } : null;
   S.run = { mode: 'daily', sess, mission: m, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
+  preloadScene(areaId);
   goBlock();
 }
 
@@ -862,6 +863,7 @@ function startPractice(skillId) {
   const s = ALL_SKILLS[skillId], a = areaOf(s.area);
   const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub: Z.ACTIVITIES[skillId]?.name || s.name, count: s.practice ? 10 : 8, skill: skillId }] };
   S.run = { mode: 'practice', sess, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
+  preloadScene(a.id);
   goBlock();
 }
 
@@ -903,6 +905,15 @@ function showTask() {
   renderTask(block, task);
 }
 
+// Opgavens scene: udsnit af det område, opgaven hører til (zoo-runden skifter område for hver opgave)
+function taskScene(task, i) {
+  const sc = task.kind !== 'warm' && Z.TASK_SCENES[ALL_SKILLS[task.skill]?.area];
+  if (!sc) return '';
+  return `<div class="task-scene" aria-hidden="true"><img src="${sc.src}" alt="" draggable="false" style="object-position:${sc.pos[i % sc.pos.length]}"></div>`;
+}
+// Hent kun det aktuelle områdes scene på forhånd
+const preloadScene = (areaId) => { const sc = Z.TASK_SCENES[areaId]; if (sc) new Image().src = sc.src; };
+
 function renderTask(block, task) {
   const run = S.run;
   run.task = task;
@@ -924,8 +935,9 @@ function renderTask(block, task) {
     </div>
     <div class="card">
       ${banner}
-      <div class="task ${p.input !== 'choice' && p.input !== 'parts' ? 'has-input' : ''}">
+      <div class="task ${p.input !== 'choice' && p.input !== 'parts' ? 'has-input' : ''} ${p.visual ? 'has-visual' : ''}">
         <div>
+          ${taskScene(task, run.ti)}
           <div class="prompt">${p.prompt}</div>
           ${p.visual ? `<div class="visual">${p.visual}</div>` : ''}
           <div id="helpbox"></div>
@@ -946,6 +958,10 @@ function renderTask(block, task) {
     $('#help').remove();
   });
   mountInput(p, answer);
+  // Opgaven er vigtigere end scenen: er der ikke plads til begge uden at scrolle (fx en lang tekstopgave
+  // på telefon), fjernes scenen, før skærmen tegnes – så tastaturet og "Tjek" altid kan ses
+  const scene = $('.task-scene');
+  if (scene && document.documentElement.scrollHeight > innerHeight + 1) scene.remove();
 }
 
 // ---------- Svar-input ----------

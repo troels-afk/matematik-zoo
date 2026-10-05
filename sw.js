@@ -1,8 +1,8 @@
 // Matematik-Zoo som webapp: appens filer gemmes på enheden, så den starter med det samme
 // og virker uden internet. VERSION og FILES (sti → indholdshash) skrives af tools/deploy.sh.
-const VERSION = '20261005144835';
+const VERSION = '20261005151324';
 const FILES = {
-"css/style.css": "7b6fdea1ad",
+"css/style.css": "5ce4cb469a",
 "icon-192.png": "8f205bffb7",
 "icon-512.png": "3f4e2cf3bb",
 "icon.png": "cd7043bac8",
@@ -153,23 +153,32 @@ const FILES = {
 "img/map/zoo-map-base.webp": "842d62fad5",
 "img/scene/foderstation.webp": "4aa67e7341",
 "img/scene/giraf.webp": "db753d6fa4",
+"img/task/algebra.webp": "a41c8216bf",
+"img/task/brok.webp": "0b42946d65",
+"img/task/data.webp": "632efde312",
+"img/task/decimal.webp": "a32b2486d1",
+"img/task/division.webp": "8e7204ed35",
+"img/task/gange.webp": "dda683aeec",
+"img/task/geometri.webp": "96f4b0580a",
+"img/task/maaling.webp": "0c819f8446",
+"img/task/tal.webp": "c11bbb25a1",
 "img/ui/babyhuset.webp": "3e081d0175",
 "img/ui/lyd.webp": "afa35341d6",
 "img/ui/oevebane.webp": "426efbed3b",
 "img/ui/opgave.webp": "a3fc40a92c",
 "img/ui/zoo-omraade.webp": "95cfcabe7c",
 "img/ui/zoo-runden.webp": "e717e3975d",
-"index.html": "ce46aeb741",
-"js/app.js": "e332ecdab8",
-"js/curriculum.js": "936430fa21",
-"js/engine.js": "8ac383976a",
+"index.html": "b72b8a4f51",
+"js/app.js": "9a53a0b319",
+"js/curriculum.js": "b26cd6e6f6",
+"js/engine.js": "e5d3f0893e",
 "js/fx.js": "d4374ab279",
-"js/map.js": "1b73aa748d",
-"js/scene.js": "0ce77c0674",
+"js/map.js": "b214d15aec",
+"js/scene.js": "d51d518ca9",
 "js/store.js": "e60eddfa18",
 "js/util.js": "183e6761c8",
 "js/visuals.js": "17d49c825e",
-"js/zoo.js": "64d56b4dd2",
+"js/zoo.js": "d0da6b5b0f",
 "manifest.webmanifest": "58cc6e90f1"
 };
 
