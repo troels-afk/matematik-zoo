@@ -4,8 +4,8 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005120829';
-import * as V from './visuals.js?v=20261005120829';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005121537';
+import * as V from './visuals.js?v=20261005121537';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
@@ -832,6 +832,20 @@ const enheder = {
   desc: 'm og cm, kg og g, l og dl',
   intro: {
     text: '<b>1 m = 100 cm</b> · <b>1 km = 1.000 m</b> · <b>1 cm = 10 mm</b><br><b>1 kg = 1.000 g</b><br><b>1 l = 10 dl = 100 cl</b>',
+    lead: 'Foderet til rovdyrene skal måles, vejes og hældes op. Til det bruger man tre slags enheder:',
+    cards: [
+      { title: 'Længde', visual: () => V.lengthUnits(), rules: ['1 m = 100 cm', '1 km = 1.000 m', '1 cm = 10 mm'], note: 'Girafungen er 2 m høj – det er 200 cm.' },
+      { title: 'Vægt', visual: () => V.weightUnits(), rules: ['1 kg = 1.000 g'], note: 'Pingvinungen vejer 3 kg – det er 3.000 g.' },
+      { title: 'Rumfang', visual: () => V.volumeUnits(), rules: ['1 l = 10 dl = 100 cl'], note: 'Sælungen drikker 2 l mælk – det er 20 dl.' },
+    ],
+    tip: {
+      title: 'Sådan regner du om',
+      rows: [
+        ['Stor → lille', 'gang', '4 m = 4 × 100 = 400 cm'],
+        ['Lille → stor', 'del', '3.000 g = 3.000 : 1.000 = 3 kg'],
+        ['En halv', '', '½ m = 50 cm · ½ kg = 500 g · ½ l = 5 dl'],
+      ],
+    },
   },
   gen(level) {
     const conv = [

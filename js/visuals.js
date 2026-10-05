@@ -319,3 +319,52 @@ export function groups(total, g, hl = 0) {
   }
   return svg(20 + perRow * (bw + 12), 20 + rows * (bh + 12), b);
 }
+
+// ---------- Små tegninger til forklaringskortene ("Se hvordan") ----------
+// Lidt mere "ting" end diagrammerne ovenfor (hegn, fodersæk, målekande), men med samme streg og få farver.
+const mini = (body, w = 240, h = 132) => svg(w, h, body, 'vis-mini');
+
+// Længde: et hegnsstykke på 1 m med et målebånd fra 0 til 100 cm under
+export function lengthUnits() {
+  const x0 = 40, x1 = 200;
+  let b = `<path d="M${x0 + 4} 22 H${x1 - 4}" class="v-mark-line" stroke-width="2.5"/>
+    <path d="M${x0 + 4} 22 l9 -5 v10 z M${x1 - 4} 22 l-9 -5 v10 z" class="v-mark"/>
+    ${t((x0 + x1) / 2, 15, '1 m', 'class="v-text v-strong v-small"')}`;
+  for (const x of [x0 - 5, x1 - 5]) b += `<rect x="${x}" y="30" width="10" height="56" rx="3" class="v-wood v-line" stroke-width="2"/>`;
+  for (const y of [40, 62]) b += `<rect x="${x0 + 5}" y="${y}" width="${x1 - x0 - 10}" height="8" rx="3" class="v-wood v-line" stroke-width="2"/>`;
+  b += `<rect x="${x0}" y="92" width="${x1 - x0}" height="18" rx="3" class="v-tape v-line" stroke-width="2"/>`;
+  for (let i = 0; i <= 10; i++) {
+    const x = x0 + (i * (x1 - x0)) / 10;
+    b += `<line x1="${x}" y1="92" x2="${x}" y2="${i % 5 ? 99 : 104}" class="v-line" stroke-width="1.8"/>`;
+  }
+  b += t(x0, 127, '0', 'class="v-text v-small"') + t(x1, 127, '100 cm', 'class="v-text v-small"');
+  return mini(b);
+}
+
+// Vægt: en fodersæk på 1 kg på en vægt, der viser 1.000 g
+export function weightUnits() {
+  const b = `<path d="M84 98 C74 78 76 54 90 44 L102 36 H138 L150 44 C164 54 166 78 156 98 Z" class="v-sack v-line" stroke-width="2.5"/>
+    <path d="M102 36 Q120 28 138 36" fill="none" class="v-line" stroke-width="2.5"/>
+    <path d="M112 30 l-6 -8 M128 30 l6 -8" class="v-line" stroke-width="2.5" stroke-linecap="round"/>
+    ${t(120, 78, '1 kg', 'class="v-text v-strong"')}
+    <rect x="58" y="98" width="124" height="9" rx="4" class="v-steel v-line" stroke-width="2"/>
+    <rect x="66" y="106" width="108" height="25" rx="6" class="v-steel v-line" stroke-width="2"/>
+    <rect x="74" y="110" width="92" height="17" rx="4" class="v-empty"/>
+    ${t(120, 124, '1.000 g', 'class="v-text v-strong" style="font-size:17px"')}`;
+  return mini(b);
+}
+
+// Rumfang: en målekande på 1 liter med en streg for hver deciliter
+export function volumeUnits() {
+  let b = `<path d="M95 32 L144 32 L139 120 Q138 125 133 125 L106 125 Q101 125 100 120 Z" class="v-water"/>
+    <path d="M90 16 L150 16 L144 120 Q143 128 135 128 L104 128 Q96 128 95 120 Z" fill="none" class="v-line" stroke-width="2.5"/>
+    <path d="M150 34 C172 36 176 66 146 86" fill="none" class="v-line" stroke-width="2.5"/>`;
+  for (let i = 1; i <= 10; i++) {
+    const y = 125 - i * 9.3, x = 96 + (i * 4.6) / 10;
+    b += `<line x1="${x}" y1="${y}" x2="${x + (i % 5 ? 9 : 16)}" y2="${y}" class="v-line" stroke-width="${i % 5 ? 1.6 : 2.2}"/>`;
+  }
+  b += t(70, 37, '1 l', 'class="v-text v-strong v-small"') + t(70, 83, '5 dl', 'class="v-text v-small"');
+  b += `<path d="M80 32 H92 M80 78 H94" class="v-line-thin" stroke-width="1.5"/>`;
+  b += t(196, 112, '10 dl', 'class="v-text v-small"') + t(196, 128, '= 1 l', 'class="v-text v-small"');
+  return mini(b);
+}

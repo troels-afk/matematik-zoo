@@ -879,3 +879,27 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .th-go .btn.big { width: 100%; min-width: 0; }
   .th-go .tour-dots { width: 100%; }
 }
+
+/* ---------- Forklaringer som små kort ("Se hvordan" og Hjælp i opgaverne) ---------- */
+.ex-lead { margin: 6px 0 0; font-size: 1.15rem; font-weight: 600; color: var(--ink); }
+.ex-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.ex-card { display: grid; align-content: start; gap: 8px; padding: 12px 14px 14px; border-radius: 18px; background: var(--card-2); border: 1px solid var(--line-2); min-width: 0; }
+.ex-card h3 { margin: 0; font-size: 1.15rem; }
+.ex-vis { display: grid; place-items: center; padding: 6px; border-radius: 14px; background: var(--card); }
+.ex-vis .vis { max-width: 220px; max-height: 124px; }
+.ex-rules { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ex-rules li { padding: 2px 10px; border-radius: 99px; background: var(--primary-soft); color: var(--primary-ink); font: 600 1rem/1.5 var(--font-head); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ex-note { margin: 0; font-size: .98rem; font-weight: 700; color: var(--ink-2); }
+.ex-tip { display: grid; gap: 8px; padding: 14px 16px; border-radius: 18px; background: var(--sun-soft); border: 1px solid color-mix(in srgb, var(--sun) 40%, transparent); }
+.ex-tip h3 { margin: 0; font-size: 1.1rem; }
+.ex-tip ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ex-tip li { display: flex; align-items: baseline; gap: 6px 10px; flex-wrap: wrap; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ex-tip .k { min-width: 7.2em; font: 600 .8rem var(--font-head); text-transform: uppercase; letter-spacing: .6px; color: var(--ink-2); }
+.ex-tip .op { padding: 0 9px; border-radius: 99px; background: var(--card); font: 600 .9rem/1.6 var(--font-head); color: var(--primary-ink); }
+.ex-help { display: grid; gap: 10px; margin-top: 14px; }
+.ex-help .ex-cards { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+/* Tegningernes faste farver (ting fra zoo'en: træ, målebånd, sæk, stål, vand) */
+.v-wood { fill: #d9a066; } .v-tape { fill: #ffd76a; } .v-sack { fill: #ecd6a8; } .v-steel { fill: #d5dde3; } .v-water { fill: #a8dcf3; }
+@media (max-width: 560px) {
+  .ex-tip .k { min-width: 0; width: 100%; }
+}

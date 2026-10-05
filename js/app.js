@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005120829';
-import * as E from './engine.js?v=20261005120829';
-import * as Z from './zoo.js?v=20261005120829';
-import { zooGate } from './scene.js?v=20261005120829';
-import { zooMap } from './map.js?v=20261005120829';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005120829';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005120829';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005120829';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005121537';
+import * as E from './engine.js?v=20261005121537';
+import * as Z from './zoo.js?v=20261005121537';
+import { zooGate } from './scene.js?v=20261005121537';
+import { zooMap } from './map.js?v=20261005121537';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005121537';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005121537';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005121537';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -740,7 +740,7 @@ function showIntro(skillId, next, btnText = 'Jeg er klar') {
       <div class="card sheet intro-card stack">
         <div class="kicker">${a.icon} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
         <h1>${Z.ACTIVITIES[skillId]?.name || s.name}</h1>${Z.ACTIVITIES[skillId] ? `<div class="muted" style="font-weight:700;margin-top:-8px">${s.name}</div>` : ''}
-        ${steps ? stepsBlock(steps, shown) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
+        ${steps ? stepsBlock(steps, shown) : s.intro.cards ? explainCards(s.intro) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
         <div class="center">${more
           ? `<button class="btn big" id="more">Næste trin (${shown}/${steps.length})</button>`
           : `<button class="btn big" id="go">${btnText}</button>`}</div>
@@ -752,6 +752,20 @@ function showIntro(skillId, next, btnText = 'Jeg er klar') {
   const step = () => { sfx('tap'); shown++; render(); };
   render();
 }
+
+// Forklaring som små kort (intro.cards): tegning, overskrift, reglerne og et konkret zoo-eksempel.
+// intro.tip er et lille "Sådan gør du"-kort nederst. Bruges på "Se hvordan" og under Hjælp i opgaverne.
+const explainCards = (intro, { lead = true } = {}) => `
+  ${lead && intro.lead ? `<p class="ex-lead">${intro.lead}</p>` : ''}
+  <div class="ex-cards">${intro.cards.map((c) => `
+    <section class="ex-card">
+      ${c.visual ? `<div class="ex-vis">${c.visual()}</div>` : ''}
+      <h3>${c.title}</h3>
+      ${c.rules?.length ? `<ul class="ex-rules">${c.rules.map((r) => `<li>${r}</li>`).join('')}</ul>` : ''}
+      ${c.note ? `<p class="ex-note">${c.note}</p>` : ''}
+    </section>`).join('')}</div>
+  ${intro.tip ? `<div class="ex-tip"><h3>${intro.tip.title}</h3><ul>${intro.tip.rows.map(([k, op, ex]) => `
+    <li><span class="k">${k}</span>${op ? `<span class="op">${op}</span>` : ''}<span>${ex}</span></li>`).join('')}</ul></div>` : ''}`;
 
 // Gennemregnet eksempel: trin vises ét ad gangen
 const stepsBlock = (steps, shown = steps.length) => `<ol class="walk">${steps.slice(0, shown).map((st, i) => `
@@ -881,7 +895,9 @@ function renderTask(block, task) {
     const s = ALL_SKILLS[task.skill];
     $('#helpbox').innerHTML = s.intro.steps
       ? `<div class="feedback retry" style="margin-top:14px">${stepsBlock(s.intro.steps)}</div>`
-      : `<div class="feedback retry" style="margin-top:14px"><div>${s.intro.text}</div>${s.intro.visual ? `<div class="explain-visual">${s.intro.visual()}</div>` : ''}</div>`;
+      : s.intro.cards
+        ? `<div class="ex-help">${explainCards(s.intro, { lead: false })}</div>`
+        : `<div class="feedback retry" style="margin-top:14px"><div>${s.intro.text}</div>${s.intro.visual ? `<div class="explain-visual">${s.intro.visual()}</div>` : ''}</div>`;
     $('#help').remove();
   });
   mountInput(p, answer);
@@ -1659,4 +1675,4 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || swOptIn))
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice } };
+window.__mo = { S, E, Z, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice, intro: (id) => showIntro(id, showHome, 'Tilbage') } };
