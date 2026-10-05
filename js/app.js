@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005075704';
-import * as E from './engine.js?v=20261005075704';
-import * as Z from './zoo.js?v=20261005075704';
-import { zooGate } from './scene.js?v=20261005075704';
-import { zooMap } from './map.js?v=20261005075704';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005075704';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005075704';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005075704';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005081751';
+import * as E from './engine.js?v=20261005081751';
+import * as Z from './zoo.js?v=20261005081751';
+import { zooGate } from './scene.js?v=20261005081751';
+import { zooMap } from './map.js?v=20261005081751';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005081751';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005081751';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005081751';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -146,6 +146,7 @@ async function showProfiles() {
         ${profiles.map((p) => `<button class="profile-btn" data-id="${esc(p.id)}"><span class="avatar lg">${meAvatar(p.name)}</span>${esc(p.name)}</button>`).join('')}
         <button class="profile-btn" id="new"><span class="avatar lg" style="background:var(--primary-soft)">＋</span>Ny profil</button>
       </div>
+      <button class="link small" id="restore" style="margin-top:14px">Gendan fra backup</button>
       <form id="newform" class="card stack" style="display:none;max-width:480px;margin:0 auto;text-align:left">
         ${say('bodil', 'Hej! Jeg er Bodil, direktør for zoo\'en. Hvad hedder du?')}
         <div><label class="lbl" for="nm">Dit navn</label><input id="nm" class="field" maxlength="24" autocomplete="off" autocapitalize="words"></div>
@@ -155,6 +156,7 @@ async function showProfiles() {
     </div>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
   on('#new', 'click', () => { $('#newform').style.display = 'block'; $('#nm').focus(); });
+  on('#restore', 'click', pickBackup);
   on('#nm', 'input', () => { $('#zn').placeholder = Z.defaultZooName($('#nm').value); });
   on('#newform', 'submit', async (e) => {
     e.preventDefault();
@@ -347,6 +349,7 @@ function dailyTasks(st) {
 }
 
 function showHome() {
+  if (reloadWhenIdle) { location.reload(); return; }
   closeSheet();
   const st = S.state;
   const zname = Z.zooName(st);
@@ -1494,8 +1497,15 @@ function showParent() {
         <div class="seg" id="spr"><button data-v="1">Til</button><button data-v="0">Fra</button></div></div>
       <div class="spread"><span>Lyd</span>
         <div class="seg" id="snd"><button data-v="1">Til</button><button data-v="0">Fra</button></div></div>
-      <div class="spread"><span class="muted small">Data gemmes ${storageMode() === 'api' ? 'på serveren (deles mellem enheder)' : 'kun i denne browser'}.</span>
+      <div class="spread"><span class="muted small">Data gemmes ${storageMode() === 'api' ? 'på serveren (deles mellem enheder)' : 'på denne enhed – tag en backup en gang imellem'}.</span>
         <button class="btn ghost" id="del">Slet profil</button></div>
+    </div>
+
+    <div class="section-title"><h2>Backup og app</h2></div>
+    <div class="card stack">
+      <p style="margin:0">Gem en kopi af ${esc(st.name)}s fremskridt som en fil. Den kan gendanne fremskridtet eller flytte det til en anden enhed.</p>
+      <div class="row"><button class="btn" id="bk-save">Gem backup</button><button class="btn ghost" id="bk-load">Indlæs backup</button></div>
+      <p class="small muted" style="margin:0">Som app på iPad: åbn siden i Safari → Del → "Føj til hjemmeskærm". Appen på hjemmeskærmen har sit eget lager, så gem en backup i Safari først og indlæs den i appen bagefter.</p>
     </div>`, (e) => { if (e.key === 'Escape') showHome(); });
 
   const paintSeg = () => {
@@ -1514,6 +1524,8 @@ function showParent() {
   });
   on('#back', 'click', showHome);
   on('#about-p', 'click', () => showAbout(showParent));
+  on('#bk-save', 'click', exportBackup);
+  on('#bk-load', 'click', pickBackup);
   on('#del', 'click', async () => {
     if (!(await ask(`Slet ${esc(st.name)}s profil og alt fremskridt?`, 'Slet', 'Annullér'))) return;
     if (!(await ask('Er du helt sikker?', 'Ja, slet', 'Annullér'))) return;
@@ -1524,6 +1536,74 @@ function showParent() {
     showProfiles();
   });
   paintSeg();
+}
+
+// ================= Backup: gem og indlæs fremskridt som fil =================
+
+async function exportBackup() {
+  await flush();
+  const data = { app: 'matematik-zoo', format: 1, saved: new Date().toISOString(), id: S.id, state: S.state };
+  const name = `matematik-zoo-${S.id}-${today()}.json`;
+  const file = new File([JSON.stringify(data)], name, { type: 'application/json' });
+  // På iPad: del-arket (Gem i Filer, AirDrop, mail). På computer: almindelig download.
+  if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'Matematik-Zoo backup' }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  toast('Backup gemt');
+}
+
+function pickBackup() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.addEventListener('change', () => { if (input.files[0]) importBackup(input.files[0]); });
+  input.click();
+}
+
+async function importBackup(file) {
+  let data = null;
+  try { data = JSON.parse(await file.text()); } catch { /* håndteres nedenfor */ }
+  const st = data?.app === 'matematik-zoo' ? data.state : null;
+  if (!st || typeof st.name !== 'string' || !st.facts || !st.skills || !Array.isArray(st.sessions)) {
+    toast('Filen er ikke en backup fra Matematik-Zoo');
+    return;
+  }
+  const id = data.id || slug(st.name);
+  let existing = null;
+  try { existing = await loadState(id); } catch { /* ny profil */ }
+  const when = new Date(data.saved).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+  const q = existing
+    ? `Erstat ${esc(existing.name)}s fremskridt her med backuppen fra ${when}?`
+    : `Indlæs ${esc(st.name)}s fremskridt fra ${when}?`;
+  if (!(await ask(q, existing ? 'Erstat' : 'Indlæs', 'Annullér'))) return;
+  S.id = id;
+  S.state = migrate(st);
+  await save(true);
+  rememberProfile(id);
+  toast('Fremskridtet er indlæst');
+  startScreen();
+}
+
+// ================= Webapp: offline og hurtig start =================
+
+let reloadWhenIdle = false;
+const swOptIn = (() => { try { return localStorage.getItem('mz_sw') === '1'; } catch { return false; } })();
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || swOptIn)) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').catch(() => { /* appen virker også uden */ });
+  // En ny version er hentet: genindlæs, når hun ikke er midt i en træning
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return;
+    if (S.run) reloadWhenIdle = true;
+    else location.reload();
+  });
+  navigator.storage?.persist?.().catch(() => { /* ikke understøttet */ });
 }
 
 // ================= Start =================
@@ -1541,4 +1621,4 @@ function showParent() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, babyReact, show: { home: showHome, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice } };
+window.__mo = { S, E, Z, babyReact, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice } };
