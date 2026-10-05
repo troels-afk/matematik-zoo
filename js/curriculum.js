@@ -4,8 +4,8 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005184426';
-import * as V from './visuals.js?v=20261005184426';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005194735';
+import * as V from './visuals.js?v=20261005194735';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
@@ -64,6 +64,7 @@ const positionssystem = {
   name: 'Cifrenes værdi',
   desc: 'Hvad et ciffer er værd, alt efter hvor det står',
   intro: {
+    scene: 'indgang',
     text: 'Et ciffer er mere værd, jo længere til venstre det står. I 4.732 er 7-tallet <b>700</b> værd, fordi det står på hundredernes plads.',
     lead: 'Hvert ciffer i et billetnummer står på en plads – og pladsen bestemmer, hvor meget cifferet er værd.',
     cards: [
@@ -118,6 +119,7 @@ const afrunding = {
   name: 'Afrunding',
   desc: 'Afrund til nærmeste tier, hundrede og tusind',
   intro: {
+    scene: 'indgang',
     text: 'Når vi afrunder, finder vi det runde tal, der ligger <b>tættest på</b>. 47 ligger mellem 40 og 50 – tættest på 50. Ligger tallet præcis midt imellem, runder vi <b>op</b>.',
     lead: 'Bodil skriver gæstetallet på tavlen som et rundt tal: det runde tal, der ligger tættest på.',
     cards: [
@@ -171,6 +173,7 @@ const sammenlign = {
   name: 'Sammenlign tal',
   desc: 'Find det største og mindste tal',
   intro: {
+    scene: 'flamingoer',
     text: 'Sammenlign cifrene <b>fra venstre</b>. Først tusinderne, så hundrederne, så tierne … Det første sted, hvor de er forskellige, afgør hvilket tal der er størst. 4.<b>7</b>12 er større end 4.<b>2</b>98.',
     lead: 'Hvilken dag kom der flest gæster? Sammenlign tallene ciffer for ciffer.',
     cards: [
@@ -227,6 +230,7 @@ const plusminus = {
   name: 'Plus og minus',
   desc: 'Læg sammen og træk fra med store tal',
   intro: {
+    scene: 'indgang',
     text: 'Læg <b>hundreder, tiere og enere</b> sammen hver for sig:<br>347 + 285 = (300+200) + (40+80) + (7+5) = 500 + 120 + 12 = <b>632</b>.<br>Ved minus kan du trække fra i bidder: 632 − 285 = 632 − 200 − 80 − 5 = <b>347</b>.',
     lead: 'Kassen skal gøres op: dagens billetsalg lægges sammen og trækkes fra.',
     cards: [
@@ -284,6 +288,7 @@ const gange10 = {
   name: 'Gange med 10, 100 og runde tal',
   desc: '10 × 34, 30 × 7, 40 × 60',
   intro: {
+    scene: 'foderlager',
     text: 'Når man ganger med 10, bliver hvert ciffer <b>10 gange mere værd</b> og rykker én plads til venstre. 3 tiere bliver til 3 hundreder, og 4 enere bliver til 4 tiere. Enernes plads bliver tom, så der skriver vi 0: 34 × 10 = <b>340</b>.<br>30 × 7: 30 er 3 tiere. 3 tiere × 7 = 21 tiere = <b>210</b>.',
     lead: 'Foderet pakkes i kasser med 10 og 100. Når man ganger med 10 eller 100, flytter cifrene plads.',
     cards: [
@@ -322,6 +327,7 @@ const gangeflercifret = {
   name: 'Gange med flercifrede tal',
   desc: '47 × 6 ved at dele tallet op',
   intro: {
+    scene: 'giraffer',
     text: 'Del det store tal op i tiere og enere, og gang hver del for sig:<br>47 × 6 = 40×6 + 7×6 = 240 + 42 = <b>282</b>.',
     lead: 'Giraferne og elefanterne spiser meget. Store gangestykker bliver lette, når du deler tallet op.',
     cards: [
@@ -355,6 +361,7 @@ const gangetekst = {
   name: 'Tekstopgaver med gange',
   desc: 'Find gangestykket i historien',
   intro: {
+    scene: 'foderlager',
     text: 'Kig efter <b>lige store grupper</b>: "5 poser med 8 i hver" er 5 × 8. Spørg dig selv: hvor mange grupper, og hvor mange i hver?',
     lead: 'Historien gemmer på et gangestykke. Find de lige store grupper.',
     cards: [
@@ -554,6 +561,7 @@ const brokfigur = {
   name: 'Brøker i figurer',
   desc: 'Hvor stor en del er farvet?',
   intro: {
+    scene: 'polar',
     text: `En brøk fortæller, hvor mange dele ud af en helhed. <b>Nævneren</b> (nederst) er hvor mange lige store dele, helheden er delt i. <b>Tælleren</b> (øverst) er hvor mange dele vi taler om. Her er ${frac(3, 4)} farvet.`,
     lead: 'En brøk fortæller, hvor meget af en helhed vi taler om.',
     cards: [
@@ -578,6 +586,7 @@ const broktallinje = {
   name: 'Brøker på tallinjen',
   desc: 'Find brøken, pilen peger på',
   intro: {
+    scene: 'polar',
     text: `Stykket fra 0 til 1 kan deles i lige store dele. Er det delt i 4, er hvert stykke ${frac(1, 4)}. Pilen står på det 3. stykke – altså ${frac(3, 4)}.`,
     lead: 'Broen fra 0 til 1 er delt i lige store stykker – ligesom en brøk.',
     cards: [
@@ -693,6 +702,7 @@ const ligevaerdig = {
   name: 'Ligeværdige brøker',
   desc: '½ = ?/6',
   intro: {
+    scene: 'polar',
     text: `${frac(1, 2)} og ${frac(3, 6)} er lige store! Gang (eller del) tæller og nævner med <b>det samme tal</b>, så får du en brøk med samme værdi: ${frac(1, 2)} = ${frac('1×3', '2×3')} = ${frac(3, 6)}.`,
     lead: 'To brøker kan se forskellige ud og alligevel være lige store.',
     cards: [
@@ -981,6 +991,7 @@ const areal = {
   name: 'Areal',
   desc: 'Hvor stor en flade er',
   intro: {
+    scene: 'elefanter',
     text: 'Arealet er hvor mange <b>kvadrater</b> der kan være inde i figuren. Et rektangel på 5 × 3 har 3 rækker med 5 kvadrater: 5 × 3 = <b>15 cm²</b>.',
     lead: 'Hvor stor er indhegningen? Arealet er, hvor mange kvadrater der er plads til.',
     cards: [
@@ -1201,6 +1212,7 @@ const vinkler = {
   name: 'Vinkler',
   desc: 'Spids, ret, stump eller lige',
   intro: {
+    scene: 'giraffer',
     text: 'En <b>ret</b> vinkel er 90° – som hjørnet på et stykke papir. Er vinklen mindre, er den <b>spids</b>. Er den større, er den <b>stump</b>. En <b>lige</b> vinkel er 180° – en helt lige linje.',
     lead: 'Hjørnerne i anlæggene har forskellige vinkler.',
     cards: [
@@ -1302,6 +1314,7 @@ const typetal = {
   name: 'Typetal, variationsbredde og median',
   desc: 'Beskriv en række tal',
   intro: {
+    scene: 'observation',
     text: '<b>Typetal:</b> det tal, der er flest af.<br><b>Variationsbredde:</b> største tal − mindste tal.<br><b>Median:</b> sæt tallene i rækkefølge – medianen er det midterste.',
     lead: 'Gæsterne har svaret 2, 4, 5, 9 og 9. Tre ord beskriver sådan en række tal.',
     cards: [
@@ -1353,6 +1366,7 @@ const sandsynlighed = {
   name: 'Sandsynlighed',
   desc: 'Hvor stor er chancen?',
   intro: {
+    scene: 'observation',
     text: '<b>Umulig</b>: kan ikke ske. <b>Sikker</b>: sker helt sikkert. <b>Lige chance</b>: halvdelen af gangene.<br><b>Sandsynlig</b>: sker oftest. <b>Usandsynlig</b>: sker sjældent.<br>Chancen for rød i en pose med 1 rød og 3 blå er <b>1 ud af 4</b> = ' + frac(1, 4) + '.',
     lead: 'Hvor stor er chancen for at spotte pandaen? Chancen kan siges med ord – og med en brøk.',
     cards: [
@@ -1420,6 +1434,7 @@ const talfolger = {
   name: 'Talfølger',
   desc: 'Find mønstret og fortsæt',
   intro: {
+    scene: 'aber',
     text: 'Kig på, hvad der sker fra det ene tal til det næste. 3, 7, 11, 15 … Der lægges <b>4</b> til hver gang, så næste tal er <b>19</b>.',
     lead: 'Pote-sporet følger et mønster. Find springet – så kender du næste tal.',
     cards: [

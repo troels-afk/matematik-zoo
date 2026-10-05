@@ -1,6 +1,6 @@
 // Illustreret zoo-port til forsiden (ren SVG, skalerer til alle skærme).
 
-import { esc } from './util.js?v=20261005184426';
+import { esc } from './util.js?v=20261005194735';
 
 export function zooGate(name, { animals = [], festive = false, art = null } = {}) {
   const len = [...name].length;

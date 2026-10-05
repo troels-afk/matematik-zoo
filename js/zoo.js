@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005184426';
-import * as E from './engine.js?v=20261005184426';
-import { today } from './util.js?v=20261005184426';
+import { AREAS, FACTS } from './curriculum.js?v=20261005194735';
+import * as E from './engine.js?v=20261005194735';
+import { today } from './util.js?v=20261005194735';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -65,6 +65,27 @@ export const EXPLAIN_PICS = {
   kodelaas: { src: 'img/explain/kodelaas.webp', alt: 'En tigerunge ved en kiste med kodelås' },
   klinik: { src: 'img/explain/klinik.webp', alt: 'En skildpadde bliver vejet på dyreklinikken' },
 };
+
+// Zoo'ens miljøer (Batch 3, img/zoo/): sekundære billeder til stemning og lokal kontekst – små felter i
+// billedernes egne proportioner, aldrig i stedet for opgaver, knapper, tekst eller figurerne. Hentes først,
+// når de vises (loading="lazy"); w/h reserverer pladsen, så intet hopper.
+export const ENV_PICS = {
+  indgang: { src: 'img/zoo/indgang.webp', w: 503, h: 339 },       // Bodil ved porten
+  flamingoer: { src: 'img/zoo/flamingoer.webp', w: 507, h: 337 },
+  giraffer: { src: 'img/zoo/giraffer.webp', w: 477, h: 328 },
+  polar: { src: 'img/zoo/polar.webp', w: 503, h: 324 },
+  aber: { src: 'img/zoo/aber.webp', w: 509, h: 318 },
+  elefanter: { src: 'img/zoo/elefanter.webp', w: 477, h: 319 },
+  klinik: { src: 'img/zoo/klinik.webp', w: 501, h: 314 },         // dyrlægen (som Yasmin) og den røde panda
+  foderlager: { src: 'img/zoo/foderlager.webp', w: 507, h: 328 },
+  observation: { src: 'img/zoo/observation.webp', w: 477, h: 320 }, // kikkert, kort og noter
+};
+// Hvert områdes miljø (områdesiden og "Øvelse klaret!") og runden i zoo'en, der skifter fra dag til dag
+export const AREA_ENV = {
+  tal: 'indgang', gange: 'foderlager', division: 'aber', brok: 'polar', decimal: 'klinik',
+  geometri: 'elefanter', maaling: 'giraffer', data: 'observation', algebra: 'observation',
+};
+export const ROUND_ENV = ['flamingoer', 'elefanter', 'giraffer', 'aber', 'polar', 'indgang'];
 
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)
 // intro[i] og done[i] er starten og slutningen på tasks[i] ({who} = missionens figur)

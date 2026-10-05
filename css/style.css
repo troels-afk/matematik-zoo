@@ -907,8 +907,19 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (max-width: 560px) {
   .ex-lead-row { flex-direction: column; align-items: stretch; gap: 10px; }
   .ex-lead-pic, .ex-lead-row.solo .ex-lead-pic { width: min(280px, 86%); align-self: center; }
+  .ex-lead-pic.env { width: min(220px, 70%); } /* miljøet er sekundært: mindre end de konkrete billeder */
   .hint-pic { width: 92px; }
 }
+
+/* ---------- Zoo'ens miljøer (Batch 3): små felter med stemning og lokal kontekst – aldrig i stedet for UI ---------- */
+/* Billederne har bløde kanter og vises i deres egne proportioner (aldrig beskåret eller zoomet ind) */
+.env-pic { display: block; width: 100%; height: auto; }
+.pd-env { width: min(300px, 80%); margin: 0 auto; }      /* "Øvelse klaret!" */
+.block-env { width: min(320px, 86%); margin: 0 auto; }   /* overgangen til runden i zoo'en */
+.book-top { display: flex; align-items: center; gap: 16px; }
+.book-top .say { flex: 1; min-width: 0; }
+.book-env { flex: none; width: 170px; }
+@media (max-width: 560px) { .book-env { display: none; } }
 /* Minitegningerne: felter, fremhævet felt (orange), stiplet tom plads, dæmpet og lille tekst */
 .v-box { fill: var(--card); stroke: var(--ink); stroke-width: 2; }
 .v-hi { fill: var(--coral-soft); stroke: var(--coral); stroke-width: 2.5; }
@@ -944,6 +955,12 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (max-width: 640px) {
   .rec-act { grid-template-columns: 1fr; padding: 18px; }
   .rec-go .btn.big { width: 100%; min-width: 0; }
+}
+/* Batch 3: et glimt af området mellem "Næste opgave for dig" og knapperne – kun når der er plads */
+.rec-env { display: none; }
+@media (min-width: 900px) {
+  .rec-act { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .rec-env { display: block; width: 190px; }
 }
 
 /* ---------- Fri træning åbner efter dagens mission ---------- */

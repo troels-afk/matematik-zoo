@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005184426';
-import * as E from './engine.js?v=20261005184426';
-import * as Z from './zoo.js?v=20261005184426';
-import { zooGate } from './scene.js?v=20261005184426';
-import { zooMap } from './map.js?v=20261005184426';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005184426';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005184426';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005184426';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005194735';
+import * as E from './engine.js?v=20261005194735';
+import * as Z from './zoo.js?v=20261005194735';
+import { zooGate } from './scene.js?v=20261005194735';
+import { zooMap } from './map.js?v=20261005194735';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005194735';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005194735';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005194735';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -660,6 +660,7 @@ function showPlace(areaId) {
         <span class="act-skill">${rec.name}</span>
         ${free ? '' : '<p class="rec-lock">🔒 Fri træning åbner, når dagens mission er klaret.</p>'}
       </div>
+      <div class="rec-env" aria-hidden="true">${envPic(Z.AREA_ENV[areaId])}</div>
       <div class="rec-go">
         ${free ? `<button class="btn big" data-practice="${rec.id}">Øv nu</button>` : '<button class="btn big" id="to-mission">Gå til dagens mission</button>'}
         <button class="link" data-intro="${rec.id}">Se hvordan</button>
@@ -802,9 +803,16 @@ const explainPic = (key, cls) => {
   const pic = key && Z.EXPLAIN_PICS[key];
   return pic ? `<img class="${cls}" src="${pic.src}" alt="${pic.alt}" draggable="false">` : '';
 };
-// Indledningen med sidens zoo-billede ved siden af (intro.pic); under Hjælp kun billedet
+// Zoo'ens miljø (Z.ENV_PICS, Batch 3): sekundært og dekorativt – hentes først, når det vises
+const envPic = (key, cls = 'env-pic') => {
+  const pic = key && Z.ENV_PICS[key];
+  return pic ? `<img class="${cls}" src="${pic.src}" width="${pic.w}" height="${pic.h}" alt="" loading="lazy" decoding="async" draggable="false">` : '';
+};
+
+// Indledningen med sidens zoo-billede ved siden af: det konkrete billede (intro.pic) eller – kun på selve
+// "Se hvordan"-siden – områdets miljø (intro.scene). Under Hjælp kun det konkrete billede.
 const explainTop = (intro, lead) => {
-  const pic = explainPic(intro.pic, 'ex-lead-pic');
+  const pic = explainPic(intro.pic, 'ex-lead-pic') || (lead && intro.lead ? envPic(intro.scene, 'ex-lead-pic env') : '');
   const text = lead && intro.lead ? `<p class="ex-lead">${intro.lead}</p>` : '';
   return pic ? `<div class="ex-lead-row${text ? '' : ' solo'}">${text}${pic}</div>` : text;
 };
@@ -890,10 +898,13 @@ function goBlock() {
   const line = block.kind === 'review'
     ? say('kaj', "Sidste runde! Lad os tjekke resten af zoo'en 🦜", 'lg')
     : say(who, `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${z.step}.`, 'lg');
-  // Områdets del af missionen: samme scene som på forsiden, nu i gang
+  // Områdets del af missionen: samme scene som på forsiden, nu i gang. Runden i zoo'en: et glimt af et
+  // andet sted i zoo'en (skifter fra dag til dag)
   const art = run.mode === 'daily' && block.kind === 'main' && hasScene({ area: run.sess.area, who })
     ? missionScene({ area: run.sess.area, who, title: run.mission?.title || '' }, 'progress', 'card')
-    : `<div class="block-art">${blockIcon(block)}</div>`;
+    : block.kind === 'review'
+      ? `<div class="block-env" aria-hidden="true">${envPic(Z.ROUND_ENV[new Date().getDate() % Z.ROUND_ENV.length])}</div>`
+      : `<div class="block-art">${blockIcon(block)}</div>`;
   view(`
     ${run.mode === 'daily' ? `<div class="session-top"><button class="icon-btn" id="quit" aria-label="Stop">✕</button>${missionTrack(run, block)}</div>` : ''}
     <div class="card sheet center stack" style="margin-top:4vh">
@@ -1284,8 +1295,11 @@ function finish() {
   const where = areaOf(run.sess.area)?.place || '', act = Z.ACTIVITIES[run.sess.main]?.name || ALL_SKILLS[run.sess.main]?.name || '';
   const back = backSet ? { id: 'backset', text: `← Tilbage til ${backSet.name}`, go: () => showPracticeSet(backSet.id) }
     : backArea ? { id: 'backarea', text: `← Tilbage til ${backArea.place}`, go: () => showPlace(backArea.id) } : null;
+  // Et kort glimt af stedet, man har øvet i (aktivitetens eget miljø, ellers områdets)
+  const env = envPic(ALL_SKILLS[run.sess.main]?.intro?.scene || Z.AREA_ENV[run.sess.area]);
   view(`
     <div class="card sheet center stack practice-done" style="margin-top:4vh">
+      ${env ? `<div class="pd-env" aria-hidden="true">${env}</div>` : ''}
       <div class="kicker">${esc(where)}${act ? ` · ${esc(act)}` : ''}</div>
       <h1>Øvelse klaret!</h1>
       <p class="pd-count">Du øvede ${n} opgaver.</p>
@@ -1404,7 +1418,8 @@ function showBook() {
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button>
       <div><h1 style="margin:0">📖 Dyrebogen</h1><span class="muted">Hver unge er et gangestykke. De vokser, når du husker dem – også dagen efter.</span></div></div>
-    <div class="card" style="margin-bottom:16px">${say('nora', `${fs.introduced} af ${fs.total} unger er født. ${fs.due ? `${fs.due} vil have flaske i dag 🍼` : 'Alle er mætte lige nu.'} ${st.records.sprint ? `Din rekord: ${st.records.sprint} ⚡` : ''}`)}</div>
+    <div class="card book-top" style="margin-bottom:16px">${say('nora', `${fs.introduced} af ${fs.total} unger er født. ${fs.due ? `${fs.due} vil have flaske i dag 🍼` : 'Alle er mætte lige nu.'} ${st.records.sprint ? `Din rekord: ${st.records.sprint} ⚡` : ''}`)}
+      <div class="book-env" aria-hidden="true">${envPic('elefanter')}</div></div>
     <div class="book">${items}</div>
     <div class="legend">${Z.STAGES.map((s, i) => `<span>${'●'.repeat(i + 1)} ${s}</span>`).join('')}<span>🍼 = vil have flaske</span></div>
     <div class="section-title"><h2>Bonus-unger</h2><span class="muted small">Én flytter ind for hver uge med ${E.WEEK_GOAL} øvedage</span></div>
