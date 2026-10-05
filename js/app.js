@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005134447';
-import * as E from './engine.js?v=20261005134447';
-import * as Z from './zoo.js?v=20261005134447';
-import { zooGate } from './scene.js?v=20261005134447';
-import { zooMap } from './map.js?v=20261005134447';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005134447';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005134447';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005134447';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005135513';
+import * as E from './engine.js?v=20261005135513';
+import * as Z from './zoo.js?v=20261005135513';
+import { zooGate } from './scene.js?v=20261005135513';
+import { zooMap } from './map.js?v=20261005135513';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005135513';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005135513';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005135513';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1584,7 +1584,8 @@ function showParent() {
     <div class="card stack">
       <p style="margin:0">Gem en kopi af ${esc(st.name)}s fremskridt som en fil. Den kan gendanne fremskridtet eller flytte det til en anden enhed.</p>
       <div class="row"><button class="btn" id="bk-save">Gem backup</button><button class="btn ghost" id="bk-load">Indlæs backup</button></div>
-      <p class="small muted" style="margin:0">Som app på iPad: åbn siden i Safari → Del → "Føj til hjemmeskærm". Appen på hjemmeskærmen har sit eget lager, så gem en backup i Safari først og indlæs den i appen bagefter.</p>
+      <p class="small muted" style="margin:0">Som app: på iPad Safari → Del → "Føj til hjemmeskærm", på Mac Safari → Arkiv → "Føj til Dock". Appen har sit eget lager, så gem en backup i browseren først og indlæs den i appen bagefter. Appen opdaterer sig selv, når den åbnes.</p>
+      <div class="spread"><span class="small muted" id="app-version">Version fra ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div>
     </div>`, (e) => { if (e.key === 'Escape') showHome(); });
 
   const paintSeg = () => {
@@ -1605,6 +1606,12 @@ function showParent() {
   on('#about-p', 'click', () => showAbout(showParent));
   on('#bk-save', 'click', exportBackup);
   on('#bk-load', 'click', pickBackup);
+  on('#check-update', 'click', async () => {
+    reloadNow = true; // her har hun selv bedt om det
+    const reg = await checkForUpdate(true);
+    if (reg?.installing || reg?.waiting) toast('Henter den nye version – appen genstarter om lidt');
+    else { reloadNow = false; toast('Du har den nyeste version'); }
+  });
   on('#del', 'click', async () => {
     if (!(await ask(`Slet ${esc(st.name)}s profil og alt fremskridt?`, 'Slet', 'Annullér'))) return;
     if (!(await ask('Er du helt sikker?', 'Ja, slet', 'Annullér'))) return;
@@ -1671,18 +1678,43 @@ async function importBackup(file) {
 
 // ================= Webapp: offline og hurtig start =================
 
-let reloadWhenIdle = false;
+let reloadWhenIdle = false, reloadNow = false;
 const swOptIn = (() => { try { return localStorage.getItem('mz_sw') === '1'; } catch { return false; } })();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || swOptIn)) {
   const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('sw.js').catch(() => { /* appen virker også uden */ });
-  // En ny version er hentet: genindlæs, når hun ikke er midt i en træning
+  // En ny version er hentet: tag den i brug med det samme, hvis forsiden vises (der går intet tabt) –
+  // ellers først når hun selv går tilbage til forsiden. Så bliver hun aldrig kastet ud af et område,
+  // en forklaring eller en træning, fordi en opdatering blev færdig (showHome genindlæser).
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!hadController) return;
-    if (S.run) reloadWhenIdle = true;
-    else location.reload();
+    const onHome = !S.run && document.querySelector('.home-top') && !document.querySelector('.bsheet.open, .modal');
+    if (reloadNow || onHome) location.reload();
+    else reloadWhenIdle = true;
   });
   navigator.storage?.persist?.().catch(() => { /* ikke understøttet */ });
+}
+
+// Søg efter en ny version, når appen kommer frem igen – fx Mac-appen i Dock'en, der kan stå åben i dagevis
+// (ellers tjekker browseren kun, når siden åbnes). Højst hver halve time; force = knappen i forældredelen.
+let lastUpdateCheck = Date.now();
+async function checkForUpdate(force = false) {
+  if (!force && Date.now() - lastUpdateCheck < 30 * 60 * 1000) return null;
+  lastUpdateCheck = Date.now();
+  const reg = await navigator.serviceWorker?.getRegistration?.().catch(() => null);
+  if (!reg) return null;
+  await reg.update().catch(() => { /* offline: prøv igen senere */ });
+  return reg;
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
+setInterval(() => { if (document.visibilityState === 'visible') checkForUpdate(); }, 60 * 60 * 1000);
+
+// Versionen er tidsstemplet af tools/deploy.sh (?v=ÅÅÅÅMMDDTTMMSS på app.js)
+function appVersion() {
+  const v = new URL(import.meta.url).searchParams.get('v') || '';
+  if (!/^\d{14}$/.test(v)) return 'udviklingsudgave';
+  const d = new Date(+v.slice(0, 4), +v.slice(4, 6) - 1, +v.slice(6, 8), +v.slice(8, 10), +v.slice(10, 12));
+  return d.toLocaleString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 // ================= Start =================
