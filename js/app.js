@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005075541';
-import * as E from './engine.js?v=20261005075541';
-import * as Z from './zoo.js?v=20261005075541';
-import { zooGate } from './scene.js?v=20261005075541';
-import { zooMap } from './map.js?v=20261005075541';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005075541';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005075541';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005075541';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005075704';
+import * as E from './engine.js?v=20261005075704';
+import * as Z from './zoo.js?v=20261005075704';
+import { zooGate } from './scene.js?v=20261005075704';
+import { zooMap } from './map.js?v=20261005075704';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005075704';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005075704';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005075704';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -378,6 +378,7 @@ function showHome() {
         <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">${ui('oeve')}<span>Øvebanen</span></button>
         <button class="icon-btn" id="help" title="Sådan spiller du" aria-label="Sådan spiller du">?</button>
         <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.5" fill="currentColor"/></svg></button>
+        <button class="icon-btn" id="parent" title="Forælder" aria-label="Forælder (kræver kode)"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.6" r="1.4" fill="currentColor"/></svg></button>
         <button class="icon-btn snd ${st.settings.sound ? '' : 'off'}" id="snd" aria-label="Lyd" aria-pressed="${st.settings.sound}">${ui('lyd')}</button>
       </div>
     </div>
@@ -388,9 +389,7 @@ function showHome() {
     <section class="map-wrap">
       <div class="map-scroll">${zooMap(mapData)}</div>
     </section>
-    <div class="footer-links">
-      <button class="link" id="parent">Forælder</button>
-    </div>`);
+`);
 
   const mapEl = $('.zoo-map');
   const act = (t) => {

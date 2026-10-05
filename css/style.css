@@ -689,13 +689,13 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .home-top .me-chip { min-width: 0; }
 .me-chip .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .info-ic { width: 24px; height: 24px; }
-.footer-links { justify-content: center; }
-/* Fire knapper øverst til højre: lidt mindre på smalle telefoner, så navnet stadig kan være der */
+/* Fem knapper øverst til højre: mindre på smalle telefoner, så navnet stadig kan være der */
 @media (max-width: 420px) {
   .home-top { gap: 8px; }
-  .home-top .row { gap: 6px !important; flex: none; }
-  .home-top .icon-btn, .home-top .icon-btn.pill { width: 42px; height: 42px; border-radius: 12px; }
-  .home-top .icon-btn .ui-ic { width: 32px; height: 32px; }
+  .home-top .row { gap: 5px !important; flex: none; }
+  .home-top .icon-btn, .home-top .icon-btn.pill { width: 38px; height: 38px; border-radius: 11px; font-size: 1.1rem; }
+  .home-top .icon-btn .ui-ic { width: 30px; height: 30px; }
+  .home-top .info-ic { width: 21px; height: 21px; }
   .home-top .me-chip { padding-right: 10px; gap: 6px; }
 }
 /* --art styrer billedets størrelse: figuren i cirklen og dyret, der kigger frem */
