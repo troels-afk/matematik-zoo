@@ -690,3 +690,142 @@ export function miniSplitTree(n, parts, d) {
   b += tx(120, 126, '+', 'v-text');
   return mini(b, 240, 142);
 }
+
+// ---------- Form og tegning (kapitel 3): linjer, trekanter, firkanter og koordinatsystemet ----------
+// Tegningerne bruger "tern" som på ternet papir: (gx, gy) med y opad som i et koordinatsystem.
+const geo = (body, w, h) => svg(Math.round(w), Math.round(h), body, 'vis-geo');
+const r1 = (n) => Math.round(n * 10) / 10;
+const unit = (x, y) => { const l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
+
+// Ternet papir med cols × rows tern à s px. X/Y regner tern om til px.
+function paper(cols, rows, s, pad = 14) {
+  const X = (gx) => r1(pad + gx * s), Y = (gy) => r1(pad + (rows - gy) * s);
+  let b = '';
+  for (let i = 0; i <= cols; i++) b += `<line x1="${X(i)}" y1="${Y(0)}" x2="${X(i)}" y2="${Y(rows)}" class="v-grid"/>`;
+  for (let j = 0; j <= rows; j++) b += `<line x1="${X(0)}" y1="${Y(j)}" x2="${X(cols)}" y2="${Y(j)}" class="v-grid"/>`;
+  return { b, X, Y, w: cols * s + 2 * pad, h: rows * s + 2 * pad };
+}
+// Navneskilt (linje a, punkt B): bogstavet på en lille plet, så ternene ikke skærer igennem det
+const tag = (x, y, s) => `<circle cx="${r1(x)}" cy="${r1(y)}" r="12" class="v-label"/>${tx(r1(x), r1(y + 6), s, 'v-text v-strong')}`;
+// Ret-vinkel-mærke i (x, y) mellem retningerne u og v (enhedsvektorer i px)
+const rightMark = (x, y, u, v, m = 13, c = 'v-mark-line') =>
+  `<path d="M${r1(x + u[0] * m)} ${r1(y + u[1] * m)} L${r1(x + (u[0] + v[0]) * m)} ${r1(y + (u[1] + v[1]) * m)} L${r1(x + v[0] * m)} ${r1(y + v[1] * m)}" fill="none" class="${c}" stroke-width="2.5"/>`;
+// Vinkelbue i (x, y) fra retning u til v – altid den korte vej rundt
+const angleArc = (x, y, u, v, r = 22, c = 'v-mark-line', w = 2.5) =>
+  `<path d="M${r1(x + u[0] * r)} ${r1(y + u[1] * r)} A${r} ${r} 0 0 ${u[0] * v[1] - u[1] * v[0] > 0 ? 1 : 0} ${r1(x + v[0] * r)} ${r1(y + v[1] * r)}" fill="none" class="${c}" stroke-width="${w}"/>`;
+
+// Linjer på ternet papir. lines = [{ a: [gx, gy], b: [gx, gy], d: [dx, dy], name, hi, ref }]
+// (hi = orange, ref = stiplet hjælpelinje). Navnet står for enden ved b.
+// stairs: ét "trin" (hen og op) tegnet ved hver skrå linje, så man kan se, hvor meget den hælder.
+// right/arc = { at: [gx, gy], u: [dx, dy], v: [dx, dy] }: ret-vinkel-mærke eller vinkelbue mellem to retninger.
+export function paperLines(lines, { cols = 10, rows = 6, s = 30, stairs = false, right = null, arc = null } = {}) {
+  const P = paper(cols, rows, s), dir = ([dx, dy]) => unit(dx, -dy);
+  let b = P.b, top = '';
+  for (const L of lines) {
+    const [x1, y1, x2, y2] = [P.X(L.a[0]), P.Y(L.a[1]), P.X(L.b[0]), P.Y(L.b[1])];
+    b += L.ref
+      ? `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="v-muted-line" stroke-width="2.5" stroke-dasharray="7 6"/>`
+      : `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${L.hi ? 'v-mark-line' : 'v-line'}" stroke-width="5" stroke-linecap="round"/>`;
+    if (stairs && L.d && L.d[0] && L.d[1]) {
+      const [dx, dy] = L.d, [ax, ay] = L.a, up = dy > 0;
+      top += `<path d="M${P.X(ax)} ${P.Y(ay)} H${P.X(ax + dx)} V${P.Y(ay + dy)}" fill="none" class="v-mark-line" stroke-width="2.5" stroke-dasharray="5 4"/>`;
+      top += tx(r1((P.X(ax) + P.X(ax + dx)) / 2), r1(P.Y(ay) + (up ? 17 : -7)), Math.abs(dx), 'v-text v-tiny v-added');
+      top += tx(r1(P.X(ax + dx) + 6), r1((P.Y(ay) + P.Y(ay + dy)) / 2 + 5), Math.abs(dy), 'v-text v-tiny v-added', 'start');
+    }
+    if (L.name) { const [ux, uy] = unit(x2 - x1, y2 - y1); top += tag(x2 + ux * s * 0.62, y2 + uy * s * 0.62, L.name); }
+  }
+  if (right) b += rightMark(P.X(right.at[0]), P.Y(right.at[1]), dir(right.u), dir(right.v), s * 0.45, right.c || 'v-mark-line');
+  if (arc) b += angleArc(P.X(arc.at[0]), P.Y(arc.at[1]), dir(arc.u), dir(arc.v), r1(s * 0.8), 'v-mark-line', 3);
+  return geo(b + top, P.w, P.h);
+}
+
+// Trekant eller firkant med hjørnerne P (px). Til siden fra hjørne i til i+1: sides[i] (tekst, fx "5 cm"),
+// ticks[i] (antal streger – sider med samme antal er lige lange) og hiSides[i] (orange). Til hjørne i: angles[i]
+// (tekst), right[i] (ret-vinkel-mærke), arcs[i] (vinkelbue, 'hi' = orange) og ref = i (stiplet ret vinkel at
+// sammenligne med).
+function shapeBody(P, { sides = [], ticks = [], hiSides = [], angles = [], right = [], arcs = [], ref = -1, fill = 'v-soft' } = {}, [W, H] = [1e4, 1e4]) {
+  const n = P.length, G = [P.reduce((s, p) => s + p[0], 0) / n, P.reduce((s, p) => s + p[1], 0) / n];
+  let b = `<path d="M${P.map((p) => `${r1(p[0])} ${r1(p[1])}`).join(' L')} Z" class="${fill} v-line" stroke-width="3" stroke-linejoin="round"/>`;
+  let marks = '', text = '';
+  P.forEach((p, i) => {
+    const q = P[(i + 1) % n], o = P[(i + n - 1) % n];
+    const u = unit(q[0] - p[0], q[1] - p[1]), v = unit(o[0] - p[0], o[1] - p[1]);
+    const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+    let [nx, ny] = [u[1], -u[0]];
+    if ((mx - G[0]) * nx + (my - G[1]) * ny < 0) { nx = -nx; ny = -ny; }
+    if (hiSides[i]) marks += `<line x1="${r1(p[0])}" y1="${r1(p[1])}" x2="${r1(q[0])}" y2="${r1(q[1])}" class="v-mark-line" stroke-width="5" stroke-linecap="round"/>`;
+    if (sides[i]) { const off = 15 + Math.abs(nx) * 20; text += tx(r1(mx + nx * off), r1(my + ny * off + 6), sides[i], 'v-text v-small'); }
+    for (let k = 0; k < (ticks[i] || 0); k++) {
+      const c = (k - (ticks[i] - 1) / 2) * 7, cx = mx + u[0] * c, cy = my + u[1] * c;
+      marks += `<line x1="${r1(cx - nx * 8)}" y1="${r1(cy - ny * 8)}" x2="${r1(cx + nx * 8)}" y2="${r1(cy + ny * 8)}" class="v-mark-line" stroke-width="3" stroke-linecap="round"/>`;
+    }
+    if (right[i]) marks += rightMark(p[0], p[1], u, v, 14);
+    if (arcs[i]) marks += angleArc(p[0], p[1], u, v, 24, arcs[i] === 'hi' ? 'v-mark-line' : 'v-muted-line', arcs[i] === 'hi' ? 3.5 : 2.5);
+    if (ref === i) {
+      // Stiplet ret vinkel ud fra den ene side – den side, hvor stregen er længst fra kanten af tegningen
+      const opt = [[u, v], [v, u]].map(([a, c]) => {
+        let w = [-a[1], a[0]];
+        if (w[0] * c[0] + w[1] * c[1] < 0) w = [a[1], -a[0]];
+        const ex = p[0] + w[0] * 58, ey = p[1] + w[1] * 58;
+        return { a, w, room: Math.min(ex, ey, W - ex, H - ey) };
+      }).sort((x, y) => y.room - x.room)[0];
+      marks += `<line x1="${r1(p[0])}" y1="${r1(p[1])}" x2="${r1(p[0] + opt.w[0] * 58)}" y2="${r1(p[1] + opt.w[1] * 58)}" class="v-muted-line" stroke-width="2.5" stroke-dasharray="6 5"/>${rightMark(p[0], p[1], opt.a, opt.w, 12, 'v-muted-line')}`;
+    }
+    if (angles[i]) {
+      const [bx, by] = unit(u[0] + v[0], u[1] + v[1]), deg = (Math.acos(Math.max(-1, Math.min(1, u[0] * v[0] + u[1] * v[1]))) * 180) / Math.PI;
+      const r = (deg < 40 ? 54 : deg < 70 ? 42 : 32) + (arcs[i] ? 14 : 0);
+      text += tx(r1(p[0] + bx * r), r1(p[1] + by * r + 6), angles[i], 'v-text v-small');
+    }
+  });
+  return b + marks + text;
+}
+
+// Figur ud fra hjørner i en vilkårlig enhed (y opad), drejet rot grader og evt. spejlet – skaleret ind i w × h
+export function polygon(pts, { w = 300, h = 200, pad = 36, rot = 0, flip = false, ...o } = {}) {
+  const padX = o.sides?.length ? Math.max(pad, 60) : pad;
+  const a = (rot * Math.PI) / 180;
+  const q = pts.map(([x, y]) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)]).map(([x, y]) => [flip ? -x : x, y]);
+  const xs = q.map((p) => p[0]), ys = q.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const k = Math.min((w - 2 * padX) / (x1 - x0 || 1), (h - 2 * pad) / (y1 - y0 || 1));
+  const ox = (w - (x1 - x0) * k) / 2, oy = (h - (y1 - y0) * k) / 2;
+  return geo(shapeBody(q.map(([x, y]) => [ox + (x - x0) * k, h - oy - (y - y0) * k]), o, [w, h]), w, h);
+}
+
+// Figur tegnet på ternet papir (hjørnerne i tern), så man kan tælle sig frem langs siderne
+export function paperPolygon(pts, { cols = 10, rows = 7, s = 28, ...o } = {}) {
+  const G = paper(cols, rows, s);
+  return geo(G.b + shapeBody(pts.map(([x, y]) => [G.X(x), G.Y(y)]), { fill: 'v-soft-a', ...o }, [G.w, G.h]), G.w, G.h);
+}
+
+// Koordinatsystem (1. kvadrant) fra 0 til max. points = [{ x, y, name, hi, note }].
+// path = { x, y, part } tegner vejen fra (0, 0): først hen ad x-aksen – og med part 2 også op.
+export function coordGrid({ max = 5, points = [], path = null } = {}) {
+  const s = max <= 5 ? 40 : max <= 7 ? 32 : 24, fs = max > 7 ? 'v-text v-tiny' : 'v-text v-small';
+  const pl = 30, pr = 30, pt = 26, pb = 30;
+  const X = (x) => pl + x * s, Y = (y) => pt + (max - y) * s;
+  let b = '';
+  for (let i = 0; i <= max; i++) {
+    b += `<line x1="${X(i)}" y1="${Y(0)}" x2="${X(i)}" y2="${Y(max)}" class="v-grid"/><line x1="${X(0)}" y1="${Y(i)}" x2="${X(max)}" y2="${Y(i)}" class="v-grid"/>`;
+    if (i) b += tx(X(i), Y(0) + 20, i, fs) + tx(X(0) - 8, Y(i) + 5, i, fs, 'end');
+  }
+  b += tx(X(0) - 7, Y(0) + 19, 0, fs, 'end');
+  b += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(max) + 14}" y2="${Y(0)}" class="v-line" stroke-width="2.5"/>${head(X(max) + 22, Y(0), X(0), Y(0), 'v-ink')}`;
+  b += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(max) - 12}" class="v-line" stroke-width="2.5"/>${head(X(0), Y(max) - 20, X(0), Y(0), 'v-ink')}`;
+  b += tx(X(max) + 16, Y(0) - 9, 'x', 'v-text v-small v-strong') + tx(X(0) + 10, Y(max) - 9, 'y', 'v-text v-small v-strong', 'start');
+  if (path) {
+    const { x, y, part = 2 } = path;
+    if (x) b += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(x) - 6}" y2="${Y(0)}" class="v-mark-line" stroke-width="5" stroke-linecap="round"/>${head(X(x), Y(0), X(0), Y(0))}`;
+    if (part > 1 && y) b += `<line x1="${X(x)}" y1="${Y(0)}" x2="${X(x)}" y2="${Y(y) + 6}" class="v-mark-line" stroke-width="5" stroke-linecap="round" stroke-dasharray="${x ? '9 6' : 'none'}"/>${head(X(x), Y(y), X(x), Y(0))}`;
+  }
+  for (const p of points) {
+    const cx = X(p.x), cy = Y(p.y);
+    b += p.hi ? `<circle cx="${cx}" cy="${cy}" r="9" class="v-mark"/>` : `<circle cx="${cx}" cy="${cy}" r="6.5" class="v-ink"/>`;
+    if (p.name) b += tag(cx + 14, cy - 14, p.name);
+    if (p.note) {
+      const ny = p.y <= 1 ? cy - (p.x > max / 2 ? 12 : 32) : cy + 22;
+      b += p.x > max / 2 ? tx(cx - 10, ny, p.note, 'v-text v-tiny v-muted', 'end') : tx(cx + 10, ny, p.note, 'v-text v-tiny v-muted', 'start');
+    }
+  }
+  return geo(b, pl + max * s + pr, pt + max * s + pb);
+}

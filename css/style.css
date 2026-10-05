@@ -397,6 +397,9 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .frac-input.mini .slot { min-width: 84px; min-height: 56px; font-size: 1.6rem; }
 .frac-input .den { font: 600 1.5rem var(--font-head); }
 .choice-grid.wide { grid-template-columns: 1fr; }
+.choice-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.choice.long { font-size: 1.2rem; padding-inline: 8px; }
+@media (max-width: 420px) { .choice.long { font-size: 1.05rem; } }
 .choice-grid.wide .choice { font-size: 1.6rem; letter-spacing: .5px; }
 .task:not(.has-input) .answer-area { width: 100%; max-width: 620px; margin: 0 auto; }
 
@@ -953,6 +956,12 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .v-text.v-tiny { font-size: 14px; }
 .v-text.v-muted { fill: var(--ink-2); }
 .v-text.v-added { fill: var(--coral); }
+/* Form og tegning (Øvebanen, kapitel 3): ternet papir, figurer og koordinatsystem */
+.vis.vis-geo { max-width: 360px; max-height: 260px; }
+.walk .visual .vis.vis-geo { max-width: 300px; }
+.v-grid { stroke: var(--line); stroke-width: 1; }
+.v-ink { fill: var(--ink); }
+.v-soft-a { fill: var(--primary-soft); fill-opacity: .6; }
 @media (max-width: 560px) {
   .ex-tip .k { min-width: 0; width: 100%; }
 }

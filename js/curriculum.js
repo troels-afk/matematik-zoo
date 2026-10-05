@@ -1881,6 +1881,602 @@ const parenteser = {
   },
 };
 
+// ================= Form og tegning (KonteXt+ 4, kapitel 3) =================
+// Linjer og figurer tegnes på ternet papir, så Ellie kan tælle sig frem: en linje, der går "2 tern hen og 1 tern
+// op", hælder præcis som alle andre linjer med samme trin. p.geo gemmer tegningens tal, så testen kan regne efter.
+
+const vsub = (p, q) => [p[0] - q[0], p[1] - q[1]];
+const vcross = (u, v) => u[0] * v[1] - u[1] * v[0];
+const vdot = (u, v) => u[0] * v[0] + u[1] * v[1];
+const vlen = (u) => Math.hypot(u[0], u[1]);
+const vneg = (u) => [-u[0], -u[1]];
+// Vinklen mellem to retninger (0–180°) og den spidse vinkel mellem to linjer (0–90°)
+const dirAngle = (u, v) => (Math.acos(Math.max(-1, Math.min(1, vdot(u, v) / (vlen(u) * vlen(v))))) * 180) / Math.PI;
+const lineAngle = (u, v) => Math.min(dirAngle(u, v), 180 - dirAngle(u, v));
+// Retningen læst fra venstre mod højre (og opad, hvis den er lodret)
+const ltr = ([dx, dy]) => (dx < 0 || (dx === 0 && dy < 0) ? [-dx, -dy] : [dx, dy]);
+// Alle retninger på ternet papir med højst 3 tern hen og 3 tern op/ned – forkortet, så (2, 2) er (1, 1)
+const DIRS = [];
+for (let dx = 0; dx <= 3; dx++) for (let dy = -3; dy <= 3; dy++) if (gcd(dx, dy) === 1 && (dx > 0 || dy === 1)) DIRS.push([dx, dy]);
+const SLANT = DIRS.filter(([dx, dy]) => dx && dy);
+// "2 tern hen og 1 tern op" – sådan tæller man på ternet papir
+const stepTxt = (d) => {
+  const [dx, dy] = ltr(d);
+  if (!dy) return 'vandret';
+  if (!dx) return 'lodret';
+  return `${dx} tern hen og ${Math.abs(dy)} tern ${dy > 0 ? 'op' : 'ned'}`;
+};
+
+// Et linjestykke med retningen d (mindst minLen tern langt), der ligger helt inde på papiret – mindst 1 tern fra kanten
+const segSteps = (d, cols, rows, minLen) => {
+  const hi = Math.min(d[0] ? Math.floor((cols - 2) / Math.abs(d[0])) : 99, d[1] ? Math.floor((rows - 2) / Math.abs(d[1])) : 99);
+  return [Math.max(1, Math.ceil(minLen / vlen(d) - 1e-9)), hi];
+};
+const fits = (d, cols, rows, minLen = 4) => { const [lo, hi] = segSteps(d, cols, rows, minLen); return lo <= hi; };
+function placeSeg(d, cols, rows, minLen = 4) {
+  const [lo, hi] = segSteps(d, cols, rows, minLen);
+  if (lo > hi) return null;
+  const n = ri(Math.max(lo, hi - 2), hi), sx = n * d[0], sy = n * d[1];
+  const x = ri(Math.max(1, 1 - sx), Math.min(cols - 1, cols - 1 - sx)), y = ri(Math.max(1, 1 - sy), Math.min(rows - 1, rows - 1 - sy));
+  return { a: [x, y], b: [x + sx, y + sy], d };
+}
+const ptSegDist = (p, s) => {
+  const v = vsub(s.b, s.a), w = vsub(p, s.a), t = Math.max(0, Math.min(1, vdot(w, v) / vdot(v, v)));
+  return vlen([w[0] - v[0] * t, w[1] - v[1] * t]);
+};
+const segsCross = (s, t) => vcross(vsub(t.b, t.a), vsub(s.a, t.a)) * vcross(vsub(t.b, t.a), vsub(s.b, t.a)) < 0
+  && vcross(vsub(s.b, s.a), vsub(t.a, s.a)) * vcross(vsub(s.b, s.a), vsub(t.b, s.a)) < 0;
+const segGap = (s, t) => (segsCross(s, t) ? 0 : Math.min(ptSegDist(s.a, t), ptSegDist(s.b, t), ptSegDist(t.a, s), ptSegDist(t.b, s)));
+// Linjestykker med de givne retninger, der holder afstand til hinanden (crossOk: de må krydse – tydeligt)
+function placeLines(dirs, { cols, rows, gap = 1.2, crossOk = false }) {
+  for (let tries = 0; tries < 400; tries++) {
+    const segs = dirs.map((d) => placeSeg(d, cols, rows));
+    let ok = segs.every(Boolean);
+    for (let i = 0; ok && i < segs.length; i++)
+      for (let j = i + 1; ok && j < segs.length; j++) {
+        const [s, t] = [segs[i], segs[j]];
+        if (segsCross(s, t)) ok = crossOk && Math.min(ptSegDist(s.a, t), ptSegDist(s.b, t), ptSegDist(t.a, s), ptSegDist(t.b, s)) >= 1;
+        else ok = segGap(s, t) >= gap;
+      }
+    if (ok) return segs;
+  }
+  return null;
+}
+
+// I) Parallelle linjer
+const parallelle = {
+  id: 'parallelle',
+  name: 'Parallelle linjer',
+  desc: 'Linjer, der hælder lige meget og aldrig mødes',
+  intro: {
+    text: 'To linjer er <b>parallelle</b>, når de hælder præcis lige meget. Så mødes de aldrig – uanset hvor langt man tegner dem.',
+    steps: [
+      { text: 'Parallelle linjer er som skinnerne på et togspor: afstanden mellem dem er den samme hele vejen, og de mødes aldrig.', visual: () => V.paperLines([{ a: [1, 4], b: [9, 4], name: 'a' }, { a: [2, 2], b: [8, 2], name: 'b' }], { rows: 6 }) },
+      { text: 'På ternet papir kan du tælle: linje a går <b>2 tern hen og 1 tern op</b>. Det gør linje b også. De hælder lige meget – de er <b>parallelle</b>.', visual: () => V.paperLines([{ a: [1, 2], b: [7, 5], d: [2, 1], name: 'a' }, { a: [3, 1], b: [9, 4], d: [2, 1], name: 'b' }], { rows: 6, stairs: true }) },
+      { text: 'Her går linje a 2 tern hen og 1 tern op, men linje b går <b>3 tern hen og 1 tern op</b>. De hælder forskelligt, så de ville mødes, hvis man tegnede dem længere. De er <b>ikke</b> parallelle.', visual: () => V.paperLines([{ a: [1, 2], b: [7, 5], d: [2, 1], name: 'a' }, { a: [3, 1], b: [9, 3], d: [3, 1], name: 'b' }], { rows: 6, stairs: true }) },
+      { text: 'Linjer, der krydser hinanden, er aldrig parallelle.', visual: () => V.paperLines([{ a: [1, 1], b: [7, 4], d: [2, 1], name: 'a' }, { a: [2, 5], b: [8, 2], d: [2, -1], name: 'b' }], { rows: 6 }) },
+    ],
+  },
+  gen(level) {
+    if (level === 3) {
+      // Tre linjer – kun to af dem er parallelle; den tredje hælder bare en lille smule anderledes
+      const cols = 12, rows = 8;
+      let segs = null, d, o;
+      while (!segs) {
+        d = pick(SLANT.filter((v) => fits(v, cols, rows)));
+        const near = DIRS.filter((v) => lineAngle(v, d) >= 8 && lineAngle(v, d) <= 20 && fits(v, cols, rows));
+        if (!near.length) continue;
+        o = pick(near);
+        segs = placeLines([d, d, o], { cols, rows, gap: 1.1 });
+      }
+      const names = shuffle(['a', 'b', 'c']), pair = [names[0], names[1]].sort(), odd = names[2];
+      const lines = segs.map((s, i) => ({ ...s, name: names[i] }));
+      const answer = `${pair[0]} og ${pair[1]}`;
+      return {
+        prompt: 'Hvilke to linjer er parallelle?',
+        visual: V.paperLines(lines, { cols, rows, s: 26 }),
+        input: 'choice', choices: ['a og b', 'a og c', 'b og c'], answer,
+        explain: `Linje ${pair[0]} og linje ${pair[1]} går begge <b>${stepTxt(d)}</b> – de hælder lige meget, så de er <b>parallelle</b>. Linje ${odd} går ${stepTxt(o)}.`,
+        explainVisual: V.paperLines(lines.map((l) => ({ ...l, hi: l.name !== odd })), { cols, rows, s: 26, stairs: true }),
+        geo: { lines: lines.map((l) => ({ name: l.name, d: l.d })) },
+      };
+    }
+    const cols = 10, rows = level === 1 ? 6 : 7, yes = chance(0.5);
+    let segs = null, d1, d2;
+    while (!segs) {
+      d1 = level === 1 ? pick([[1, 0], [0, 1]]) : pick(SLANT.filter((v) => fits(v, cols, rows)));
+      const others = DIRS.filter((v) => fits(v, cols, rows) && (level === 1 ? lineAngle(v, d1) >= 25 : lineAngle(v, d1) >= 8 && lineAngle(v, d1) <= 20));
+      if (!yes && !others.length) continue;
+      d2 = yes ? d1 : pick(others);
+      segs = placeLines([d1, d2], { cols, rows, gap: level === 1 ? 1.5 : 1.2, crossOk: level === 1 && !yes });
+    }
+    const lines = segs.map((s, i) => ({ ...s, name: 'ab'[i] }));
+    const crossing = segsCross(segs[0], segs[1]);
+    const explain = yes
+      ? (d1[0] && d1[1]
+        ? `Begge linjer går <b>${stepTxt(d1)}</b>. De hælder lige meget og mødes aldrig – de er <b>parallelle</b>.`
+        : `Begge linjer er ${d1[1] ? 'lodrette' : 'vandrette'}. Afstanden mellem dem er den samme hele vejen, så de mødes aldrig – de er <b>parallelle</b>.`)
+      : crossing
+        ? 'Linjerne krydser hinanden – så kan de ikke være parallelle.'
+        : `Linje a går <b>${stepTxt(d1)}</b>, men linje b går <b>${stepTxt(d2)}</b>. De hælder forskelligt, så de ville mødes, hvis man tegnede dem længere. De er <b>ikke parallelle</b>.`;
+    return {
+      prompt: 'Er linjerne a og b parallelle?',
+      visual: V.paperLines(lines, { cols, rows }),
+      input: 'choice', choices: ['Ja', 'Nej'], answer: yes ? 'Ja' : 'Nej',
+      explain,
+      explainVisual: V.paperLines(lines.map((l) => ({ ...l, hi: yes })), { cols, rows, stairs: !crossing }),
+      geo: { lines: lines.map((l) => ({ name: l.name, d: l.d })) },
+    };
+  },
+};
+
+// To linjestykker, der mødes i gitterpunktet c – som et hjørne ('L'), et 'T' eller et kryds ('X')
+function meetLines(d1, d2, { cols, rows, shape }) {
+  const ext = (c, d, back) => {
+    const l = vlen(d), lo = Math.ceil(2 / l - 1e-9), n = ri(lo, Math.max(lo, Math.floor(5 / l))), mlo = Math.ceil(1.5 / l - 1e-9);
+    const m = back ? ri(mlo, Math.max(mlo, Math.floor(3.5 / l))) : 0;
+    return { a: [c[0] - m * d[0], c[1] - m * d[1]], b: [c[0] + n * d[0], c[1] + n * d[1]], d };
+  };
+  const inside = (p) => p[0] >= 1 && p[0] <= cols - 1 && p[1] >= 1 && p[1] <= rows - 1;
+  for (let tries = 0; tries < 400; tries++) {
+    const c = [ri(1, cols - 1), ri(1, rows - 1)];
+    const s1 = ext(c, d1, shape !== 'L'), s2 = ext(c, d2, shape === 'X');
+    if ([s1.a, s1.b, s2.a, s2.b].every(inside)) return { s1, s2, c };
+  }
+  return null;
+}
+
+// II) Vinkelrette linjer
+const vinkelrette = {
+  id: 'vinkelrette',
+  name: 'Vinkelrette linjer',
+  desc: 'Linjer, der mødes i en ret vinkel',
+  intro: {
+    text: 'To linjer står <b>vinkelret</b> på hinanden, når de mødes i en <b>ret vinkel</b> (90°) – som hjørnet på et stykke papir.',
+    steps: [
+      { text: 'To linjer står <b>vinkelret</b> på hinanden, når de mødes i en <b>ret vinkel</b> (90°). Den rette vinkel vises med et lille firkant-mærke.', visual: () => V.paperLines([{ a: [1, 2], b: [7, 2], name: 'a' }, { a: [3, 1], b: [3, 5], name: 'b' }], { rows: 6, right: { at: [3, 2], u: [1, 0], v: [0, 1] } }) },
+      { text: 'Er du i tvivl, så hold hjørnet af et stykke papir ind mellem linjerne. Passer hjørnet præcis, står linjerne vinkelret.' },
+      { text: 'Linjerne kan godt være drejet. Linje a går <b>2 tern hen og 1 tern op</b>, og linje b går <b>1 tern hen og 2 tern ned</b>: tallene har byttet plads, og "op" er blevet til "ned". Så står de vinkelret.', visual: () => V.paperLines([{ a: [1, 1], b: [7, 4], d: [2, 1], name: 'a' }, { a: [4, 5], b: [6, 1], d: [1, -2], name: 'b' }], { rows: 6, stairs: true, right: { at: [5, 3], u: [2, 1], v: [1, -2] } }) },
+      { text: 'Er vinklen mindre eller større end 90°, står linjerne <b>ikke</b> vinkelret. Den stiplede linje viser, hvor en vinkelret linje skulle have gået.', visual: () => V.paperLines([{ a: [1, 1], b: [8, 1], name: 'a' }, { a: [3, 1], b: [6, 5], name: 'b' }, { a: [3, 1], b: [3, 5], ref: true }], { rows: 6, arc: { at: [3, 1], u: [1, 0], v: [3, 4] } }) },
+    ],
+  },
+  gen(level) {
+    const cols = 10, rows = 7, yes = chance(0.5), shape = pick(['L', 'T', 'X']);
+    let m = null, d1, d2;
+    while (!m) {
+      d1 = level === 1 ? pick([[1, 0], [0, 1]]) : pick(SLANT);
+      if (yes) d2 = ltr([-d1[1], d1[0]]);
+      else {
+        const [lo, hi] = level === 3 ? [74, 83] : level === 2 ? [20, 70] : [25, 65];
+        const others = DIRS.filter((v) => lineAngle(v, d1) >= lo && lineAngle(v, d1) <= hi);
+        if (!others.length) continue;
+        d2 = pick(others);
+      }
+      // Tegn linjerne i tilfældige retninger, så hjørnet ikke altid vender ens
+      m = meetLines(chance(0.5) ? d1 : vneg(d1), chance(0.5) ? d2 : vneg(d2), { cols, rows, shape });
+    }
+    const { s1, s2, c } = m, ang = dirAngle(s1.d, s2.d);
+    const lines = [{ ...s1, name: 'a' }, { ...s2, name: 'b' }];
+    let explain, extra = {};
+    if (yes) {
+      explain = d1[0] && d1[1]
+        ? `Linje a går <b>${stepTxt(d1)}</b>, og linje b går <b>${stepTxt(d2)}</b>: tallene har byttet plads, og "op" og "ned" har byttet. Så mødes de i en <b>ret vinkel</b> (90°) – de står <b>vinkelret</b>.`
+        : 'Den ene linje er vandret, og den anden er lodret. De mødes i en <b>ret vinkel</b> (90°) – de står <b>vinkelret</b> på hinanden.';
+      extra = { right: { at: c, u: s1.d, v: s2.d } };
+    } else {
+      // Hjælpelinjen: den vinkelrette linje på a gennem skæringspunktet – på samme side som b
+      let w = [-s1.d[1], s1.d[0]];
+      if (vdot(w, s2.d) < 0) w = vneg(w);
+      let k = 2.6 / vlen(w);
+      while (k > 0.5 / vlen(w) && !(c[0] + w[0] * k >= 0.3 && c[0] + w[0] * k <= cols - 0.3 && c[1] + w[1] * k >= 0.3 && c[1] + w[1] * k <= rows - 0.3)) k *= 0.9;
+      lines.push({ a: c, b: [c[0] + w[0] * k, c[1] + w[1] * k], ref: true });
+      explain = `Vinklen med buen er <b>${ang < 90 ? 'spids' : 'stump'}</b> – ${ang < 90 ? 'mindre' : 'større'} end en ret vinkel. Den stiplede linje viser, hvor en vinkelret linje skulle have gået. Linjerne står <b>ikke vinkelret</b>.`;
+      extra = { arc: { at: c, u: s1.d, v: s2.d } };
+    }
+    return {
+      prompt: 'Står linjerne a og b vinkelret på hinanden?',
+      visual: V.paperLines(lines.slice(0, 2), { cols, rows }),
+      input: 'choice', choices: ['Ja', 'Nej'], answer: yes ? 'Ja' : 'Nej',
+      explain, explainVisual: V.paperLines(lines, { cols, rows, ...extra }),
+      geo: { d1: s1.d, d2: s2.d },
+    };
+  },
+};
+
+// Trekant ud fra sidelængderne: AB = s[0] (grundlinjen), BC = s[1], CA = s[2]
+const triFromSides = ([c, a, b]) => { const x = (b * b - a * a + c * c) / (2 * c); return [[0, 0], [c, 0], [x, Math.sqrt(Math.max(0, b * b - x * x))]]; };
+// Trekant ud fra vinklerne ved hjørne 0 og 1 (grundlinjen er 1 lang)
+const triFromAngles = (A, B) => {
+  const r = Math.PI / 180, ac = Math.sin(B * r) / Math.sin((180 - A - B) * r);
+  return [[0, 0], [1, 0], [ac * Math.cos(A * r), ac * Math.sin(A * r)]];
+};
+// Sidelængder til en trekant af slagsen kind (0 = ligesidet, 1 = ligebenet, 2 = ingen lige lange), i hele cm
+function triSides(kind) {
+  if (kind === 0) { const n = ri(3, 9); return [n, n, n]; }
+  if (kind === 1) {
+    let l, b;
+    do { l = ri(3, 9); b = ri(2, 12); } while (Math.abs(b - l) < 2 || b > 1.6 * l || b < 0.45 * l);
+    return shuffle([l, l, b]);
+  }
+  let s;
+  do s = [ri(3, 9), ri(3, 9), ri(3, 9)].sort((x, y) => x - y); while (s[0] === s[1] || s[1] === s[2] || s[2] > 0.85 * (s[0] + s[1]));
+  return shuffle(s);
+}
+const TRI_SIDES = ['Ligesidet', 'Ligebenet', 'Ingen sider lige lange'];
+const TRI_SIDES_WHY = [
+  'Alle tre sider er lige lange: trekanten er <b>ligesidet</b>.',
+  'To af siderne er lige lange: trekanten er <b>ligebenet</b>.',
+  'Ingen af siderne er lige lange – trekanten er hverken ligesidet eller ligebenet.',
+];
+
+// III) Trekanter efter sider
+const trekantSider = {
+  id: 'trekant-sider',
+  name: 'Trekanter efter sider',
+  desc: 'Ligesidet, ligebenet – eller ingen lige lange sider',
+  intro: {
+    text: 'Se på siderne: <b>ligesidet</b> = alle tre sider er lige lange · <b>ligebenet</b> = to sider er lige lange.',
+    steps: [
+      { text: 'En <b>ligesidet</b> trekant har <b>tre</b> lige lange sider.', visual: () => V.polygon(triFromSides([4, 4, 4]), { sides: ['4 cm', '4 cm', '4 cm'] }) },
+      { text: 'En <b>ligebenet</b> trekant har <b>to</b> lige lange sider – de to "ben". Den tredje side er anderledes.', visual: () => V.polygon(triFromSides([3, 5, 5]), { sides: ['3 cm', '5 cm', '5 cm'] }) },
+      { text: 'Er <b>ingen</b> af siderne lige lange, er trekanten hverken ligesidet eller ligebenet.', visual: () => V.polygon(triFromSides([7, 4, 5]), { sides: ['7 cm', '4 cm', '5 cm'] }) },
+      { text: 'Små streger på siderne betyder: sider med <b>samme antal streger</b> er lige lange. Her har to sider én streg – trekanten er ligebenet.', visual: () => V.polygon(triFromSides([3, 5, 5]), { ticks: [0, 1, 1] }) },
+      { text: 'Pas på enhederne! 4 cm = 40 mm. En trekant med siderne 4 cm, 40 mm og 3 cm har altså to lige lange sider – den er <b>ligebenet</b>.' },
+    ],
+  },
+  gen(level) {
+    const choices = TRI_SIDES;
+    if (level < 3) {
+      const kind = ri(0, 2), L = triSides(kind), pts = triFromSides(L);
+      // Niveau 2: kun streger – sider med samme antal streger er lige lange (benene i en ligebenet har én streg)
+      const base = L.findIndex((n) => L.indexOf(n) === L.lastIndexOf(n));
+      const ticks = kind === 0 ? [1, 1, 1] : kind === 1 ? L.map((n, i) => (i === base ? pick([0, 2]) : 1)) : chance(0.5) ? [0, 0, 0] : shuffle([1, 2, 3]);
+      const marks = level === 1 ? { sides: L.map((n) => `${n} cm`) } : { ticks, rot: ri(0, 23) * 15, flip: chance(0.5) };
+      return {
+        prompt: 'Hvilken slags trekant er det?',
+        visual: V.polygon(pts, marks),
+        input: 'choice', choices, answer: choices[kind],
+        explain: level === 1
+          ? `Siderne er ${L.map((n) => `${n} cm`).join(', ').replace(/, ([^,]*)$/, ' og $1')}. ${TRI_SIDES_WHY[kind]}`
+          : `Sider med samme antal streger er lige lange. ${TRI_SIDES_WHY[kind]}`,
+        geo: { lens: L },
+      };
+    }
+    if (chance(0.5)) {
+      // Tæl i ternene: er de skrå sider lige lange?
+      const iso = chance(0.6);
+      let pts, how;
+      if (iso) {
+        const t = ri(0, 2);
+        if (t === 0) {
+          const k = ri(1, 3), h = ri(2, 5);
+          pts = [[0, 0], [2 * k, 0], [k, h]];
+          how = [`Siden fra venstre hjørne op til toppen går <b>${k} tern hen og ${h} tern op</b>.`, `Siden fra højre hjørne op til toppen går <b>${k} tern tilbage og ${h} tern op</b> – lige så mange tern.`, 'De to skrå sider er altså lige lange: trekanten er <b>ligebenet</b>.'];
+        } else if (t === 1) {
+          const k = ri(1, 2), h = ri(2, 6);
+          pts = [[0, 0], [h, k], [0, 2 * k]];
+          how = [`Siden fra det nederste hjørne går <b>${h} tern hen og ${k} tern op</b>.`, `Siden fra det øverste hjørne går <b>${h} tern hen og ${k} tern ned</b> – lige så mange tern.`, 'De to skrå sider er altså lige lange: trekanten er <b>ligebenet</b>.'];
+        } else {
+          const n = ri(2, 5);
+          pts = [[0, 0], [n, 0], [0, n]];
+          how = [`Den vandrette side er <b>${n} tern</b>, og den lodrette side er også <b>${n} tern</b>.`, 'Den skrå side er længere end dem begge.', 'To sider er lige lange: trekanten er <b>ligebenet</b>.'];
+        }
+      } else {
+        let w, h, p, lens;
+        do {
+          w = ri(3, 7); h = ri(2, 5); p = ri(0, w);
+          lens = [w, Math.hypot(w - p, h), Math.hypot(p, h)];
+        } while (2 * p === w || Math.abs(lens[0] - lens[1]) < 0.3 || Math.abs(lens[1] - lens[2]) < 0.3 || Math.abs(lens[0] - lens[2]) < 0.3);
+        pts = [[0, 0], [w, 0], [p, h]];
+        const side = (dx, back) => (dx ? `${dx} tern ${back ? 'tilbage' : 'hen'} og ${h} tern op` : `${h} tern lige op`);
+        how = [`Den venstre side går <b>${side(p, false)}</b>, men den højre side går <b>${side(w - p, true)}</b> – de er ikke lige lange.`, `Bunden er <b>${w} tern</b> – den er heller ikke lige så lang som nogen af de andre sider.`, 'Ingen af siderne er lige lange.'];
+      }
+      const mx = Math.max(...pts.map((q) => q[0])), my = Math.max(...pts.map((q) => q[1]));
+      const ox = ri(1, 9 - mx), oy = ri(1, 6 - my), at = pts.map(([x, y]) => [x + ox, y + oy]);
+      const lens = at.map((q, i) => vlen(vsub(at[(i + 1) % 3], q)));
+      const kind = iso ? 1 : 2;
+      return {
+        prompt: 'Tæl i ternene. Hvilken slags trekant er det?',
+        visual: V.paperPolygon(at, { cols: 10, rows: 7 }),
+        input: 'choice', choices, answer: choices[kind],
+        explain: stepsHTML(how),
+        explainVisual: V.paperPolygon(at, { cols: 10, rows: 7, ticks: lens.map((l) => (iso && lens.filter((m) => Math.abs(m - l) < 1e-9).length === 2 ? 1 : 0)) }),
+        geo: { lens },
+      };
+    }
+    // Siderne i både cm og mm – skriv dem i samme enhed først
+    const kind = ri(0, 2);
+    let mm = triSides(kind).map((n) => n * 10), trap = null;
+    if (kind === 2 && chance(0.5)) {
+      // Fælden: 6 cm og 6 mm ligner hinanden, men er ikke lige lange
+      const a = ri(4, 9);
+      trap = a;
+      mm = shuffle([a * 10, a, a * 10 + pick([-2, 2])]);
+    }
+    let units;
+    do units = mm.map((n) => (n % 10 ? 'mm' : pick(['cm', 'mm']))); while (!units.includes('cm') || !units.includes('mm'));
+    const shown = mm.map((n, i) => (units[i] === 'cm' ? `${n / 10} cm` : `${n} mm`));
+    const conv = mm.map((n, i) => (units[i] === 'cm' ? `${n / 10} cm = ${n} mm` : null)).filter(Boolean);
+    return {
+      prompt: `En trekant har siderne <b>${shown[0]}</b>, <b>${shown[1]}</b> og <b>${shown[2]}</b>. Hvilken slags trekant er det?`,
+      input: 'choice', choices, answer: choices[kind],
+      explain: stepsHTML([
+        `Skriv siderne i samme enhed (1 cm = 10 mm): ${conv.join(' og ')}.`,
+        `Så er siderne ${mm.map((n) => `${n} mm`).join(', ').replace(/, ([^,]*)$/, ' og $1')}.`,
+        TRI_SIDES_WHY[kind] + (trap ? ` Pas på: ${trap} cm og ${trap} mm er ikke det samme – ${trap} cm = ${trap * 10} mm.` : ''),
+      ]),
+      geo: { lens: mm },
+    };
+  },
+};
+
+// IV) Trekanter efter vinkler
+const TRI_ANGLES = ['Retvinklet', 'Spidsvinklet', 'Stumpvinklet'];
+const trekantVinkler = {
+  id: 'trekant-vinkler',
+  name: 'Trekanter efter vinkler',
+  desc: 'Retvinklet, spidsvinklet eller stumpvinklet',
+  intro: {
+    text: 'Find den <b>største</b> vinkel: er den <b>ret</b> (90°), er trekanten retvinklet · er den <b>stump</b> (over 90°), er den stumpvinklet · ellers er alle vinkler <b>spidse</b>, og trekanten er spidsvinklet.',
+    steps: [
+      { text: 'En trekant har tre vinkler. Find den <b>største</b> vinkel – den bestemmer, hvad trekanten hedder.', visual: () => V.polygon(triFromAngles(60, 80), { angles: ['60°', '80°', '40°'] }) },
+      { text: 'Er en af vinklerne <b>ret</b> (90°), er trekanten <b>retvinklet</b>. Firkant-mærket viser den rette vinkel.', visual: () => V.polygon(triFromAngles(90, 35), { right: [true] }) },
+      { text: 'Er en af vinklerne <b>stump</b> – større end 90° – er trekanten <b>stumpvinklet</b>.', visual: () => V.polygon(triFromAngles(125, 30), { arcs: ['hi'] }) },
+      { text: 'Er <b>alle tre</b> vinkler <b>spidse</b> – mindre end 90° – er trekanten <b>spidsvinklet</b>.', visual: () => V.polygon(triFromAngles(65, 70), { arcs: ['hi', 'hi', 'hi'] }) },
+      { text: 'I tvivl? Hold hjørnet af et stykke papir ind i den største vinkel. Den stiplede linje viser en ret vinkel at sammenligne med – her er vinklen lidt større, så trekanten er stumpvinklet.', visual: () => V.polygon(triFromAngles(104, 38), { arcs: ['hi'], ref: 0 }) },
+    ],
+  },
+  gen(level) {
+    const kind = ri(0, 2);
+    let ang;
+    if (kind === 0) { const a = ri(28, 62); ang = [90, a, 90 - a]; }
+    else if (kind === 1) { const M = level === 3 ? ri(76, 84) : ri(62, 78), R = 180 - M, p = ri(Math.max(30, R - M), Math.min(M, R - 30)); ang = [M, p, R - p]; }
+    else { const O = level === 3 ? ri(100, 112) : ri(110, 130), R = 180 - O, p = ri(25, R - 25); ang = [O, p, R - p]; }
+    const at = shuffle(ang), big = at.indexOf(Math.max(...at)), pts = triFromAngles(at[0], at[1]);
+    const list = at.map((a) => `${a}°`).join(', ').replace(/, ([^,]*)$/, ' og $1');
+    const marks = level === 1
+      ? { angles: at.map((a) => `${a}°`) }
+      : { right: at.map((a) => a === 90), flip: chance(0.5), rot: level === 3 ? ri(0, 23) * 15 : 0 };
+    const why = [
+      `Én vinkel er <b>ret</b> (90°)${level === 1 ? '' : ' – se firkant-mærket'}. Så er trekanten <b>retvinklet</b>.`,
+      `Alle tre vinkler er <b>spidse</b> – selv den største${level === 1 ? ` (${at[big]}°)` : ''} er mindre end en ret vinkel. Så er trekanten <b>spidsvinklet</b>.`,
+      `Én vinkel er <b>stump</b> – større end en ret vinkel${level === 1 ? ` (${at[big]}°)` : ''}. Så er trekanten <b>stumpvinklet</b>.`,
+    ][kind];
+    return {
+      prompt: 'Hvilken slags trekant er det?',
+      visual: V.polygon(pts, marks),
+      input: 'choice', choices: TRI_ANGLES, answer: TRI_ANGLES[kind],
+      explain: (level === 1 ? `Vinklerne er ${list}. ` : '') + why + (level > 1 && kind ? ' Den stiplede linje viser en ret vinkel at sammenligne med.' : ''),
+      explainVisual: V.polygon(pts, { ...marks, arcs: at.map((a, i) => (i === big && kind ? 'hi' : 0)), ref: level > 1 && kind ? big : -1 }),
+      geo: { angles: at },
+    };
+  },
+};
+
+// V) Firkanter: kvadrat, rektangel, rombe og parallelogram
+const QUADS = ['Kvadrat', 'Rektangel', 'Rombe', 'Parallelogram'];
+function quadShape(kind) {
+  const r = Math.PI / 180;
+  if (kind === 0) { const s = ri(3, 8); return { pts: [[0, 0], [s, 0], [s, s], [0, s]], lens: [s, s, s, s], ticks: [1, 1, 1, 1], right: true }; }
+  if (kind === 1) {
+    let w, h;
+    do { w = ri(4, 9); h = ri(2, 7); } while (w < 1.4 * h);
+    return { pts: [[0, 0], [w, 0], [w, h], [0, h]], lens: [w, h, w, h], ticks: [1, 2, 1, 2], right: true };
+  }
+  const th = ri(kind === 2 ? 50 : 55, kind === 2 ? 70 : 72) * r;
+  let a, b;
+  if (kind === 2) a = b = ri(3, 8);
+  else do { a = ri(4, 9); b = ri(2, 7); } while (a < 1.4 * b);
+  return { pts: [[0, 0], [a, 0], [a + b * Math.cos(th), b * Math.sin(th)], [b * Math.cos(th), b * Math.sin(th)]], lens: [a, b, a, b], ticks: kind === 2 ? [1, 1, 1, 1] : [1, 2, 1, 2], right: false, th: th / r };
+}
+const QUAD_WHY = [
+  'Alle fire sider er lige lange, og alle fire vinkler er rette. Det er et <b>kvadrat</b>. (Et kvadrat er også et rektangel og en rombe – men "kvadrat" er det mest præcise navn.)',
+  'Alle fire vinkler er rette, men siderne er ikke lige lange. Det er et <b>rektangel</b>.',
+  'Alle fire sider er lige lange, men vinklerne er ikke rette. Det er en <b>rombe</b>.',
+  'De modstående sider er parallelle og lige lange, men nabosiderne er forskellige, og vinklerne er ikke rette. Det er et <b>parallelogram</b>.',
+];
+const QUAD_FACTS = [
+  { q: 'Er et kvadrat også et rektangel?', a: 'Ja', kind: 0, why: 'Et rektangel skal have fire rette vinkler. Det har et kvadrat – så et kvadrat <b>er</b> et rektangel (bare med lige lange sider).' },
+  { q: 'Er et rektangel altid et kvadrat?', a: 'Nej', kind: 1, why: 'Et rektangel kan være langt og smalt. Så er siderne ikke lige lange – og så er det ikke et kvadrat.' },
+  { q: 'Er et kvadrat også en rombe?', a: 'Ja', kind: 0, why: 'En rombe skal have fire lige lange sider. Det har et kvadrat – så et kvadrat <b>er</b> en rombe (bare med rette vinkler).' },
+  { q: 'Er en rombe altid et kvadrat?', a: 'Nej', kind: 2, why: 'En rombe kan være skæv. Så er vinklerne ikke rette – og så er det ikke et kvadrat.' },
+  { q: 'Er en rombe et parallelogram?', a: 'Ja', kind: 2, why: 'En rombe har to par parallelle sider – så <b>er</b> den et parallelogram.' },
+  { q: 'Er et rektangel et parallelogram?', a: 'Ja', kind: 1, why: 'I et rektangel er de modstående sider parallelle – to par parallelle sider. Så <b>er</b> det et parallelogram.' },
+  { q: 'Har et parallelogram altid fire rette vinkler?', a: 'Nej', kind: 3, why: 'Et parallelogram kan være skævt – så er vinklerne ikke rette. Kun rektangler (og kvadrater) har fire rette vinkler.' },
+  { q: 'Har en rombe altid fire lige lange sider?', a: 'Ja', kind: 2, why: 'Ja – det er netop det, der gør den til en rombe: alle fire sider er lige lange.' },
+];
+// Firkanter på ternet papir til "Er det et parallelogram?" – hjørnerne i tern
+function quadOnPaper(yes) {
+  if (yes) {
+    const t = ri(0, 3), a = ri(3, 5), h = ri(2, 4);
+    if (t === 0) { const k = pick([-2, -1, 1, 2]); return { pts: [[0, 0], [a, 0], [a + k, h], [k, h]], name: 'parallelogram' }; }
+    if (t === 1) return { pts: [[0, 0], [a, 0], [a, h], [0, h]], name: 'rektangel' };
+    if (t === 2) { let p, q; do { p = ri(1, 3); q = ri(1, 2); } while (p === q); return { pts: [[0, q], [p, 0], [2 * p, q], [p, 2 * q]], name: 'rombe' }; }
+    const u = pick([[3, 1], [2, 1], [3, -1]]), v = pick([[1, 2], [1, 3], [-1, 2]]);
+    return { pts: [[0, 0], u, [u[0] + v[0], u[1] + v[1]], v], name: 'parallelogram' };
+  }
+  const t = ri(0, 2);
+  if (t === 0) {
+    let a, h, k1, k2;
+    do { a = ri(4, 6); h = ri(2, 4); k1 = ri(0, 2); k2 = ri(0, 2); } while (k1 === k2 || k1 + k2 > a - 2);
+    return { pts: [[0, 0], [a, 0], [a - k2, h], [k1, h]], name: 'trapez' };
+  }
+  if (t === 1) { let q1, q2; const p = ri(1, 3); do { q1 = ri(1, 2); q2 = ri(2, 4); } while (q1 === q2); return { pts: [[0, q1], [p, 0], [2 * p, q1], [p, q1 + q2]], name: 'drage' }; }
+  let pts, v;
+  do {
+    pts = [[0, ri(0, 1)], [ri(3, 5), 0], [ri(4, 6), ri(3, 4)], [ri(0, 2), ri(2, 4)]];
+    v = pts.map((q, i) => vsub(pts[(i + 1) % 4], q));
+  } while (!vcross(v[0], v[2]) || !vcross(v[1], v[3]) || !v.every((u, i) => vcross(u, v[(i + 1) % 4]) > 0));
+  return { pts, name: 'firkant' };
+}
+const firkanter = {
+  id: 'firkanter',
+  name: 'Firkanter',
+  desc: 'Kvadrat, rektangel, rombe og parallelogram',
+  intro: {
+    text: 'Se på siderne og vinklerne: <b>kvadrat</b> = 4 lige lange sider og 4 rette vinkler · <b>rektangel</b> = 4 rette vinkler · <b>rombe</b> = 4 lige lange sider · <b>parallelogram</b> = to par parallelle sider.',
+    steps: [
+      { text: 'Et <b>parallelogram</b> har to par <b>parallelle</b> sider. Siderne over for hinanden er lige lange (samme antal streger).', visual: () => V.polygon(quadShapeFixed(3), { ticks: [1, 2, 1, 2] }) },
+      { text: 'Et <b>rektangel</b> er et parallelogram med <b>fire rette vinkler</b>.', visual: () => V.polygon([[0, 0], [6, 0], [6, 3], [0, 3]], { ticks: [1, 2, 1, 2], right: [1, 1, 1, 1] }) },
+      { text: 'En <b>rombe</b> er et parallelogram med <b>fire lige lange sider</b>.', visual: () => V.polygon(quadShapeFixed(2), { ticks: [1, 1, 1, 1] }) },
+      { text: 'Et <b>kvadrat</b> har både fire rette vinkler <b>og</b> fire lige lange sider. Så er et kvadrat også et rektangel og en rombe – men "kvadrat" er det mest præcise navn.', visual: () => V.polygon([[0, 0], [4, 0], [4, 4], [0, 4]], { ticks: [1, 1, 1, 1], right: [1, 1, 1, 1] }) },
+      { text: 'En firkant, der ikke har to par parallelle sider, er <b>ikke</b> et parallelogram – fx en firkant, hvor kun bunden og toppen er parallelle.', visual: () => V.paperPolygon([[1, 1], [7, 1], [6, 4], [3, 4]], { cols: 8, rows: 5, s: 30 }) },
+    ],
+  },
+  gen(level) {
+    if (level < 3) {
+      const kind = ri(0, 3), sh = quadShape(kind);
+      // En rombe vises gerne stående på spidsen (som en drage-figur) – sådan ser man den tit
+      const rot = level === 1 ? (kind === 2 && chance(0.5) ? 90 - sh.th / 2 : 0) : ri(0, 11) * 15;
+      const marks = level === 1
+        ? { sides: sh.lens.map((n) => `${n} cm`), right: sh.right ? [1, 1, 1, 1] : [] }
+        : { ticks: sh.ticks, right: sh.right ? [1, 1, 1, 1] : [] };
+      return {
+        prompt: 'Hvad hedder firkanten? Vælg det mest præcise navn.',
+        visual: V.polygon(sh.pts, { ...marks, rot }),
+        input: 'choice', choices: QUADS, answer: QUADS[kind], cols: 2,
+        explain: (level === 2 ? 'Sider med samme antal streger er lige lange, og firkant-mærkerne viser rette vinkler. ' : '') + QUAD_WHY[kind],
+        geo: { pts: sh.pts },
+      };
+    }
+    if (chance(0.5)) {
+      const f = pick(QUAD_FACTS), sh = quadShape(f.kind);
+      return {
+        prompt: f.q,
+        visual: V.polygon(sh.pts, { ticks: sh.ticks, right: sh.right ? [1, 1, 1, 1] : [], w: 260, h: 150, pad: 24 }),
+        input: 'choice', choices: ['Ja', 'Nej'], answer: f.a,
+        explain: f.why,
+      };
+    }
+    const yes = chance(0.5), sh = quadOnPaper(yes);
+    const nx = Math.min(...sh.pts.map((q) => q[0])), ny = Math.min(...sh.pts.map((q) => q[1]));
+    const pts = sh.pts.map(([x, y]) => [x - nx, y - ny]);
+    const mx = Math.max(...pts.map((q) => q[0])), my = Math.max(...pts.map((q) => q[1]));
+    const ox = ri(1, 9 - mx), oy = ri(1, 6 - my), at = pts.map(([x, y]) => [x + ox, y + oy]);
+    const v = at.map((q, i) => vsub(at[(i + 1) % 4], q));
+    const par = [!vcross(v[0], v[2]), !vcross(v[1], v[3])];
+    const pairTxt = (i) => (par[i] ? `går begge ${stepTxt(v[i])} – de er <b>parallelle</b>` : `: den ene går ${stepTxt(v[i])}, den anden går ${stepTxt(v[i + 2])} – de er ikke parallelle`);
+    return {
+      prompt: 'Er firkanten et parallelogram?',
+      visual: V.paperPolygon(at, { cols: 10, rows: 7 }),
+      input: 'choice', choices: ['Ja', 'Nej'], answer: yes ? 'Ja' : 'Nej',
+      explain: stepsHTML([
+        'Et parallelogram har <b>to par</b> parallelle sider – siderne over for hinanden.',
+        `Det ene par sider ${pairTxt(0)}.`.replace(' :', ':'),
+        `Det andet par sider ${pairTxt(1)}.`.replace(' :', ':'),
+        yes ? `To par parallelle sider: firkanten <b>er</b> et parallelogram.${sh.name === 'rektangel' ? ' (Den er også et rektangel.)' : sh.name === 'rombe' ? ' (Den er også en rombe.)' : ''}`
+          : `Firkanten er <b>ikke</b> et parallelogram.${sh.name === 'trapez' ? ' (Med ét par parallelle sider kaldes den et trapez.)' : ''}`,
+      ]),
+      explainVisual: V.paperPolygon(at, { cols: 10, rows: 7, hiSides: [par[0], par[1], par[0], par[1]] }),
+      geo: { pts: at },
+    };
+  },
+};
+// Faste figurer til eksemplet (samme hver gang)
+function quadShapeFixed(kind) {
+  const r = Math.PI / 180, th = 60 * r;
+  return kind === 2 ? [[0, 0], [4, 0], [4 + 4 * Math.cos(th), 4 * Math.sin(th)], [4 * Math.cos(th), 4 * Math.sin(th)]]
+    : [[0, 0], [6, 0], [6 + 3 * Math.cos(th), 3 * Math.sin(th)], [3 * Math.cos(th), 3 * Math.sin(th)]];
+}
+
+// Punkter i koordinatsystemet, der ikke står oven i hinanden (navneskiltene skal kunne læses)
+const apart = (p, list) => list.every((q) => Math.max(Math.abs(p[0] - q[0]), Math.abs(p[1] - q[1])) >= 2);
+const coordHow = (x, y, name) => stepsHTML([
+  'Start i (0, 0) nederst til venstre.',
+  x ? `Gå hen ad x-aksen, til du er lige under ${name}: <b>${x} hen</b>.` : `${name} ligger på y-aksen, så du skal <b>0 hen</b>.`,
+  y ? `Gå så lige op til ${name}: <b>${y} op</b>.` : `${name} ligger på x-aksen, så du skal <b>0 op</b>.`,
+  `${name} = (${x}, ${y}) – først hen, så op.`,
+]);
+
+// VI) Aflæs et punkt
+const koordAflaes = {
+  id: 'koord-aflaes',
+  name: 'Aflæs et punkt',
+  desc: 'Hvor ligger punktet? Skriv (x, y)',
+  intro: {
+    text: 'Et punkt skrives (x, y): først hvor langt <b>hen</b> ad x-aksen, så hvor langt <b>op</b>.',
+    steps: [
+      { text: 'Et koordinatsystem har to akser: <b>x-aksen</b> går vandret, og <b>y-aksen</b> går lodret. De mødes i (0, 0).', visual: () => V.coordGrid({ max: 5 }) },
+      { text: 'Hvor ligger punktet P? Start i (0, 0), og gå hen ad x-aksen, til du er lige under P: <b>4 hen</b>.', visual: () => V.coordGrid({ max: 5, points: [{ x: 4, y: 2, name: 'P' }], path: { x: 4, y: 2, part: 1 } }) },
+      { text: 'Gå så lige op til P: <b>2 op</b>. P = <b>(4, 2)</b>. Tallet for "hen" skrives først.', visual: () => V.coordGrid({ max: 5, points: [{ x: 4, y: 2, name: 'P', hi: true }], path: { x: 4, y: 2 } }) },
+      { text: 'Rækkefølgen betyder noget: (4, 2) og (2, 4) er to forskellige punkter. Husk: <b>først hen, så op</b>.', visual: () => V.coordGrid({ max: 5, points: [{ x: 4, y: 2, name: 'P', note: '(4, 2)' }, { x: 2, y: 4, name: 'Q', note: '(2, 4)' }] }) },
+    ],
+  },
+  gen(level) {
+    const max = level === 1 ? 5 : 10;
+    const points = [];
+    if (level < 3) {
+      let x, y;
+      do { x = ri(1, max); y = ri(1, max); } while (level === 2 && x === y);
+      points.push({ x, y, name: 'P' });
+    } else {
+      for (const name of ['A', 'B', 'C']) {
+        let p;
+        do {
+          p = [ri(1, max), ri(1, max)];
+          if (chance(0.3)) p[ri(0, 1)] = 0;
+        } while ((p[0] === 0 && p[1] === 0) || !apart(p, points.map((q) => [q.x, q.y])));
+        points.push({ x: p[0], y: p[1], name });
+      }
+    }
+    const t = pick(points), { x, y, name } = t;
+    return {
+      prompt: `Hvad er koordinaterne til punktet <b>${name}</b>?`,
+      visual: V.coordGrid({ max, points }),
+      input: 'parts', layout: [`${name} = (`, { slot: 0, label: 'x' }, ',', { slot: 1, label: 'y' }, ')'],
+      answer: [x, y], answerText: `${name} = (${x}, ${y})`,
+      hint: 'Start i (0, 0). Tæl først, hvor langt <b>hen</b> punktet er – og så hvor langt <b>op</b>.',
+      explain: coordHow(x, y, name),
+      explainVisual: V.coordGrid({ max, points: points.map((q) => ({ ...q, hi: q === t })), path: { x, y } }),
+      geo: { points, target: name },
+    };
+  },
+};
+
+// VII) Find punktet – (6, 4) er ikke det samme som (4, 6)
+const koordFind = {
+  id: 'koord-find',
+  name: 'Find punktet',
+  desc: 'Hvilket punkt er (6, 4)? Pas på – ikke (4, 6)',
+  intro: {
+    text: '(6, 4) betyder <b>6 hen</b> og <b>4 op</b>. Pas på: (4, 6) er et helt andet punkt!',
+    steps: [
+      { text: 'Find punktet (6, 4). Det første tal fortæller, hvor langt du skal <b>hen</b> ad x-aksen: <b>6 hen</b>.', visual: () => V.coordGrid({ max: 7, points: [{ x: 6, y: 4, name: 'A' }, { x: 4, y: 6, name: 'B' }, { x: 2, y: 3, name: 'C' }], path: { x: 6, y: 4, part: 1 } }) },
+      { text: 'Det andet tal fortæller, hvor langt du skal <b>op</b>: <b>4 op</b>. Der ligger punkt <b>A</b>. A = (6, 4).', visual: () => V.coordGrid({ max: 7, points: [{ x: 6, y: 4, name: 'A', hi: true }, { x: 4, y: 6, name: 'B' }, { x: 2, y: 3, name: 'C' }], path: { x: 6, y: 4 } }) },
+      { text: 'Pas på fælden: punkt B er 4 hen og 6 op – det er (4, 6). Tallene er byttet om, og så er det et helt andet punkt.', visual: () => V.coordGrid({ max: 7, points: [{ x: 6, y: 4, name: 'A', note: '(6, 4)' }, { x: 4, y: 6, name: 'B', note: '(4, 6)' }] }) },
+    ],
+  },
+  gen(level) {
+    const max = level === 1 ? 5 : 10, n = level === 1 ? 3 : 4;
+    let x, y;
+    do {
+      x = ri(1, max); y = ri(1, max);
+      if (level === 3 && chance(0.4)) { if (chance(0.5)) x = 0; else y = 0; }
+    } while (Math.abs(x - y) < 2);
+    // Målet, fælden med tallene byttet om – og nogle andre punkter
+    const pts = [[x, y], [y, x]];
+    while (pts.length < n) {
+      const p = [ri(1, max), ri(1, max)];
+      if (apart(p, pts)) pts.push(p);
+    }
+    const names = shuffle('ABCD'.slice(0, n).split(''));
+    const points = pts.map(([a, b], i) => ({ x: a, y: b, name: names[i] }));
+    const [T, S] = points;
+    return {
+      prompt: `Hvilket punkt har koordinaterne <b style="white-space:nowrap">(${x}, ${y})</b>?`,
+      visual: V.coordGrid({ max, points }),
+      input: 'choice', choices: names.slice().sort(), answer: T.name,
+      explain: stepsHTML([
+        `(${x}, ${y}) betyder <b>${x} hen</b> ad x-aksen og <b>${y} op</b>.`,
+        `Start i (0, 0), ${!x ? `bliv på y-aksen, og gå ${y} op` : !y ? `og gå ${x} hen ad x-aksen – 0 op, så punktet ligger på x-aksen` : `gå ${x} hen og så ${y} op`}. Der ligger punkt <b>${T.name}</b>.`,
+        `Pas på: punkt ${S.name} er (${y}, ${x}) – der er tallene byttet om.`,
+      ]),
+      explainVisual: V.coordGrid({ max, points: points.map((q) => ({ ...q, hi: q === T, note: q === S ? `(${y}, ${x})` : '' })), path: { x, y } }),
+      geo: { points, target: [x, y] },
+    };
+  },
+};
+
 // ================= Øvebanen: matematikken delt op i discipliner =================
 // Øvebanen er altid åben, og alt er frit. Disciplinerne følger klassens bog (KonteXt+ 4) inden for Fælles Måls
 // tre faglige områder. Zoo'ens færdigheder står med deres egen fremgang (fælles med zoo'en); Øvebanens egne
@@ -1989,7 +2585,9 @@ export const DISCIPLINES = [
   disc('d-decimal', 'tal', 'Decimaltal', '🔟', 'var(--c-dec)', 6, 'Tiendedele, hundrededele, tallinjen og regning med komma', [decfigur, decimalDele, dectallinje, decsammenlign, decplusminus]),
   disc('d-ligninger', 'tal', 'Ligninger og balance', '⚖️', 'var(--c-alg)', 9, 'Find det ukendte tal – begge sider af = er lige store', [ukendt, findX]),
   disc('d-moenstre', 'tal', 'Mønstre', '🐾', 'var(--c-alg)', 9, 'Find reglen i en talfølge, og fortsæt', [talfolger]),
-  disc('d-linjer', 'geo', 'Linjer og vinkler', '📐', 'var(--c-geo)', 3, 'Spidse, rette, stumpe og lige vinkler', [vinkler]),
+  disc('d-linjer', 'geo', 'Linjer og vinkler', '📐', 'var(--c-geo)', 3, 'Parallelle og vinkelrette linjer – og spidse, rette, stumpe og lige vinkler', [parallelle, vinkelrette, vinkler]),
+  disc('d-figurer', 'geo', 'Trekanter og firkanter', '🔺', 'var(--c-geo)', 3, 'Navngiv trekanter efter sider og vinkler – og firkanterne', [trekantSider, trekantVinkler, firkanter]),
+  disc('d-koordinater', 'geo', 'Koordinatsystemet', '📍', 'var(--c-geo)', 3, 'Aflæs og find punkter – først hen, så op', [koordAflaes, koordFind]),
   disc('d-areal', 'geo', 'Areal og omkreds', '🟩', 'var(--c-geo)', 8, 'Hele vejen rundt – og hvor stor en flade er', [omkreds, areal]),
   disc('d-maal', 'geo', 'Længde, vægt og rumfang', '📏', 'var(--c-maal)', 7, 'Omregn mellem enhederne', [enhLaengde, enhVaegt, enhRumfang]),
   disc('d-tid', 'geo', 'Tid', '🕐', 'var(--c-maal)', 7, 'Aflæs uret, og regn med tid', [klokken, tidsforskel]),
