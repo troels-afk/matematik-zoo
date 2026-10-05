@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005083145';
-import * as E from './engine.js?v=20261005083145';
-import { today } from './util.js?v=20261005083145';
+import { AREAS, FACTS } from './curriculum.js?v=20261005084229';
+import * as E from './engine.js?v=20261005084229';
+import { today } from './util.js?v=20261005084229';
 
 // Figurernes tegninger: ansigt (talebobler og kort), buste (missionens cirkel) og helfigur (scener).
 // Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -17,58 +17,76 @@ export const CAST = {
   yasmin: { name: 'Yasmin', role: 'Dyrlæge-elev', emoji: '👧🏽', ...art('yasmin') },
 };
 
-// Scener til "Dagens mission": stedet bagest og dyret i midten. Figuren forrest er
-// missionens figur (CAST[who].full). Områder uden scene viser figur og unge i en cirkel.
+// Missionens scene – ét fælles format for alle 9 områder: områdets tegning (bg), dyret (cub: en unge med
+// glad/tænker/jubler – evt. én pr. opgave; full: helfigur) og missionens figur forrest (CAST[who].full).
+// Samme scene følger missionen fra start (intro) over træningen (progress) til slutningen (success).
 export const SCENES = {
-  gange: { bg: 'img/scene/foderstation.webp', animal: 'img/scene/giraf.webp', alt: 'Giraffernes foderstation' },
+  tal: { bg: 'img/map/01-indgang-flamingosoe.webp', cub: 'flamingounge', alt: 'Indgangen og flamingosøen' },
+  gange: { bg: 'img/scene/foderstation.webp', cub: ['girafunge', 'elefantunge', 'girafunge'], full: 'img/scene/giraf.webp', fullFor: 'girafunge', alt: 'Foderstationen' },
+  division: { bg: 'img/map/03-abehuset.webp', cub: 'abeunge', alt: 'Abehuset' },
+  brok: { bg: 'img/map/04-polaromraade.webp', cub: ['pingvinunge', 'pingvinunge', 'sælunge'], alt: 'Polarområdet med pingviner og sæler' },
+  decimal: { bg: 'img/map/05-dyreklinik.webp', cub: 'pindsvineunge', alt: 'Dyreklinikken' },
+  geometri: { bg: 'img/map/06-zebra-naesehorn.webp', cub: ['zebraføl', 'næsehornsunge', 'zebraføl'], alt: 'Zebraernes og næsehornenes anlæg' },
+  maaling: { bg: 'img/map/07-rovdyrsomraade.webp', cub: ['tigerunge', 'løveunge', 'tigerunge'], alt: 'Rovdyrområdet' },
+  data: { bg: 'img/map/08-data-plaza.webp', cub: 'pandaunge', alt: 'Data-pladsen' },
+  algebra: { bg: 'img/map/09-skattejagt.webp', cub: 'ræveunge', alt: 'Skattejagten i skoven' },
 };
 
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)
-// done[i] er slutningen på tasks[i] ({who} = missionens figur) – vises, når missionen er klaret
+// intro[i] og done[i] er starten og slutningen på tasks[i] ({who} = missionens figur)
 export const ZONES = {
   tal: {
-    animals: ['🦩', '🦢', '🦆'], who: 'bodil', blurb: 'Indgangen, billetlugen og flamingosøen', step: 'tæl gæster og billetter',
+    animals: ['🦩', '🦢', '🦆'], who: 'liv', blurb: 'Indgangen, billetlugen og flamingosøen', step: 'tæl gæster og billetter',
     tasks: ['Tæl dagens gæster i billetlugen', 'Lav besøgsrapporten til Bodil', 'Der er kø ved billetlugen – hjælp til!'],
+    intro: ['Der står gæster i kø ved billetlugen. {who} skal vide, hvor mange der kommer i dag.', "Bodil vil se, hvor mange gæster zoo'en har haft. {who} har brug for hjælp til tallene.", 'Køen ved billetlugen bliver længere og længere. {who} har brug for en hurtig regnehjælper.'],
     done: ['Du hjalp {who} med at tælle dagens gæster.', 'Du hjalp {who} med besøgsrapporten til Bodil.', 'Du fik køen ved billetlugen til at glide.'],
   },
   gange: {
     animals: ['🦒', '🐘', '🦛'], who: 'nora', blurb: 'Her bestilles foder til de store dyr', step: 'regn foderet ud til de store dyr',
     tasks: ['Bestil blade til giraferne', 'Regn ugens foder ud til elefanterne', 'Hjælp Nora med den store foderbestilling'],
+    intro: ['Giraferne har spist alle bladene. {who} skal regne ud, hvor mange nye der skal bestilles.', 'Elefanterne spiser enormt meget. {who} skal regne foderet ud til hele ugen.', 'Den store foderbestilling skal sendes i dag, og {who} har mange tal at holde styr på.'],
     done: ['Du hjalp {who} med giraffernes foder.', 'Du hjalp {who} med elefanternes foder til hele ugen.', 'Du hjalp {who} med den store foderbestilling.'],
   },
   division: {
-    animals: ['🐒', '🐿️', '🦫'], who: 'nora', blurb: 'Maden fordeles ligeligt – resten går til Kaj', step: 'fordel maden ligeligt mellem dyrene',
+    animals: ['🐒', '🐿️', '🦫'], who: 'kaj', blurb: 'Maden fordeles ligeligt – resten går til Kaj', step: 'fordel maden ligeligt mellem dyrene',
     tasks: ['Fordel bananerne ligeligt mellem aberne', 'Gør madskålene klar til abehuset', 'Del frugten ud – Kaj holder øje med resten'],
+    intro: ['Aberne skændes om bananerne. {who} vil have dem delt helt lige.', 'Der skal være lige meget i hver madskål. {who} holder øje fra sin gren.', 'Frugten skal deles ud – og det, der bliver til overs, vil {who} gerne have!'],
     done: ['Du fordelte bananerne ligeligt mellem aberne.', 'Du hjalp {who} med madskålene til abehuset.', 'Du delte frugten ud – og Kaj fik resten.'],
   },
   brok: {
-    animals: ['🦭', '🐻‍❄️', '🦦'], who: 'nora', blurb: 'Bassiner, fiskespande og pingvinunger', step: 'del fisk og bassiner i brøkdele',
-    tasks: ['Fyld pingvinbassinet op', 'Del fiskespandene mellem pingvinerne', 'Hjælp Nora med sælernes madplan'],
+    animals: ['🦭', '🐻‍❄️', '🦦'], who: 'liv', blurb: 'Bassiner, fiskespande og pingvinunger', step: 'del fisk og bassiner i brøkdele',
+    tasks: ['Fyld pingvinbassinet op', 'Del fiskespandene mellem pingvinerne', 'Lav en ny madplan til sælerne'],
+    intro: ['Pingvinbassinet er halvtomt. {who} skal finde ud af, hvor meget vand der mangler.', 'Fiskene skal deles retfærdigt mellem pingvinerne. {who} har brug for din hjælp.', 'Sælerne skal have en ny madplan, og {who} skal dele fiskene i brøkdele.'],
     done: ['Du hjalp {who} med at fylde pingvinbassinet op.', 'Du delte fiskespandene mellem pingvinerne.', 'Du hjalp {who} med sælernes madplan.'],
   },
   decimal: {
     animals: ['🦔', '🐢', '🦥'], who: 'yasmin', blurb: 'Dyrene vejes, måles og får medicin', step: 'vej og mål dyrene i klinikken',
     tasks: ['Vej den nye surikatunge', 'Tjek om pindsvinet har taget på', 'Hjælp Yasmin med at måle medicin op'],
+    intro: ['En ny surikatunge er kommet på klinikken. {who} skal veje den helt præcist.', 'Pindsvinet har været sygt. {who} vil vide, om det har taget på.', 'Medicinen skal måles helt nøjagtigt op. {who} har brug for en sikker hånd.'],
     done: ['Du hjalp {who} med at veje den nye surikatunge.', 'Du hjalp {who} med at tjekke pindsvinets vægt.', 'Du hjalp {who} med at måle medicinen op.'],
   },
   geometri: {
-    animals: ['🦓', '🦏', '🐪'], who: 'liv', blurb: 'Hegn, anlæg og nye indhegninger', step: 'mål hegn og anlæg op',
-    tasks: ['Byg et nyt hegn til zebraerne', 'Tegn det nye næsehorn-anlæg', 'Hjælp Liv med at måle anlæggene op'],
+    animals: ['🦓', '🦏', '🐪'], who: 'nora', blurb: 'Hegn, anlæg og nye indhegninger', step: 'mål hegn og anlæg op',
+    tasks: ['Byg et nyt hegn til zebraerne', 'Tegn det nye næsehorn-anlæg', 'Mål de nye anlæg op'],
+    intro: ['Zebraerne skal have et nyt hegn. {who} skal vide, hvor langt det skal være.', 'Næsehornet skal have mere plads. {who} vil have det nye anlæg tegnet rigtigt.', 'De nye anlæg skal måles op, før dyrene kan flytte ind. {who} har brug for hjælp.'],
     done: ['Du hjalp {who} med zebraernes nye hegn.', 'Du hjalp {who} med at tegne næsehorn-anlægget.', 'Du hjalp {who} med at måle anlæggene op.'],
   },
   maaling: {
-    animals: ['🦁', '🐯', '🐆'], who: 'nora', blurb: 'Fodringstider, shows og åbningstider', step: 'hold styr på tider og mål',
+    animals: ['🦁', '🐯', '🐆'], who: 'liv', blurb: 'Fodringstider, shows og åbningstider', step: 'hold styr på tider og mål',
     tasks: ['Lav fodringsplanen for rovdyrene', 'Tjek zoo-uret før løvefodringen', 'Hold styr på tiderne til sæl-showet'],
+    intro: ['Løverne og tigrene skal fodres til tiden. {who} laver planen og har brug for hjælp.', 'Løverne bliver sure, hvis fodringen kommer for sent. {who} skal holde øje med zoo-uret.', 'Sæl-showet starter snart. {who} skal have styr på alle tiderne.'],
     done: ['Du hjalp {who} med rovdyrenes fodringsplan.', 'Du hjalp {who} med at holde tiden til løvefodringen.', 'Du hjalp {who} med tiderne til sæl-showet.'],
   },
   data: {
-    animals: ['🐼', '🐨', '🦘'], who: 'liv', blurb: 'Hvad synes gæsterne? Tæl, spørg og tegn diagrammer', step: 'tæl og tegn diagrammer over gæsterne',
-    tasks: ['Find gæsternes yndlingsdyr', 'Lav et diagram til opslagstavlen', 'Hjælp Liv med gæsteundersøgelsen'],
+    animals: ['🐼', '🐨', '🦘'], who: 'kaj', blurb: 'Hvad synes gæsterne? Tæl, spørg og tegn diagrammer', step: 'tæl og tegn diagrammer over gæsterne',
+    tasks: ['Find gæsternes yndlingsdyr', 'Lav et diagram til opslagstavlen', 'Gør gæsteundersøgelsen færdig'],
+    intro: ['{who} har spurgt gæsterne om deres yndlingsdyr. Nu skal svarene tælles op.', 'Opslagstavlen mangler et diagram. {who} har tallene, men kan ikke tegne det selv.', 'Gæsteundersøgelsen er næsten færdig. {who} mangler hjælp til de sidste tal.'],
     done: ['Du fandt gæsternes yndlingsdyr.', 'Du hjalp {who} med diagrammet til opslagstavlen.', 'Du hjalp {who} med gæsteundersøgelsen.'],
   },
   algebra: {
     animals: ['🦊', '🦝', '🦉'], who: 'kaj', blurb: 'Pote-spor og kodelåse til gæsternes skattejagt', step: 'knæk koder og følg pote-spor',
     tasks: ['Lav en skattejagt til gæsterne', 'Knæk koden til Kajs skattekiste', "Følg pote-sporet gennem zoo'en"],
+    intro: ['{who} vil lave en skattejagt med hemmelige koder til gæsterne.', '{who} har glemt koden til sin egen skattekiste! Kan du knække den?', "Der er pote-spor over hele zoo'en. {who} vil vide, hvor de fører hen."],
     done: ['Du hjalp {who} med skattejagten til gæsterne.', 'Du knækkede koden til Kajs skattekiste.', "Du fulgte pote-sporet hele vejen gennem zoo'en."],
   },
 };
@@ -288,6 +306,24 @@ export function goodnight(state) {
 }
 
 // Tegning til et dyr ud fra dets emoji (bruges på kort, kortet over zoo'en og porten)
+// Scenen for en bestemt opgave: dyret følger opgaven (fx elefantungen ved elefanternes foder),
+// med tre udtryk: happy (start), think (i gang) og cheer (klaret). full = helfigur, hvis den passer.
+export function sceneFor(areaId, title) {
+  const s = SCENES[areaId];
+  if (!s) return null;
+  const i = Math.max(0, ZONES[areaId].tasks.indexOf(title));
+  const kind = Array.isArray(s.cub) ? s.cub[i] || s.cub[0] : s.cub;
+  const b = Object.values(BABIES).find((x) => x.kind === kind);
+  return { ...s, full: s.full && kind === s.fullFor ? s.full : null, face: b?.expr || { happy: b?.img, think: b?.img, cheer: b?.img } };
+}
+
+// Starten på en mission: "Giraferne har spist alle bladene. Nora skal regne ud …"
+export function missionIntroText(areaId, title, who) {
+  const z = ZONES[areaId], i = z.tasks.indexOf(title);
+  const t = z.intro?.[i] || `{who} har brug for din hjælp i ${AREAS.find((a) => a.id === areaId).place}.`;
+  return t.replace('{who}', CAST[who]?.name || CAST[z.who].name);
+}
+
 // Slutningen på en mission: "Du hjalp Nora med giraffernes foder."
 export function missionDoneText(areaId, title, who) {
   const z = ZONES[areaId], i = z.tasks.indexOf(title);

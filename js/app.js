@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005083145';
-import * as E from './engine.js?v=20261005083145';
-import * as Z from './zoo.js?v=20261005083145';
-import { zooGate } from './scene.js?v=20261005083145';
-import { zooMap } from './map.js?v=20261005083145';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005083145';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005083145';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005083145';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005084229';
+import * as E from './engine.js?v=20261005084229';
+import * as Z from './zoo.js?v=20261005084229';
+import { zooGate } from './scene.js?v=20261005084229';
+import { zooMap } from './map.js?v=20261005084229';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005084229';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005084229';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005084229';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -258,7 +258,7 @@ function showIntroTour(done = showHome) {
     {
       art: `<ol class="plan">
         <li><span class="n">1</span><div><div class="t">Morgenrunde i Babyhuset</div><div class="d">Giv ungerne flaske – gangetabellen</div></div><span class="ico">${ui('baby')}</span></li>
-        <li><span class="n">2</span><div><div class="t">Dagens opgave</div><div class="d">Hjælp Nora, Liv eller Yasmin med en opgave i zoo'en</div></div><span class="ico">${ui('area')}</span></li>
+        <li><span class="n">2</span><div><div class="t">Dagens opgave</div><div class="d">Hjælp Nora, Liv, Yasmin eller Kaj med en opgave i zoo'en</div></div><span class="ico">${ui('area')}</span></li>
         <li><span class="n">3</span><div><div class="t">Runde i zoo'en</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div><span class="ico">${ui('round')}</span></li>
       </ol>`,
       title: 'Sådan går en dag',
@@ -332,18 +332,16 @@ function isoWeek(d = new Date()) {
   return Math.ceil(((t - y0) / 86400000 + 1) / 7);
 }
 
-// Dagens opgaver: én figur pr. foreslået område (aldrig den samme figur to gange)
+// Dagens opgaver: hvert foreslået område med sin egen faste figur, så historien hænger sammen
 function dailyTasks(st) {
   const sugg = E.suggestAreas(st, 3);
-  const used = new Set();
   const doneAreas = new Set(st.sessions.filter((x) => x.date === today() && x.mode !== 'practice').map((x) => x.area));
   return sugg.map((areaId) => {
-    let who = Z.ZONES[areaId].who;
-    if (who === 'bodil' || used.has(who)) who = ['nora', 'liv', 'yasmin', 'kaj'].find((w) => !used.has(w));
-    used.add(who);
-    const others = Object.values(Z.CAST).map((c) => c.name).filter((n) => n !== Z.CAST[who].name);
-    const titles = Z.ZONES[areaId].tasks.filter((t) => !others.some((n) => t.includes(n)));
-    const title = Z.dayPick(titles.length ? titles : Z.ZONES[areaId].tasks, areaId);
+    const z = Z.ZONES[areaId], who = z.who;
+    // opgaver, der nævner en anden hjælper ved navn, passer ikke til figuren
+    const others = ['nora', 'liv', 'yasmin', 'kaj'].filter((w) => w !== who).map((w) => Z.CAST[w].name);
+    const titles = z.tasks.filter((t) => !others.some((n) => t.includes(n)));
+    const title = Z.dayPick(titles.length ? titles : z.tasks, areaId);
     return { area: areaId, who, title, done: doneAreas.has(areaId) };
   });
 }
@@ -430,25 +428,46 @@ function showHome() {
   if (freshBonus.length) setTimeout(() => bonusSheet(freshBonus), 400);
 }
 
-// Missionens billede: en scene (Z.SCENES) eller figur + unge i en cirkel.
-// after = missionen er klaret: figurerne jubler, og der er stjerner og blade i luften.
-function missionVisual(t, after = false) {
-  const z = Z.ZONES[t.area], c = Z.CAST[t.who], scene = Z.SCENES[t.area];
-  const party = after ? `<span class="party" aria-hidden="true">${'<i></i>'.repeat(9)}</span>` : '';
-  if (scene) {
-    // Et lille udsnit af zoo'en: stedet bagest, dyret i midten og figuren forrest
-    return `<div class="mission-scene ${after ? 'after' : ''}" role="img" aria-label="${esc(scene.alt)}">
-        <img class="ms-bg" src="${scene.bg}" alt="" draggable="false">
-        <img class="ms-animal" src="${scene.animal}" alt="" draggable="false">
-        ${c.full ? `<img class="ms-who" src="${c.full}" alt="" draggable="false">` : ''}
-        ${after && c.full ? '<span class="ms-say" aria-hidden="true">Tak for hjælpen! 💛</span>' : ''}${party}
-      </div>`;
+// ================= MissionScene: én fælles scene for alle 9 missioner =================
+// Områdets tegning bagest, dyret i midten og missionens figur forrest. Samme scene følger
+// missionen hele vejen: state 'intro' (der søges hjælp), 'progress' (i gang) og 'success' (klaret).
+// size: 'hero' (forsiden og slutningen), 'card' (overgangen i træningen), 'thumb' (missionslinjen).
+const FACE = { intro: 'happy', progress: 'think', success: 'cheer' };
+const hasScene = (t) => !!(Z.SCENES[t.area] && Z.CAST[t.who]?.full);
+const PARTY = `<span class="party" aria-hidden="true">${'<i></i>'.repeat(9)}</span>`;
+
+function missionScene(t, state = 'intro', size = 'hero') {
+  const sc = Z.sceneFor(t.area, t.title), c = Z.CAST[t.who];
+  if (size === 'thumb') {
+    return sc ? `<span class="mt-scene" aria-hidden="true"><img class="mts-bg" src="${sc.bg}" alt="" draggable="false"><img class="mts-ani" src="${sc.face[FACE[state]]}" alt="" draggable="false"></span>` : '';
   }
+  if (!hasScene(t)) return missionCircle(t, state);
+  const animal = sc.full
+    ? `<img class="ms-animal full" src="${sc.full}" alt="" draggable="false">`
+    : `<img class="ms-animal cub" src="${sc.face[FACE[state]]}" alt="" draggable="false">`;
+  const line = size === 'hero' && { intro: 'Vi har brug for din hjælp!', success: 'Tak for hjælpen! 💛' }[state];
+  return `<div class="mission-scene ms-${state} ms-${size}" role="img" aria-label="${esc(sc.alt)}">
+      <img class="ms-bg" src="${sc.bg}" alt="" draggable="false">
+      ${animal}
+      <img class="ms-who" src="${c.full}" alt="" draggable="false">
+      ${line ? `<span class="ms-say" aria-hidden="true">${line}</span>` : ''}${state === 'success' ? PARTY : ''}
+    </div>`;
+}
+
+// Reserve, hvis figuren ikke har en helfigur: figur og unge i en cirkel
+function missionCircle(t, state) {
+  const z = Z.ZONES[t.area], c = Z.CAST[t.who], after = state === 'success';
   const art = z.animals.map((e) => Z.artFor(e)).find(Boolean);
   const portrait = c.bust || c.img
     ? `<img class="mission-face" src="${c.bust || c.img}" alt="${c.name}">`
     : `<span class="mission-emoji" aria-hidden="true">${c.emoji}</span>`;
-  return `<div class="mission-art who-${t.who} ${after ? 'after' : ''}">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}${party}</div>`;
+  return `<div class="mission-art who-${t.who} ${after ? 'after' : ''}">${portrait}${art ? `<img class="mission-animal" src="${art}" alt="">` : ''}${after ? PARTY : ''}</div>`;
+}
+
+// "Giraferne har spist alle bladene. <b>Nora</b> skal regne ud …"
+function missionIntroHtml(t) {
+  const name = Z.CAST[t.who]?.name || '';
+  return esc(Z.missionIntroText(t.area, t.title, t.who)).replace(name, `<b>${name}</b>`);
 }
 
 // "Du hjalp <b>Nora</b> med giraffernes foder."
@@ -462,12 +481,12 @@ function missionCard(st, t, open) {
   const a = areaOf(t.area), z = Z.ZONES[t.area], c = Z.CAST[t.who];
   const cur = E.currentSkill(st, t.area);
   return `
-    <section class="mission card ${Z.SCENES[t.area] ? 'has-scene' : ''}">
-      ${missionVisual(t)}
+    <section class="mission card ${hasScene(t) ? 'has-scene' : ''}">
+      ${missionScene(t, 'intro')}
       <div class="mission-body">
-        <span class="kicker with-ic">${ui('opgave')}Dagens mission</span>
+        <span class="kicker with-ic">${ui('opgave')}Dagens mission · ${a.place}</span>
         <h1>${t.title}</h1>
-        <p class="mission-need"><b>${c.name}</b> har brug for din hjælp i ${a.icon} <b>${a.place}</b>.</p>
+        <p class="mission-need">${missionIntroHtml(t)}</p>
         <ol class="mission-steps">
           <li><span class="si">${ui('baby')}<i>1</i></span><span><b>Morgenrunde</b> · giv ungerne i Babyhuset flaske</span></li>
           <li><span class="si">${ui('area')}<i>2</i></span><span><b>${a.place}</b> · ${z.step} <span class="topic">${cur ? SKILLS[cur].name : 'repetition'}</span></span></li>
@@ -488,8 +507,8 @@ function missionDone(st, log) {
     const t = { area: log.area, who: log.mission.who, title: log.mission.title };
     const chips = (log.chips || []).slice(0, 3);
     return `
-    <section class="mission card done ${Z.SCENES[t.area] ? 'has-scene' : ''}">
-      ${missionVisual(t, true)}
+    <section class="mission card done ${hasScene(t) ? 'has-scene' : ''}">
+      ${missionScene(t, 'success')}
       <div class="mission-body">
         <span class="kicker with-ic">${ui('opgave')}${esc(t.title)} <span class="ok">✓</span></span>
         <h1>Mission klaret!</h1>
@@ -774,7 +793,10 @@ function missionTrack(run, block) {
     const tail = state === 'done' ? '<span class="mt-check">✓</span>' : state === 'current' ? `<span class="mt-count">${Math.min(run.ti + 1, b.count)}/${b.count}</span>` : '';
     return `<li class="${state}"><span class="mt-ic">${blockIcon(b)}</span><span class="mt-lbl">${label(b)}</span>${tail}</li>`;
   }).join('<li class="mt-arrow" aria-hidden="true">→</li>');
-  return `<div class="mission-track"><div class="mt-title">${ui('opgave')}Mission: <b>${esc(title)}</b></div><ol class="mt-steps">${steps}</ol></div>`;
+  // Kompakt udgave af missionens scene: samme sted og dyr – nu tænkende, mens der regnes
+  const t = { area: run.sess.area, who: run.mission?.who || Z.ZONES[run.sess.area].who, title: run.mission?.title || '' };
+  return `<div class="mission-track has-scene">${missionScene(t, 'progress', 'thumb')}
+    <div class="mt-main"><div class="mt-title">${ui('opgave')}Mission: <b>${esc(title)}</b></div><ol class="mt-steps">${steps}</ol></div></div>`;
 }
 
 // Startskærm: dagens plan, så man kan fortryde før regnestykkerne begynder
@@ -818,14 +840,19 @@ function goBlock() {
   if (run.bi === 0) return showTask();
   const prev = run.sess.blocks[run.bi - 1];
   const z = Z.ZONES[run.sess.area];
+  const who = run.mission?.who || z.who;
   const line = block.kind === 'review'
     ? say('kaj', "Sidste runde! Lad os tjekke resten af zoo'en 🦜", 'lg')
-    : say(run.mission?.who || (z.who === 'bodil' ? 'nora' : z.who), `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${z.step}.`, 'lg');
+    : say(who, `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${z.step}.`, 'lg');
+  // Områdets del af missionen: samme scene som på forsiden, nu i gang
+  const art = run.mode === 'daily' && block.kind === 'main' && hasScene({ area: run.sess.area, who })
+    ? missionScene({ area: run.sess.area, who, title: run.mission?.title || '' }, 'progress', 'card')
+    : `<div class="block-art">${blockIcon(block)}</div>`;
   view(`
     ${run.mode === 'daily' ? `<div class="session-top"><button class="icon-btn" id="quit" aria-label="Stop">✕</button>${missionTrack(run, block)}</div>` : ''}
     <div class="card sheet center stack" style="margin-top:4vh">
       ${prev?.kind === 'warm' ? '<div class="kicker">✓ Opvarmning klaret</div>' : ''}
-      <div class="block-art">${blockIcon(block)}</div>
+      ${art}
       <h1>${block.title}</h1>
       <div style="text-align:left">${line}</div>
       <div><button class="btn big" id="go">Videre</button></div>
@@ -1274,8 +1301,8 @@ function showPayoff(st, res, b, after, bigWin) {
   const { t, main } = res;
   const art = main.art ? `<img src="${main.art}" alt="">` : main.icon ? ui(main.icon) : `<span aria-hidden="true">${main.emoji}</span>`;
   view(`
-    <section class="mission card payoff ${Z.SCENES[t.area] ? 'has-scene' : ''}">
-      ${missionVisual(t, true)}
+    <section class="mission card payoff ${hasScene(t) ? 'has-scene' : ''}">
+      ${missionScene(t, 'success')}
       <div class="mission-body">
         <span class="kicker with-ic">${ui('opgave')}${esc(t.title)} <span class="ok">✓</span></span>
         <h1>Mission klaret!</h1>
@@ -1664,4 +1691,4 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || swOptIn))
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, babyReact, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice } };
+window.__mo = { S, E, Z, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice } };

@@ -793,38 +793,56 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .mt-steps li.current .mt-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 }
 
-/* ---------- Dagens mission som scene (områder med SCENES i zoo.js) ---------- */
+/* ---------- MissionScene: én fælles scene for alle 9 missioner (SCENES i zoo.js) ---------- */
 /* Tekst og knap til venstre på en rolig, lys baggrund; til højre et lille udsnit af zoo'en:
-   stedet bagest, dyret i midten og figuren forrest. Giraffen kigger op over kortets kant. */
+   områdets tegning bagest, dyret til højre og missionens figur forrest. */
 .mission.has-scene { grid-template-columns: minmax(0, 1fr) minmax(250px, 48%); grid-template-areas: "body scene"; justify-items: stretch;
   gap: 12px; padding: 26px 0 26px 30px; margin-top: 40px;
   background: radial-gradient(ellipse 52% 70% at 84% 100%, color-mix(in srgb, var(--good) 20%, transparent), transparent 72%),
     linear-gradient(135deg, var(--sun-soft), var(--card) 58%); }
 .mission.has-scene .mission-body { grid-area: body; }
-/* Fast forhold, så kompositionen er den samme i alle bredder; scenen står på kortets bundkant */
-.mission-scene { grid-area: scene; position: relative; align-self: end; aspect-ratio: 20 / 19; margin: -26px 0; }
+/* Fast forhold, så kompositionen er den samme i alle bredder */
+.mission-scene { position: relative; aspect-ratio: 20 / 19; }
+.mission.has-scene .mission-scene { grid-area: scene; align-self: end; margin: -26px 0; } /* står på kortets bundkant */
 .mission-scene img { position: absolute; user-select: none; -webkit-user-drag: none; pointer-events: none; }
-.ms-bg { right: 0; bottom: 24%; width: 76%; height: auto; }
-.ms-animal { right: 4%; bottom: 3%; height: 104%; width: auto; filter: drop-shadow(0 8px 10px rgba(31, 51, 70, .12)); }
+/* Områdets tegning holdes inden for en fast ramme, så både brede og høje tegninger passer */
+.ms-bg { right: 0; bottom: 18%; width: 82%; height: 76%; object-fit: contain; object-position: right bottom; }
+.ms-animal { filter: drop-shadow(0 8px 10px rgba(31, 51, 70, .12)); }
+.ms-animal.full { right: 4%; bottom: 3%; height: 104%; width: auto; } /* helfigur, fx giraffen – kigger op over kanten */
+.ms-animal.cub { right: 1%; bottom: -3%; width: 40%; height: auto; } /* en unge, der kigger frem forrest */
 .ms-who { left: -4%; bottom: -3%; height: 70%; width: auto; filter: drop-shadow(0 8px 12px rgba(31, 51, 70, .14)); }
+/* Overgangen i træningen: samme scene i et mindre kort */
+.mission-scene.ms-card { width: min(300px, 76vw); margin: 2px auto 0; }
 @media (max-width: 640px) {
-  .mission.has-scene { grid-template-columns: 1fr; grid-template-areas: "scene" "body"; padding: 0 18px 20px; margin-top: 48px; gap: 14px;
+  .mission.has-scene { grid-template-columns: 1fr; grid-template-areas: "scene" "body"; padding: 0 18px 20px; margin-top: 44px; gap: 12px;
     background: radial-gradient(ellipse 85% 34% at 50% 26%, color-mix(in srgb, var(--good) 18%, transparent), transparent 75%),
       linear-gradient(180deg, var(--sun-soft), var(--card) 50%); }
-  .mission-scene { aspect-ratio: auto; align-self: auto; height: 210px; margin: 0 -18px; }
-  .ms-bg { width: auto; height: 50%; right: auto; left: calc(50% - 26px); bottom: 20%; }
-  .ms-animal { right: auto; left: calc(50% - 44px); bottom: 0; height: 116%; }
-  .ms-who { left: auto; right: calc(50% + 2px); bottom: -4%; height: 92%; }
+  .mission.has-scene .mission-scene { aspect-ratio: auto; align-self: auto; height: 192px; margin: 0 -18px; }
+  .mission.has-scene .ms-bg { right: auto; left: calc(50% - 40px); bottom: 8%; width: 46%; height: 84%; object-position: center bottom; }
+  .mission.has-scene .ms-animal.full { right: auto; left: calc(50% - 44px); bottom: 0; height: 116%; }
+  .mission.has-scene .ms-animal.cub { right: auto; left: calc(50% + 52px); bottom: -2%; width: auto; height: 56%; }
+  .mission.has-scene .ms-who { left: auto; right: calc(50% + 2px); bottom: -4%; height: 92%; }
+}
+/* Missionslinjen i træningen: lille udgave af scenen ved siden af titel og trin */
+.mission-track.has-scene { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 12px; }
+.mt-main { display: grid; gap: 6px; min-width: 0; }
+.mt-scene { position: relative; width: 84px; height: 58px; border-radius: 12px; overflow: hidden; flex: none;
+  background: color-mix(in srgb, var(--good) 16%, var(--card)); box-shadow: inset 0 0 0 1px var(--line-2); }
+.mts-bg { position: absolute; inset: -6% -8% auto auto; width: 92%; height: auto; }
+.mts-ani { position: absolute; left: -4%; bottom: -10%; height: 86%; width: auto; filter: drop-shadow(0 2px 3px rgba(31, 51, 70, .2)); }
+@media (max-width: 640px) {
+  .mt-scene { display: none; }
+  .mission-track.has-scene { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
 }
 
 /* ---------- Mission klaret: samme scene som ved starten, nu i "efter"-tilstand ---------- */
 .mission.payoff { margin-top: max(40px, 9vh); }
 .kicker .ok { color: var(--primary); font-weight: 900; }
 /* Varmt lys bag figurerne; på slutskærmen hopper de af glæde et par gange */
-.mission-scene.after::before { content: ''; position: absolute; inset: 4% -2% 0 2%; border-radius: 50%;
+.mission-scene.ms-success::before { content: ''; position: absolute; inset: 4% -2% 0 2%; border-radius: 50%;
   background: radial-gradient(circle at 52% 58%, color-mix(in srgb, var(--sun) 46%, transparent), transparent 64%); }
-.payoff .mission-scene.after .ms-animal { animation: cheer 1s cubic-bezier(.3, .7, .4, 1) .3s 2 both; }
-.payoff .mission-scene.after .ms-who { animation: cheer .9s cubic-bezier(.3, .7, .4, 1) .5s 2 both; }
+.payoff .mission-scene.ms-success .ms-animal { animation: cheer 1s cubic-bezier(.3, .7, .4, 1) .3s 2 both; }
+.payoff .mission-scene.ms-success .ms-who { animation: cheer .9s cubic-bezier(.3, .7, .4, 1) .5s 2 both; }
 .payoff .mission-art.after .mission-animal { animation: cheer 1s cubic-bezier(.3, .7, .4, 1) .3s 2 both, bob 3s ease-in-out 2.4s infinite; }
 @keyframes cheer { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(-6%); } 65% { transform: translateY(1.5%); } }
 .ms-say { position: absolute; z-index: 2; left: 0; top: 9%; padding: 8px 14px; border-radius: 16px; background: var(--card); color: var(--ink);
@@ -872,7 +890,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .pm-title { font-size: 1.08rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mission-scene.after img, .mission-art.after img, .party i, .ms-say, .pm-art img { animation: none !important; }
+  .mission-scene.ms-success img, .mission-art.after img, .party i, .ms-say, .pm-art img { animation: none !important; }
 }
 
 /* ---------- Figurerne: hver har sin egen farve bag tegningen ---------- */
