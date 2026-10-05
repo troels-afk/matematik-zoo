@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005084229';
-import * as E from './engine.js?v=20261005084229';
-import * as Z from './zoo.js?v=20261005084229';
-import { zooGate } from './scene.js?v=20261005084229';
-import { zooMap } from './map.js?v=20261005084229';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005084229';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005084229';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005084229';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005085532';
+import * as E from './engine.js?v=20261005085532';
+import * as Z from './zoo.js?v=20261005085532';
+import { zooGate } from './scene.js?v=20261005085532';
+import { zooMap } from './map.js?v=20261005085532';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005085532';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005085532';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005085532';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -467,13 +467,13 @@ function missionCircle(t, state) {
 // "Giraferne har spist alle bladene. <b>Nora</b> skal regne ud …"
 function missionIntroHtml(t) {
   const name = Z.CAST[t.who]?.name || '';
-  return esc(Z.missionIntroText(t.area, t.title, t.who)).replace(name, `<b>${name}</b>`);
+  return esc(Z.missionIntroText(t.area, t.title, t.who)).replace(new RegExp(`\\b${name}\\b`), `<b>${name}</b>`);
 }
 
 // "Du hjalp <b>Nora</b> med giraffernes foder."
 function missionDoneHtml(t) {
   const name = Z.CAST[t.who]?.name || '';
-  return esc(Z.missionDoneText(t.area, t.title, t.who)).replace(name, `<b>${name}</b>`);
+  return esc(Z.missionDoneText(t.area, t.title, t.who)).replace(new RegExp(`\\b${name}\\b`), `<b>${name}</b>`);
 }
 
 // Dagens mission: hvem har brug for hjælp, hvad skal der ske, og én knap

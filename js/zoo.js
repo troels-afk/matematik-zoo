@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005084229';
-import * as E from './engine.js?v=20261005084229';
-import { today } from './util.js?v=20261005084229';
+import { AREAS, FACTS } from './curriculum.js?v=20261005085532';
+import * as E from './engine.js?v=20261005085532';
+import { today } from './util.js?v=20261005085532';
 
 // Figurernes tegninger: ansigt (talebobler og kort), buste (missionens cirkel) og helfigur (scener).
 // Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -25,7 +25,7 @@ export const SCENES = {
   gange: { bg: 'img/scene/foderstation.webp', cub: ['girafunge', 'elefantunge', 'girafunge'], full: 'img/scene/giraf.webp', fullFor: 'girafunge', alt: 'Foderstationen' },
   division: { bg: 'img/map/03-abehuset.webp', cub: 'abeunge', alt: 'Abehuset' },
   brok: { bg: 'img/map/04-polaromraade.webp', cub: ['pingvinunge', 'pingvinunge', 'sælunge'], alt: 'Polarområdet med pingviner og sæler' },
-  decimal: { bg: 'img/map/05-dyreklinik.webp', cub: 'pindsvineunge', alt: 'Dyreklinikken' },
+  decimal: { bg: 'img/map/05-dyreklinik.webp', cub: ['dovendyrunge', 'pindsvineunge', 'skildpaddeunge'], alt: 'Dyreklinikken' },
   geometri: { bg: 'img/map/06-zebra-naesehorn.webp', cub: ['zebraføl', 'næsehornsunge', 'zebraføl'], alt: 'Zebraernes og næsehornenes anlæg' },
   maaling: { bg: 'img/map/07-rovdyrsomraade.webp', cub: ['tigerunge', 'løveunge', 'tigerunge'], alt: 'Rovdyrområdet' },
   data: { bg: 'img/map/08-data-plaza.webp', cub: 'pandaunge', alt: 'Data-pladsen' },
@@ -38,19 +38,19 @@ export const ZONES = {
   tal: {
     animals: ['🦩', '🦢', '🦆'], who: 'liv', blurb: 'Indgangen, billetlugen og flamingosøen', step: 'tæl gæster og billetter',
     tasks: ['Tæl dagens gæster i billetlugen', 'Lav besøgsrapporten til Bodil', 'Der er kø ved billetlugen – hjælp til!'],
-    intro: ['Der står gæster i kø ved billetlugen. {who} skal vide, hvor mange der kommer i dag.', "Bodil vil se, hvor mange gæster zoo'en har haft. {who} har brug for hjælp til tallene.", 'Køen ved billetlugen bliver længere og længere. {who} har brug for en hurtig regnehjælper.'],
+    intro: ['Der står gæster i kø ved billetlugen – mange vil se flamingoerne. {who} skal vide, hvor mange der kommer i dag.', 'Bodil vil vide, hvor mange gæster der har været ved flamingosøen og resten af zoo\'en. {who} har brug for hjælp til tallene.', 'Alle vil ind og se den nye flamingounge, og køen ved billetlugen bliver længere og længere. {who} har brug for en hurtig regnehjælper.'],
     done: ['Du hjalp {who} med at tælle dagens gæster.', 'Du hjalp {who} med besøgsrapporten til Bodil.', 'Du fik køen ved billetlugen til at glide.'],
   },
   gange: {
     animals: ['🦒', '🐘', '🦛'], who: 'nora', blurb: 'Her bestilles foder til de store dyr', step: 'regn foderet ud til de store dyr',
     tasks: ['Bestil blade til giraferne', 'Regn ugens foder ud til elefanterne', 'Hjælp Nora med den store foderbestilling'],
-    intro: ['Giraferne har spist alle bladene. {who} skal regne ud, hvor mange nye der skal bestilles.', 'Elefanterne spiser enormt meget. {who} skal regne foderet ud til hele ugen.', 'Den store foderbestilling skal sendes i dag, og {who} har mange tal at holde styr på.'],
+    intro: ['Giraferne har spist alle bladene. {who} skal regne ud, hvor mange nye der skal bestilles.', 'Elefanterne spiser enormt meget. {who} skal regne foderet ud til hele ugen.', 'Giraferne, elefanterne og flodhestene skal alle have foder. Den store bestilling skal sendes i dag, og {who} har mange tal at holde styr på.'],
     done: ['Du hjalp {who} med giraffernes foder.', 'Du hjalp {who} med elefanternes foder til hele ugen.', 'Du hjalp {who} med den store foderbestilling.'],
   },
   division: {
     animals: ['🐒', '🐿️', '🦫'], who: 'kaj', blurb: 'Maden fordeles ligeligt – resten går til Kaj', step: 'fordel maden ligeligt mellem dyrene',
     tasks: ['Fordel bananerne ligeligt mellem aberne', 'Gør madskålene klar til abehuset', 'Del frugten ud – Kaj holder øje med resten'],
-    intro: ['Aberne skændes om bananerne. {who} vil have dem delt helt lige.', 'Der skal være lige meget i hver madskål. {who} holder øje fra sin gren.', 'Frugten skal deles ud – og det, der bliver til overs, vil {who} gerne have!'],
+    intro: ['Aberne skændes om bananerne. {who} vil have dem delt helt lige.', 'Der skal være lige meget i hver madskål. {who} holder øje fra sin gren.', 'Frugten skal deles ud til aberne – og det, der bliver til overs, vil {who} gerne have!'],
     done: ['Du fordelte bananerne ligeligt mellem aberne.', 'Du hjalp {who} med madskålene til abehuset.', 'Du delte frugten ud – og Kaj fik resten.'],
   },
   brok: {
@@ -61,33 +61,33 @@ export const ZONES = {
   },
   decimal: {
     animals: ['🦔', '🐢', '🦥'], who: 'yasmin', blurb: 'Dyrene vejes, måles og får medicin', step: 'vej og mål dyrene i klinikken',
-    tasks: ['Vej den nye surikatunge', 'Tjek om pindsvinet har taget på', 'Hjælp Yasmin med at måle medicin op'],
-    intro: ['En ny surikatunge er kommet på klinikken. {who} skal veje den helt præcist.', 'Pindsvinet har været sygt. {who} vil vide, om det har taget på.', 'Medicinen skal måles helt nøjagtigt op. {who} har brug for en sikker hånd.'],
-    done: ['Du hjalp {who} med at veje den nye surikatunge.', 'Du hjalp {who} med at tjekke pindsvinets vægt.', 'Du hjalp {who} med at måle medicinen op.'],
+    tasks: ['Vej den nye dovendyrunge', 'Tjek om pindsvinet har taget på', 'Hjælp Yasmin med at måle medicin op'],
+    intro: ['En ny dovendyrunge er kommet på klinikken. {who} skal veje den helt præcist.', 'Pindsvinet har været sygt. {who} vil vide, om det har taget på.', 'Skildpaddeungen skal have medicin, og den skal måles helt nøjagtigt op. {who} har brug for en sikker hånd.'],
+    done: ['Du hjalp {who} med at veje den nye dovendyrunge.', 'Du hjalp {who} med at tjekke pindsvinets vægt.', 'Du hjalp {who} med at måle medicinen op til skildpaddeungen.'],
   },
   geometri: {
     animals: ['🦓', '🦏', '🐪'], who: 'nora', blurb: 'Hegn, anlæg og nye indhegninger', step: 'mål hegn og anlæg op',
     tasks: ['Byg et nyt hegn til zebraerne', 'Tegn det nye næsehorn-anlæg', 'Mål de nye anlæg op'],
-    intro: ['Zebraerne skal have et nyt hegn. {who} skal vide, hvor langt det skal være.', 'Næsehornet skal have mere plads. {who} vil have det nye anlæg tegnet rigtigt.', 'De nye anlæg skal måles op, før dyrene kan flytte ind. {who} har brug for hjælp.'],
+    intro: ['Zebraerne skal have et nyt hegn. {who} skal vide, hvor langt det skal være.', 'Næsehornet skal have mere plads. {who} vil have det nye anlæg tegnet rigtigt.', 'Zebraerne og næsehornene får nye anlæg. {who} skal måle dem op, før dyrene kan flytte ind.'],
     done: ['Du hjalp {who} med zebraernes nye hegn.', 'Du hjalp {who} med at tegne næsehorn-anlægget.', 'Du hjalp {who} med at måle anlæggene op.'],
   },
   maaling: {
-    animals: ['🦁', '🐯', '🐆'], who: 'liv', blurb: 'Fodringstider, shows og åbningstider', step: 'hold styr på tider og mål',
-    tasks: ['Lav fodringsplanen for rovdyrene', 'Tjek zoo-uret før løvefodringen', 'Hold styr på tiderne til sæl-showet'],
-    intro: ['Løverne og tigrene skal fodres til tiden. {who} laver planen og har brug for hjælp.', 'Løverne bliver sure, hvis fodringen kommer for sent. {who} skal holde øje med zoo-uret.', 'Sæl-showet starter snart. {who} skal have styr på alle tiderne.'],
-    done: ['Du hjalp {who} med rovdyrenes fodringsplan.', 'Du hjalp {who} med at holde tiden til løvefodringen.', 'Du hjalp {who} med tiderne til sæl-showet.'],
+    animals: ['🦁', '🐯', '🐆'], who: 'liv', blurb: 'Fodringstider, rundvisninger og åbningstider', step: 'hold styr på tider og mål',
+    tasks: ['Lav fodringsplanen for rovdyrene', 'Tjek zoo-uret før løvefodringen', 'Hold styr på tiderne til rovdyr-rundvisningen'],
+    intro: ['Løverne og tigrene skal fodres til tiden. {who} laver planen og har brug for hjælp.', 'Løverne bliver sure, hvis fodringen kommer for sent. {who} skal holde øje med zoo-uret.', 'Gæsterne skal på rundvisning hos løverne og tigrene. {who} skal have styr på alle tiderne.'],
+    done: ['Du hjalp {who} med rovdyrenes fodringsplan.', 'Du hjalp {who} med at holde tiden til løvefodringen.', 'Du hjalp {who} med tiderne til rovdyr-rundvisningen.'],
   },
   data: {
     animals: ['🐼', '🐨', '🦘'], who: 'kaj', blurb: 'Hvad synes gæsterne? Tæl, spørg og tegn diagrammer', step: 'tæl og tegn diagrammer over gæsterne',
     tasks: ['Find gæsternes yndlingsdyr', 'Lav et diagram til opslagstavlen', 'Gør gæsteundersøgelsen færdig'],
-    intro: ['{who} har spurgt gæsterne om deres yndlingsdyr. Nu skal svarene tælles op.', 'Opslagstavlen mangler et diagram. {who} har tallene, men kan ikke tegne det selv.', 'Gæsteundersøgelsen er næsten færdig. {who} mangler hjælp til de sidste tal.'],
+    intro: ['{who} har spurgt gæsterne om deres yndlingsdyr. Er det mon pandaen? Nu skal svarene tælles op.', 'Opslagstavlen ved pandaerne mangler et diagram. {who} har tallene, men kan ikke tegne det selv.', 'Gæsteundersøgelsen om pandaerne, koalaerne og kænguruerne er næsten færdig. {who} mangler hjælp til de sidste tal.'],
     done: ['Du fandt gæsternes yndlingsdyr.', 'Du hjalp {who} med diagrammet til opslagstavlen.', 'Du hjalp {who} med gæsteundersøgelsen.'],
   },
   algebra: {
     animals: ['🦊', '🦝', '🦉'], who: 'kaj', blurb: 'Pote-spor og kodelåse til gæsternes skattejagt', step: 'knæk koder og følg pote-spor',
     tasks: ['Lav en skattejagt til gæsterne', 'Knæk koden til Kajs skattekiste', "Følg pote-sporet gennem zoo'en"],
-    intro: ['{who} vil lave en skattejagt med hemmelige koder til gæsterne.', '{who} har glemt koden til sin egen skattekiste! Kan du knække den?', "Der er pote-spor over hele zoo'en. {who} vil vide, hvor de fører hen."],
-    done: ['Du hjalp {who} med skattejagten til gæsterne.', 'Du knækkede koden til Kajs skattekiste.', "Du fulgte pote-sporet hele vejen gennem zoo'en."],
+    intro: ['{who} vil lave en skattejagt med hemmelige koder til gæsterne, og ræveungen har allerede gemt de første spor.', 'Ræveungen har fundet Kajs skattekiste, men {who} har glemt koden! Kan du knække den?', "Der er pote-spor over hele zoo'en – mon det er ræveungens? {who} vil vide, hvor de fører hen."],
+    done: ['Du hjalp {who} med skattejagten til gæsterne.', 'Du knækkede koden til Kajs skattekiste.', 'Du fulgte pote-sporet hele vejen – det var ræveungens!'],
   },
 };
 
