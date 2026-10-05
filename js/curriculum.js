@@ -4,8 +4,8 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005213456';
-import * as V from './visuals.js?v=20261005213456';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005221226';
+import * as V from './visuals.js?v=20261005221226';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
@@ -2260,13 +2260,13 @@ function quadShape(kind) {
   if (kind === 0) { const s = ri(3, 8); return { pts: [[0, 0], [s, 0], [s, s], [0, s]], lens: [s, s, s, s], ticks: [1, 1, 1, 1], right: true }; }
   if (kind === 1) {
     let w, h;
-    do { w = ri(4, 9); h = ri(2, 7); } while (w < 1.4 * h);
+    do { w = ri(4, 9); h = ri(2, 7); } while (w < 1.4 * h || w > 3 * h);
     return { pts: [[0, 0], [w, 0], [w, h], [0, h]], lens: [w, h, w, h], ticks: [1, 2, 1, 2], right: true };
   }
   const th = ri(kind === 2 ? 50 : 55, kind === 2 ? 70 : 72) * r;
   let a, b;
   if (kind === 2) a = b = ri(3, 8);
-  else do { a = ri(4, 9); b = ri(2, 7); } while (a < 1.4 * b);
+  else do { a = ri(4, 9); b = ri(2, 7); } while (a < 1.4 * b || a > 3 * b);
   return { pts: [[0, 0], [a, 0], [a + b * Math.cos(th), b * Math.sin(th)], [b * Math.cos(th), b * Math.sin(th)]], lens: [a, b, a, b], ticks: kind === 2 ? [1, 1, 1, 1] : [1, 2, 1, 2], right: false, th: th / r };
 }
 const QUAD_WHY = [

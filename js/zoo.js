@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005213456';
-import * as E from './engine.js?v=20261005213456';
-import { today } from './util.js?v=20261005213456';
+import { AREAS, FACTS } from './curriculum.js?v=20261005221226';
+import * as E from './engine.js?v=20261005221226';
+import { today } from './util.js?v=20261005221226';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -32,23 +32,23 @@ export const SCENES = {
   algebra: { bg: 'img/map/09-skattejagt.webp', cub: 'ræveunge', alt: 'Skattejagten i skoven' },
 };
 
-// Opgaveskærmenes scene pr. område (Batch 1, img/task/): kun miljø – opgaven står altid under.
-// Hver variant er [venstre, højre]: dyr og ting, der kigger ind fra hver sin kant af båndet i båndets højde,
-// så de aldrig zoomes ind, uanset hvor bredt båndet er. Opgaverne skifter mellem områdets to varianter.
-// Kan et billede ikke deles uden at skære gennem en figur (indgangen, Zoo-uret), er varianten én samlet
-// tegning i højre side ('r'). Billederne viser Liv; i områder med en anden figur er udsnittene kun dyr og ting.
-// (Udsnittene laves af tools/opgavescener/ ud fra billeder-raa/batch1-opgavescener/.)
-const scene = (a, n, sides = 'lr') => ['l', 'r'].map((s) => (sides.includes(s) ? `img/task/${a}-${n}${s}.webp` : null));
+// Opgaveskærmenes scene pr. område (Batch 1, img/task/): ét samlet billede af områdets miljø i et bredt bånd
+// øverst i opgaven – opgaven står altid under. Billedet fylder altid båndets bredde (det zoomes aldrig længere
+// ind) og beskæres kun lodret: y er udsnittet i det normale bånd (3:1), yk i det kompakte (18:5), som bruges,
+// når opgaven har sin egen tegning, i brede kolonner (iPad på højkant) og når pladsen ikke rækker. Udsnittene
+// skærer ingen ansigter over (hatte, ører og horn må gerne skæres) – tjek med tools/opgavescener/lav.py tjek.
+// Skattejagten har intet kompakt udsnit (papegøjen og Liv står for langt fra hinanden) og beholder det normale.
+// Liv er med i alle billederne. (Billederne laves af tools/opgavescener/lav.py ud fra billeder-raa/batch1-opgavescener/.)
 export const TASK_SCENES = {
-  tal: [scene('tal', 1, 'r'), scene('tal', 2)],
-  gange: [scene('gange', 1), scene('gange', 2)],
-  division: [scene('division', 1), scene('division', 2)],
-  brok: [scene('brok', 1), scene('brok', 2)],
-  decimal: [scene('decimal', 1), scene('decimal', 2)],
-  geometri: [scene('geometri', 1), scene('geometri', 2)],
-  maaling: [scene('maaling', 1, 'r'), scene('maaling', 2)],
-  data: [scene('data', 1), scene('data', 2)],
-  algebra: [scene('algebra', 1), scene('algebra', 2)],
+  tal: { src: 'img/task/tal.webp', y: '30%', yk: '13%' },           // Liv ved porten og flamingoerne
+  gange: { src: 'img/task/gange.webp', y: '18%', yk: '14%' },       // Liv og giraffen ved foderkasserne
+  division: { src: 'img/task/division.webp', y: '8%', yk: '11%' },  // aberne med bananer og Liv
+  brok: { src: 'img/task/brok.webp', y: '23%', yk: '23%' },         // Liv giver pingvinen en fisk, sælen dukker op
+  decimal: { src: 'img/task/decimal.webp', y: '25%', yk: '26%' },   // dovendyret på klinikkens vægt
+  geometri: { src: 'img/task/geometri.webp', y: '26%', yk: '39%' }, // zebraen, Liv og næsehornet
+  maaling: { src: 'img/task/maaling.webp', y: '28.5%', yk: '35%' }, // Zoo-uret, tigeren, Liv og løven
+  data: { src: 'img/task/data.webp', y: '42%', yk: '40%' },         // Liv ved søjlediagrammet og pandaen
+  algebra: { src: 'img/task/algebra.webp', y: '7.5%' },             // papegøjen, Liv og aben ved skattekisten
 };
 
 // Forklaringernes zoo-billeder (Batch 2, img/explain/): det konkrete billede mellem symbolet og reglen,
