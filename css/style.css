@@ -101,7 +101,7 @@ b, strong { font-weight: 800; }
 .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .spread { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .stack > * + * { margin-top: 16px; }
-.section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 30px 2px 12px; }
+.section-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin: 30px 2px 12px; }
 .section-title h2 { margin: 0; }
 
 /* ---------- Knapper ---------- */
@@ -537,13 +537,6 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .baby-banner .baby { width: 74px; height: 74px; }
   .avatar { width: 54px; height: 54px; }
 }
-.ani { display: inline-flex; align-items: flex-end; }
-.ani .ani-img { width: 54px; height: 54px; margin-left: -10px; filter: drop-shadow(0 3px 4px rgba(31, 51, 70, .12)); }
-.ani .ani-img:first-child { margin-left: 0; }
-.task-card .top .ani .ani-img { width: 62px; height: 62px; }
-.area .band .ani .ani-img { width: 50px; height: 50px; }
-.hero-ani .ani-img { width: 70px; height: 70px; }
-@media (max-width: 760px) { .task-card .top .ani .ani-img { width: 52px; height: 52px; } }
 .task-card .rec { top: auto; right: auto; bottom: -11px; left: 16px; z-index: 1; box-shadow: 0 2px 6px rgba(31, 51, 70, .15); }
 .task-card .body { padding-top: 18px; }
 .icon-btn.pill { width: auto; padding: 0 14px; gap: 6px; display: inline-flex; align-items: center; font: 600 .95rem var(--font-head); color: var(--ink); }
@@ -727,7 +720,6 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .mission-go .btn.big { width: 100%; min-width: 0; }
 }
 .mission-steps .topic { display: inline-block; margin-left: 6px; font: 600 .74rem var(--font-head); color: var(--ink-2); background: var(--card-2); border: 1px solid var(--line); border-radius: 99px; padding: 1px 9px; vertical-align: 2px; }
-.sheet-next { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--sun-soft); font-weight: 700; }
 
 /* ---------- Missionslinje i træningen ---------- */
 .session-top { align-items: center; }
@@ -903,3 +895,41 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 /* ---------- Bonus-unger (én pr. hel uge) ---------- */
 .bonus-sec { display: grid; gap: 10px; padding: 12px 14px; border-radius: 16px; background: var(--sun-soft); }
 .bonus-sec .cribs { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+
+/* ---------- Områdesiden: scene, fremgang og aktiviteter ---------- */
+.mission-scene.ms-locked .ms-bg { filter: saturate(.3) brightness(1.04) contrast(.92); } /* under opbygning: dæmpet som på kortet */
+.place-hero .mission-body { gap: 10px; }
+/* Fremgangen samlet i ét roligt felt: niveauvej, dyrene og næste mål */
+.place-prog { display: grid; gap: 10px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--card) 85%, transparent); border: 1px solid var(--line-2); }
+.pp-path { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pp-path li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 99px; background: var(--card-2); color: var(--ink-3); font: 600 .85rem var(--font-head); opacity: .65; }
+.pp-path li.done { opacity: 1; color: var(--primary-ink); }
+.pp-path li.now { opacity: 1; background: var(--sun-soft); color: var(--ink); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--sun) 60%, transparent); }
+.pp-animals { list-style: none; margin: 0; padding: 0; display: flex; gap: 14px; }
+.pp-animals li { display: grid; justify-items: center; gap: 3px; font: 600 .74rem var(--font-head); color: var(--ink-2); }
+.pa-img { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--card); box-shadow: inset 0 0 0 2px var(--line); }
+.pa-img img { width: 92%; height: 92%; object-fit: contain; }
+.pp-animals li:not(.open) .pa-img img { filter: brightness(0) opacity(.16); } /* ikke flyttet ind endnu: skygge */
+.pp-animals li.open .pa-img { background: var(--good-soft); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--good) 45%, transparent); }
+.pp-animals li.next .pa-img { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--sun) 70%, transparent); }
+.pp-next { margin: 0; font-size: .95rem; font-weight: 700; color: var(--ink); }
+/* Aktiviteterne: matematikken som opgaver i zoo'en */
+.acts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.act { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 18px; background: var(--card); border: 1px solid var(--line-2); box-shadow: var(--shadow-sm); }
+.act-n { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--sun-soft); color: var(--ink); font: 600 1.05rem var(--font-head); }
+.act.done .act-n { background: var(--primary-ink); color: var(--card); }
+.act.locked { background: var(--card-2); box-shadow: none; }
+.act.locked .act-n { background: var(--line-2); font-size: .85rem; }
+.act-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.act-name { font: 600 1.12rem/1.3 var(--font-head); color: var(--ink); }
+.act.locked .act-name { color: var(--ink-2); }
+.act-desc { font-size: .92rem; font-weight: 700; color: var(--ink-2); }
+.act-skill { justify-self: start; margin-top: 4px; padding: 1px 9px; border-radius: 99px; background: var(--card-2); border: 1px solid var(--line); color: var(--ink-3); font: 600 .72rem var(--font-head); }
+.act-go { display: flex; gap: 8px; flex: none; }
+.act-lock { flex: none; max-width: 230px; text-align: right; color: var(--ink-3); font-size: .82rem; font-weight: 700; }
+@media (max-width: 640px) {
+  .act { flex-wrap: wrap; }
+  .act-go { width: 100%; justify-content: flex-end; }
+  .act-lock { width: 100%; max-width: none; padding-left: 54px; text-align: left; }
+  .pp-animals { gap: 10px; }
+}

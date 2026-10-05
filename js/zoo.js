@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005085532';
-import * as E from './engine.js?v=20261005085532';
-import { today } from './util.js?v=20261005085532';
+import { AREAS, FACTS } from './curriculum.js?v=20261005091816';
+import * as E from './engine.js?v=20261005091816';
+import { today } from './util.js?v=20261005091816';
 
 // Figurernes tegninger: ansigt (talebobler og kort), buste (missionens cirkel) og helfigur (scener).
 // Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -37,54 +37,63 @@ export const SCENES = {
 export const ZONES = {
   tal: {
     animals: ['🦩', '🦢', '🦆'], who: 'liv', blurb: 'Indgangen, billetlugen og flamingosøen', step: 'tæl gæster og billetter',
+    story: 'Her ved indgangen sælger {who} billetter, tæller gæster og holder øje med flamingosøen. Alle tal skal passe, så Bodil ved, hvordan det går.',
     tasks: ['Tæl dagens gæster i billetlugen', 'Lav besøgsrapporten til Bodil', 'Der er kø ved billetlugen – hjælp til!'],
     intro: ['Der står gæster i kø ved billetlugen – mange vil se flamingoerne. {who} skal vide, hvor mange der kommer i dag.', 'Bodil vil vide, hvor mange gæster der har været ved flamingosøen og resten af zoo\'en. {who} har brug for hjælp til tallene.', 'Alle vil ind og se den nye flamingounge, og køen ved billetlugen bliver længere og længere. {who} har brug for en hurtig regnehjælper.'],
     done: ['Du hjalp {who} med at tælle dagens gæster.', 'Du hjalp {who} med besøgsrapporten til Bodil.', 'Du fik køen ved billetlugen til at glide.'],
   },
   gange: {
     animals: ['🦒', '🐘', '🦛'], who: 'nora', blurb: 'Her bestilles foder til de store dyr', step: 'regn foderet ud til de store dyr',
+    story: 'I Foderlageret bestiller {who} foder til de store dyr. Giraferne, elefanterne og flodhestene spiser rigtig meget – og alt skal regnes ud.',
     tasks: ['Bestil blade til giraferne', 'Regn ugens foder ud til elefanterne', 'Hjælp Nora med den store foderbestilling'],
     intro: ['Giraferne har spist alle bladene. {who} skal regne ud, hvor mange nye der skal bestilles.', 'Elefanterne spiser enormt meget. {who} skal regne foderet ud til hele ugen.', 'Giraferne, elefanterne og flodhestene skal alle have foder. Den store bestilling skal sendes i dag, og {who} har mange tal at holde styr på.'],
     done: ['Du hjalp {who} med giraffernes foder.', 'Du hjalp {who} med elefanternes foder til hele ugen.', 'Du hjalp {who} med den store foderbestilling.'],
   },
   division: {
     animals: ['🐒', '🐿️', '🦫'], who: 'kaj', blurb: 'Maden fordeles ligeligt – resten går til Kaj', step: 'fordel maden ligeligt mellem dyrene',
+    story: 'I abehuset skal maden deles helt lige, så ingen bliver snydt. Det, der bliver til overs, holder {who} skarpt øje med.',
     tasks: ['Fordel bananerne ligeligt mellem aberne', 'Gør madskålene klar til abehuset', 'Del frugten ud – Kaj holder øje med resten'],
     intro: ['Aberne skændes om bananerne. {who} vil have dem delt helt lige.', 'Der skal være lige meget i hver madskål. {who} holder øje fra sin gren.', 'Frugten skal deles ud til aberne – og det, der bliver til overs, vil {who} gerne have!'],
     done: ['Du fordelte bananerne ligeligt mellem aberne.', 'Du hjalp {who} med madskålene til abehuset.', 'Du delte frugten ud – og Kaj fik resten.'],
   },
   brok: {
     animals: ['🦭', '🐻‍❄️', '🦦'], who: 'liv', blurb: 'Bassiner, fiskespande og pingvinunger', step: 'del fisk og bassiner i brøkdele',
+    story: 'Ved polarområdet passer {who} pingvinerne og sælerne. Fisk, isflager og bassiner skal deles i lige store dele.',
     tasks: ['Fyld pingvinbassinet op', 'Del fiskespandene mellem pingvinerne', 'Lav en ny madplan til sælerne'],
     intro: ['Pingvinbassinet er halvtomt. {who} skal finde ud af, hvor meget vand der mangler.', 'Fiskene skal deles retfærdigt mellem pingvinerne. {who} har brug for din hjælp.', 'Sælerne skal have en ny madplan, og {who} skal dele fiskene i brøkdele.'],
     done: ['Du hjalp {who} med at fylde pingvinbassinet op.', 'Du delte fiskespandene mellem pingvinerne.', 'Du hjalp {who} med sælernes madplan.'],
   },
   decimal: {
     animals: ['🦔', '🐢', '🦥'], who: 'yasmin', blurb: 'Dyrene vejes, måles og får medicin', step: 'vej og mål dyrene i klinikken',
+    story: 'På dyreklinikken vejer og måler {who} de små dyr. Her tæller hver tiendedel – medicin skal være helt præcis.',
     tasks: ['Vej den nye dovendyrunge', 'Tjek om pindsvinet har taget på', 'Hjælp Yasmin med at måle medicin op'],
     intro: ['En ny dovendyrunge er kommet på klinikken. {who} skal veje den helt præcist.', 'Pindsvinet har været sygt. {who} vil vide, om det har taget på.', 'Skildpaddeungen skal have medicin, og den skal måles helt nøjagtigt op. {who} har brug for en sikker hånd.'],
     done: ['Du hjalp {who} med at veje den nye dovendyrunge.', 'Du hjalp {who} med at tjekke pindsvinets vægt.', 'Du hjalp {who} med at måle medicinen op til skildpaddeungen.'],
   },
   geometri: {
     animals: ['🦓', '🦏', '🐪'], who: 'nora', blurb: 'Hegn, anlæg og nye indhegninger', step: 'mål hegn og anlæg op',
+    story: 'På savannen bygger {who} nye hegn og anlæg til zebraerne og næsehornene. Alt skal måles op, før dyrene kan flytte ind.',
     tasks: ['Byg et nyt hegn til zebraerne', 'Tegn det nye næsehorn-anlæg', 'Mål de nye anlæg op'],
     intro: ['Zebraerne skal have et nyt hegn. {who} skal vide, hvor langt det skal være.', 'Næsehornet skal have mere plads. {who} vil have det nye anlæg tegnet rigtigt.', 'Zebraerne og næsehornene får nye anlæg. {who} skal måle dem op, før dyrene kan flytte ind.'],
     done: ['Du hjalp {who} med zebraernes nye hegn.', 'Du hjalp {who} med at tegne næsehorn-anlægget.', 'Du hjalp {who} med at måle anlæggene op.'],
   },
   maaling: {
     animals: ['🦁', '🐯', '🐆'], who: 'liv', blurb: 'Fodringstider, rundvisninger og åbningstider', step: 'hold styr på tider og mål',
+    story: 'Ved rovdyrene holder {who} styr på tiden. Løverne og tigrene skal fodres til tiden, og gæsterne vil på rundvisning.',
     tasks: ['Lav fodringsplanen for rovdyrene', 'Tjek zoo-uret før løvefodringen', 'Hold styr på tiderne til rovdyr-rundvisningen'],
     intro: ['Løverne og tigrene skal fodres til tiden. {who} laver planen og har brug for hjælp.', 'Løverne bliver sure, hvis fodringen kommer for sent. {who} skal holde øje med zoo-uret.', 'Gæsterne skal på rundvisning hos løverne og tigrene. {who} skal have styr på alle tiderne.'],
     done: ['Du hjalp {who} med rovdyrenes fodringsplan.', 'Du hjalp {who} med at holde tiden til løvefodringen.', 'Du hjalp {who} med tiderne til rovdyr-rundvisningen.'],
   },
   data: {
     animals: ['🐼', '🐨', '🦘'], who: 'kaj', blurb: 'Hvad synes gæsterne? Tæl, spørg og tegn diagrammer', step: 'tæl og tegn diagrammer over gæsterne',
+    story: 'På data-pladsen spørger {who} gæsterne, hvad de synes. Svarene bliver til diagrammer på opslagstavlen.',
     tasks: ['Find gæsternes yndlingsdyr', 'Lav et diagram til opslagstavlen', 'Gør gæsteundersøgelsen færdig'],
     intro: ['{who} har spurgt gæsterne om deres yndlingsdyr. Er det mon pandaen? Nu skal svarene tælles op.', 'Opslagstavlen ved pandaerne mangler et diagram. {who} har tallene, men kan ikke tegne det selv.', 'Gæsteundersøgelsen om pandaerne, koalaerne og kænguruerne er næsten færdig. {who} mangler hjælp til de sidste tal.'],
     done: ['Du fandt gæsternes yndlingsdyr.', 'Du hjalp {who} med diagrammet til opslagstavlen.', 'Du hjalp {who} med gæsteundersøgelsen.'],
   },
   algebra: {
     animals: ['🦊', '🦝', '🦉'], who: 'kaj', blurb: 'Pote-spor og kodelåse til gæsternes skattejagt', step: 'knæk koder og følg pote-spor',
+    story: 'Inde i skoven har {who} lavet en skattejagt. Pote-spor og hemmelige koder venter på at blive knækket.',
     tasks: ['Lav en skattejagt til gæsterne', 'Knæk koden til Kajs skattekiste', "Følg pote-sporet gennem zoo'en"],
     intro: ['{who} vil lave en skattejagt med hemmelige koder til gæsterne, og ræveungen har allerede gemt de første spor.', 'Ræveungen har fundet Kajs skattekiste, men {who} har glemt koden! Kan du knække den?', "Der er pote-spor over hele zoo'en – mon det er ræveungens? {who} vil vide, hvor de fører hen."],
     done: ['Du hjalp {who} med skattejagten til gæsterne.', 'Du knækkede koden til Kajs skattekiste.', 'Du fulgte pote-sporet hele vejen – det var ræveungens!'],
@@ -322,6 +331,59 @@ export function missionIntroText(areaId, title, who) {
   const z = ZONES[areaId], i = z.tasks.indexOf(title);
   const t = z.intro?.[i] || `{who} har brug for din hjælp i ${AREAS.find((a) => a.id === areaId).place}.`;
   return t.replace('{who}', CAST[who]?.name || CAST[z.who].name);
+}
+
+// Områdets matematik præsenteret som aktiviteter i zoo'en (kun navne og tekster – færdigheder,
+// progression og låse er de samme). Bruges på områdesiden; færdighedens rigtige navn står ved siden af.
+export const ACTIVITIES = {
+  positionssystem: { name: 'Læs billetnumrene', desc: 'Hvad er hvert ciffer værd i de lange billetnumre?' },
+  afrunding: { name: 'Rund gæstetallet af', desc: 'Bodil vil have tallene rundet af til tavlen ved indgangen.' },
+  sammenlign: { name: 'Find den travleste dag', desc: 'Hvilken dag kom der flest gæster – og hvilken færrest?' },
+  plusminus: { name: 'Gør kassen op', desc: 'Læg dagens billetsalg sammen, og træk fra.' },
+  gange10: { name: 'Pak foderkasserne', desc: 'Kasser med 10 og 100 – hvor meget foder er der i alt?' },
+  gangeflercifret: { name: 'Beregn dagens foder', desc: 'Hvor mange kilo skal giraferne og elefanterne have?' },
+  gangetekst: { name: 'Fyld giraffernes vogne', desc: 'Find gangestykket i historien om foderet.' },
+  divtabel: { name: 'Fordel bananerne', desc: 'Del helt lige mellem aberne – gange baglæns.' },
+  divrest: { name: 'Hvad bliver til overs?', desc: 'Del maden ud – resten går til Kaj.' },
+  divflercifret: { name: 'Del de store sække', desc: 'Meget foder skal deles i lige store portioner.' },
+  divtekst: { name: 'Gør madskålene klar', desc: 'Lav lige store portioner og grupper til abehuset.' },
+  brokfigur: { name: 'Tjek isflagerne', desc: 'Hvor stor en del af isflagen er farvet?' },
+  broktallinje: { name: 'Find pingvinens plads på broen', desc: 'Hvor langt ude på broen står pingvinen?' },
+  broksammenlign: { name: 'Hvem fik mest fisk?', desc: 'Sammenlign pingvinernes portioner.' },
+  brokafantal: { name: 'Del fiskespandene', desc: 'Hvor mange fisk er ¾ af spanden?' },
+  ligevaerdig: { name: 'Lige store portioner', desc: 'Find to måder at skrive den samme portion på.' },
+  decfigur: { name: 'Mål medicinen op', desc: 'Tiendedele og hundrededele i målebægeret.' },
+  dectallinje: { name: 'Aflæs vægten', desc: 'Hvad viser vægten, når ungen bliver vejet?' },
+  decsammenlign: { name: 'Hvem vejer mest?', desc: 'Sammenlign ungernes vægt.' },
+  decplusminus: { name: 'Gør klinikkens regnskab', desc: 'Plus og minus med kilo og kroner.' },
+  omkreds: { name: 'Byg hegnet', desc: 'Hvor langt skal hegnet være hele vejen rundt?' },
+  areal: { name: 'Giv dyrene plads', desc: 'Hvor stor er den nye indhegning?' },
+  vinkler: { name: 'Tjek hjørnerne', desc: 'Er hjørnet spidst, ret eller stumpt?' },
+  enheder: { name: 'Vej kødet til rovdyrene', desc: 'Kilo og gram, meter og centimeter, liter og deciliter.' },
+  klokken: { name: 'Læs zoo-uret', desc: 'Hvad er klokken på uret ved løverne?' },
+  tidsforskel: { name: 'Planlæg fodringen', desc: 'Hvor lang tid er der til næste fodring?' },
+  soejle: { name: 'Læs gæsternes diagram', desc: 'Hvilket dyr fik flest stemmer?' },
+  typetal: { name: 'Beskriv svarene', desc: 'Find det mest almindelige svar og midten.' },
+  sandsynlighed: { name: 'Hvad er chancen?', desc: 'Hvor stor er chancen for at se pandaen?' },
+  talfolger: { name: 'Følg pote-sporet', desc: 'Find mønstret i sporene, og fortsæt.' },
+  ukendt: { name: 'Knæk kodelåsen', desc: 'Hvilket tal mangler i koden?' },
+};
+export const activityName = (skill) => ACTIVITIES[skill.id]?.name || skill.name;
+
+// Områdets næste mål i zoo-sprog: hvilket dyr flytter ind ved næste niveau
+export function nextGoal(state, area) {
+  const p = E.areaProgress(state, area.id), lv = areaLevel(state, area.id);
+  const animal = (i) => { const b = animalFor(ZONES[area.id].animals[i]); return b ? withArticle(b.kind) : 'et nyt dyr'; };
+  const more = (n) => (n === 1 ? '1 aktivitet mere' : `${n} aktiviteter mere`);
+  const up = (n) => `${LEVELS[n].icon} ${LEVELS[n].name}`;
+  if (lv === 0) {
+    const first = area.skills.find((s) => !['sikker', 'mestret'].includes(E.skillStatus(state, s.id))) || area.skills[0];
+    return `Klar "${activityName(first)}" – så åbner ${area.place}, og ${animal(0)} flytter ind.`;
+  }
+  if (lv === 1) return `Klar ${more(Math.ceil(p.total / 2) - p.done)} – så stiger ${area.place} til ${up(2)}, og ${animal(1)} flytter ind.`;
+  if (lv === 2) return `Klar ${more(p.total - p.done)} – så stiger ${area.place} til ${up(3)}, og ${animal(2)} flytter ind.`;
+  if (lv === 3) return `Klar alle aktiviteterne igen på en ny dag – så stiger ${area.place} til ${up(4)}.`;
+  return `${area.place} er et guld-område! Øv gerne videre, så det bliver ved med at sidde.`;
 }
 
 // Slutningen på en mission: "Du hjalp Nora med giraffernes foder."

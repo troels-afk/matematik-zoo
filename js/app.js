@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005085532';
-import * as E from './engine.js?v=20261005085532';
-import * as Z from './zoo.js?v=20261005085532';
-import { zooGate } from './scene.js?v=20261005085532';
-import { zooMap } from './map.js?v=20261005085532';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005085532';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005085532';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005085532';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005091816';
+import * as E from './engine.js?v=20261005091816';
+import * as Z from './zoo.js?v=20261005091816';
+import { zooGate } from './scene.js?v=20261005091816';
+import { zooMap } from './map.js?v=20261005091816';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005091816';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005091816';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005091816';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -131,7 +131,6 @@ function weekDots(st) {
 
 const levelsOf = (st) => AREAS.map((a) => Z.areaLevel(st, a.id));
 // Dyr som tegning (eller emoji, hvis der ikke findes en tegning)
-const ani = (list) => list.map((e) => { const src = Z.artFor(e); return src ? `<img class="ani-img" src="${src}" alt="" draggable="false">` : `<span>${e}</span>`; }).join('');
 
 // ================= Profiler =================
 
@@ -401,7 +400,7 @@ function showHome() {
       // Før træningen: figuren bliver dagens mission øverst. Efter: vis opgaven i et ark.
       taskSheet(tasks.find((x) => x.area === t.dataset.task));
     }
-    else if (t.dataset.area) areaSheet(t.dataset.area);
+    else if (t.dataset.area) showPlace(t.dataset.area);
     else if (t.dataset.baby) babySheet();
     else if (t.dataset.bodil) bodilSheet(levels, first);
   };
@@ -436,7 +435,7 @@ const FACE = { intro: 'happy', progress: 'think', success: 'cheer' };
 const hasScene = (t) => !!(Z.SCENES[t.area] && Z.CAST[t.who]?.full);
 const PARTY = `<span class="party" aria-hidden="true">${'<i></i>'.repeat(9)}</span>`;
 
-function missionScene(t, state = 'intro', size = 'hero') {
+function missionScene(t, state = 'intro', size = 'hero', opts = {}) {
   const sc = Z.sceneFor(t.area, t.title), c = Z.CAST[t.who];
   if (size === 'thumb') {
     return sc ? `<span class="mt-scene" aria-hidden="true"><img class="mts-bg" src="${sc.bg}" alt="" draggable="false"><img class="mts-ani" src="${sc.face[FACE[state]]}" alt="" draggable="false"></span>` : '';
@@ -445,8 +444,8 @@ function missionScene(t, state = 'intro', size = 'hero') {
   const animal = sc.full
     ? `<img class="ms-animal full" src="${sc.full}" alt="" draggable="false">`
     : `<img class="ms-animal cub" src="${sc.face[FACE[state]]}" alt="" draggable="false">`;
-  const line = size === 'hero' && { intro: 'Vi har brug for din hjælp!', success: 'Tak for hjælpen! 💛' }[state];
-  return `<div class="mission-scene ms-${state} ms-${size}" role="img" aria-label="${esc(sc.alt)}">
+  const line = opts.say ?? (size === 'hero' && { intro: 'Vi har brug for din hjælp!', success: 'Tak for hjælpen! 💛' }[state]);
+  return `<div class="mission-scene ms-${state} ms-${size} ${opts.locked ? 'ms-locked' : ''}" role="img" aria-label="${esc(sc.alt)}">
       <img class="ms-bg" src="${sc.bg}" alt="" draggable="false">
       ${animal}
       <img class="ms-who" src="${c.full}" alt="" draggable="false">
@@ -555,27 +554,6 @@ function taskSheet(t) {
     </div>`, (el) => el.querySelector('#go-task').addEventListener('click', () => { closeSheet(); runSession(t.area, t); }));
 }
 
-function areaSheet(areaId) {
-  const st = S.state, a = areaOf(areaId), z = Z.ZONES[areaId];
-  const lv = Z.areaLevel(st, areaId), L = Z.LEVELS[lv];
-  const label = { ny: 'Ny', øver: 'Øver', sikker: 'Sikker ⭐', mestret: 'Mestret 🌟' };
-  const rows = a.skills.map((sk, i) => {
-    const status = E.skillStatus(st, sk.id), unlocked = E.isUnlocked(st, sk.id);
-    return `<div class="sheet-skill">
-      <div style="min-width:0"><b>${sk.name}</b> <span class="st ${status}">${label[status]}</span><div class="muted small">${sk.desc}</div></div>
-      ${unlocked ? `<div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ghost sm" data-intro="${sk.id}" aria-label="Forklaring">💡</button><button class="btn sm" data-practice="${sk.id}">Øv</button></div>`
-        : `<span class="muted small">🔒 efter "${a.skills[i - 1].name}"</span>`}
-    </div>`;
-  }).join('');
-  openSheet(`
-    <div class="sheet-head"><span class="sheet-ic">${a.icon}</span><div><h2 style="margin:0">${a.place}</h2><span class="muted">${a.name} · ${L.icon} ${L.name}</span></div>
-      <span class="ani" style="margin-left:auto">${lv ? ani(z.animals.slice(0, Math.min(lv, 3))) : ''}</span></div>
-    <p class="sheet-next">${lv < 4 ? '🎯' : '🌟'} ${Z.nextStep(st, a)}</p>
-    <div class="sheet-skills">${rows}</div>`, (el) => {
-    el.querySelectorAll('[data-practice]').forEach((b) => b.addEventListener('click', () => { closeSheet(); startPractice(b.dataset.practice); }));
-    el.querySelectorAll('[data-intro]').forEach((b) => b.addEventListener('click', () => { closeSheet(); showIntro(b.dataset.intro, showHome, 'Tilbage'); }));
-  });
-}
 
 function babySheet() {
   const st = S.state, fs = E.factSummary(st);
@@ -636,38 +614,61 @@ function sprintEligible(st) {
   return st.settings.sprint && FACTS.filter((f) => E.factBox(st, f.key) >= 2).length >= 6;
 }
 
-// ================= Et område =================
+// ================= Et område: "nu er jeg inde i dette zoo-område" =================
+// Samme scene som missionerne, en kort fortælling, områdets fremgang (niveau, dyr og næste mål)
+// og matematikken som aktiviteter i zoo'en. Færdigheder, progression og låse er de samme som før.
 
 function showPlace(areaId) {
   const st = S.state, a = areaOf(areaId), z = Z.ZONES[areaId];
-  const lv = Z.areaLevel(st, areaId), L = Z.LEVELS[lv];
-  const rows = a.skills.map((s, i) => {
-    const status = E.skillStatus(st, s.id);
-    const unlocked = E.isUnlocked(st, s.id);
-    const label = { ny: 'Ny', øver: 'Øver', sikker: 'Sikker ⭐', mestret: 'Mestret 🌟' }[status];
-    return `<div class="card skill-row" style="--ac:${a.color}">
-      <div style="flex:1;min-width:220px">
-        <h3 style="margin:0 0 2px">${s.name} <span class="st ${status}">${label}</span></h3>
-        <span class="muted small">${s.desc}</span>
+  const lv = Z.areaLevel(st, areaId);
+  const t = { area: areaId, who: z.who, title: '' };
+  const story = esc(z.story || z.blurb).replace('{who}', `<b>${Z.CAST[z.who].name}</b>`);
+  const cap = (x) => x[0].toUpperCase() + x.slice(1);
+  // Niveauvejen: Åben → Populær → Stjerne → Guld (under opbygning står først, indtil området åbner)
+  const path = (lv ? '' : `<li class="now"><span>${Z.LEVELS[0].icon}</span><b>${Z.LEVELS[0].name}</b></li>`)
+    + [1, 2, 3, 4].map((n) => `<li class="${n < lv ? 'done' : n === lv ? 'now' : ''}" title="${Z.LEVELS[n].name}"><span>${Z.LEVELS[n].icon}</span>${n === lv ? `<b>${Z.LEVELS[n].name}</b>` : ''}</li>`).join('');
+  // Dyrene, der flytter ind ved niveau 1, 2 og 3
+  const animals = z.animals.map((e, i) => {
+    const b = Z.animalFor(e), open = lv > i;
+    return `<li class="${open ? 'open' : i === lv ? 'next' : ''}" title="${open && b ? cap(b.kind) : 'Flytter ind senere'}">
+      <span class="pa-img">${b?.img ? `<img src="${b.img}" alt="" draggable="false">` : e}</span><span class="pa-nm">${open && b ? cap(b.kind) : '?'}</span></li>`;
+  }).join('');
+  const label = { ny: 'Ny', øver: 'I gang', sikker: 'Klaret ⭐', mestret: 'Mester 🌟' };
+  const acts = a.skills.map((sk, i) => {
+    const status = E.skillStatus(st, sk.id), unlocked = E.isUnlocked(st, sk.id);
+    const done = ['sikker', 'mestret'].includes(status);
+    const act = Z.ACTIVITIES[sk.id] || { name: sk.name, desc: sk.desc };
+    return `<li class="act ${done ? 'done' : unlocked ? 'open' : 'locked'}">
+      <span class="act-n" aria-hidden="true">${done ? '✓' : unlocked ? i + 1 : '🔒'}</span>
+      <div class="act-body">
+        <span class="act-name">${act.name}${unlocked ? ` <span class="st ${status}">${label[status]}</span>` : ''}</span>
+        <span class="act-desc">${act.desc}</span>
+        <span class="act-skill">${sk.name}</span>
       </div>
       ${unlocked
-        ? `<div class="row"><button class="btn ghost" data-intro="${s.id}">💡 Forklaring</button><button class="btn" data-practice="${s.id}">Øv</button></div>`
-        : `<span class="muted small">🔒 Åbner, når du er sikker i "${a.skills[i - 1].name}"</span>`}
-    </div>`;
+        ? `<div class="act-go"><button class="btn ghost sm" data-intro="${sk.id}">Se hvordan</button><button class="btn sm" data-practice="${sk.id}">Start</button></div>`
+        : `<span class="act-lock">Åbner, når "${Z.activityName(a.skills[i - 1])}" er klaret</span>`}
+    </li>`;
   }).join('');
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Zoo-kortet</span></div>
-    <section class="area-hero" style="--ac:${a.color}">
-      <span class="big">${a.icon}</span>
-      <div style="flex:1;min-width:200px">
-        <h1 style="margin:0">${a.place}</h1>
-        <div class="muted" style="font-weight:700">${a.name} · ${z.blurb}</div>
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til kortet">←</button><span class="muted">Zoo-kortet</span></div>
+    <section class="mission card place-hero ${hasScene(t) ? 'has-scene' : ''}">
+      ${missionScene(t, 'intro', 'hero', { say: lv ? `Velkommen til ${a.place}!` : `Hjælp med at åbne ${a.place}!`, locked: !lv })}
+      <div class="mission-body">
+        <span class="kicker">${a.name}</span>
+        <h1>${a.place}</h1>
+        <p class="mission-need">${story}</p>
+        <div class="place-prog">
+          <ol class="pp-path" aria-label="Niveau: ${Z.LEVELS[lv].name}">${path}</ol>
+          <ol class="pp-animals" aria-label="Dyrene i ${a.place}">${animals}</ol>
+          <p class="pp-next">${esc(Z.nextGoal(st, a))}</p>
+        </div>
       </div>
-      <div class="center"><div class="ani hero-ani">${lv ? ani(z.animals.slice(0, Math.min(lv, 3))) : '🚧'}</div><span class="lvl" style="--ac:${a.color}">${L.icon} ${L.name}</span></div>
     </section>
-    <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
+    <div class="section-title"><h2>Det kan du hjælpe med</h2><span class="muted small">Den næste aktivitet åbner, når den forrige er klaret</span></div>
+    <ol class="acts">${acts}</ol>`, (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
-  on('[data-practice]', 'click', (e) => startPractice(e.currentTarget.dataset.practice));
+  on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice); });
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), 'Tilbage'));
 }
 
@@ -739,7 +740,7 @@ function showIntro(skillId, next, btnText = 'Jeg er klar') {
     view(`
       <div class="card sheet intro-card stack">
         <div class="kicker">${a.icon} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
-        <h1>${s.name}</h1>
+        <h1>${Z.ACTIVITIES[skillId]?.name || s.name}</h1>${Z.ACTIVITIES[skillId] ? `<div class="muted" style="font-weight:700;margin-top:-8px">${s.name}</div>` : ''}
         ${steps ? stepsBlock(steps, shown) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
         <div class="center">${more
           ? `<button class="btn big" id="more">Næste trin (${shown}/${steps.length})</button>`
@@ -828,7 +829,7 @@ function startSession(areaId) {
 
 function startPractice(skillId) {
   const s = ALL_SKILLS[skillId], a = areaOf(s.area);
-  const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub: s.name, count: s.practice ? 10 : 8, skill: skillId }] };
+  const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub: Z.ACTIVITIES[skillId]?.name || s.name, count: s.practice ? 10 : 8, skill: skillId }] };
   S.run = { mode: 'practice', sess, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
   goBlock();
 }
@@ -1194,6 +1195,7 @@ function finish() {
   bonus.forEach((x) => wins.unshift({ e: '🍼', t: `Ugens unge: ${x.name} (${x.kind}) er flyttet ind i Babyhuset` }));
   const n = run.results.length;
   const backSet = PRACTICE_SETS.find((x) => x.id === run.sess.area);
+  const backArea = !backSet && run.mode === 'practice' ? AREAS.find((x) => x.id === run.sess.area) : null;
   if (run.mode === 'daily') {
     const res = missionResults(st, run, b, after, born, grew, bonus);
     // Til forsidens "Mission klaret" (lægges oven i tidligere vagter i dag)
@@ -1227,11 +1229,13 @@ function finish() {
       <div class="row" style="justify-content:center">${weekDots(st)}<span class="small muted">dage denne uge</span></div>
       <div class="row" style="justify-content:center">
         ${backSet ? `<button class="btn big" id="backset">← ${backSet.name}</button><button class="btn ghost" id="home">Til zoo'en</button>`
+          : backArea ? `<button class="btn big" id="backarea">← Tilbage til ${backArea.place}</button><button class="btn ghost" id="home">Til zoo'en</button>`
           : `<button class="btn big" id="home">Til zoo'en</button>${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}`}
       </div>
-    </div>`, (e) => { if (e.key === 'Enter') (backSet ? showPracticeSet(backSet.id) : showHome()); });
+    </div>`, (e) => { if (e.key === 'Enter') (backSet ? showPracticeSet(backSet.id) : backArea ? showPlace(backArea.id) : showHome()); });
   on('#home', 'click', showHome);
   on('#backset', 'click', () => showPracticeSet(backSet.id));
+  on('#backarea', 'click', () => showPlace(backArea.id));
   on('#sprint', 'click', startSprint);
   setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 350);
   if (bigWin) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
