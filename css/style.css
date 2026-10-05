@@ -495,11 +495,12 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 /* Områderne: hele billedets felt er klikbart, ikke kun selve tegningen */
 .zm-area { display: block; }
 .zm-ov { position: relative; display: block; width: 100%; height: 100%; object-fit: contain; transform-origin: 50% 75%; transition: transform .2s ease, filter .2s ease, opacity .2s ease; }
-@media (hover: hover) { .zm-area:hover .zm-ov { transform: scale(1.035); filter: brightness(1.06) drop-shadow(0 8px 12px rgba(31, 51, 70, .28)); } }
+/* Mus eller tastatur over tegningen eller navneskiltet: begge fremhæves (.hl sættes af app.js) */
+.zm-area.hl .zm-ov { transform: scale(1.035); filter: brightness(1.07) drop-shadow(0 0 2px #fff) drop-shadow(0 8px 12px rgba(31, 51, 70, .28)); }
 .zm-area:active .zm-ov { transform: scale(.97); filter: brightness(.93); transition-duration: .06s; }
 /* Under opbygning: dæmpede farver (ingen gennemsigtighed, så grundkortet ikke skinner igennem) */
 .zm-area.lv-0 .zm-ov { filter: saturate(.3) brightness(1.04) contrast(.92); }
-@media (hover: hover) { .zm-area.lv-0:hover .zm-ov { filter: saturate(.6) brightness(1.06); } }
+.zm-area.lv-0.hl .zm-ov { filter: saturate(.6) brightness(1.08) drop-shadow(0 0 2px #fff) drop-shadow(0 8px 12px rgba(31, 51, 70, .2)); }
 .zm-area.lv-0:active .zm-ov { filter: grayscale(.6) brightness(.98); }
 /* Populær, stjerne og guld: varmt lys bag tegningen og små stjerner */
 .zm-glow { position: absolute; inset: -4% -2% 2%; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, rgba(255, 236, 160, .55), rgba(255, 236, 160, 0)); }
@@ -521,7 +522,8 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .zm-label .sym { font-size: .9em; }
 .zm-label.lv-0 { background: rgba(244, 239, 230, .94); color: #6d5c4a; border-color: #cbbba3; }
 .zm-label.lv-4 { border-color: #f2b632; box-shadow: 0 0 0 2px rgba(255, 210, 90, .6), 0 2px 6px rgba(31, 51, 70, .2); }
-@media (hover: hover) { .zm-label:hover { scale: 1.06; } }
+.zm-label.hl { scale: 1.08; background: #fff; border-color: var(--primary); color: #2d2014;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent), 0 4px 10px rgba(31, 51, 70, .25); }
 .zm-label:active { scale: .95; }
 
 /* Porten: zoo'ens navn med en flagguirlande – et flag pr. område med en stjerne */
@@ -839,4 +841,41 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .act-go { width: 100%; justify-content: flex-end; }
   .act-lock { width: 100%; max-width: none; padding-left: 54px; text-align: left; }
   .pp-animals { gap: 10px; }
+}
+
+/* ---------- Introens første side: zoo'ens indgang som scene (samme kortstil som missionerne) ---------- */
+/* Computer og iPad: tegningen fylder kortet, Bodil står på bundkanten til højre, og teksten ligger i en lys
+   boks nederst til venstre lidt ind over tegningen. Mobil: scenen øverst og teksten under. Ingen animation. */
+#app > .tour-hero { animation: none; }
+.tour-hero { position: relative; max-width: 900px; margin: 4vh auto 0; padding: 0; overflow: hidden; height: clamp(440px, 54vw, 500px);
+  border: 2px solid color-mix(in srgb, var(--sun) 45%, transparent);
+  background: radial-gradient(ellipse 46% 52% at 52% 62%, color-mix(in srgb, var(--good) 20%, transparent), transparent 72%),
+    linear-gradient(165deg, var(--sky-soft), var(--sun-soft) 58%, var(--card)); }
+.th-scene img { position: absolute; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.th-bg { left: 27%; top: 4%; width: 51%; height: auto; filter: drop-shadow(0 10px 16px rgba(31, 51, 70, .12)); }
+.th-bodil { right: 0; bottom: 0; width: 31%; height: auto; filter: drop-shadow(0 8px 12px rgba(31, 51, 70, .14)); }
+.th-top { position: absolute; z-index: 2; top: 18px; left: 26px; right: 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.th-box { position: absolute; z-index: 2; left: 26px; bottom: 26px; width: min(400px, 44%); display: grid; gap: 12px; padding: 22px 24px;
+  border-radius: var(--r); background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: var(--shadow-lg); }
+.th-box h1 { margin: 0; font-size: clamp(1.6rem, 3.2vw, 2.1rem); text-wrap: balance; }
+.th-box p { margin: 0; font-size: 1.15rem; }
+.th-go { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+.th-go .btn.big { min-width: 200px; }
+/* iPad stående: højere kort, så tegningen kan blive stor */
+@media (min-width: 641px) and (max-width: 1000px) and (orientation: portrait) {
+  .tour-hero { height: min(640px, 82vw); }
+  .th-bg { left: 9%; top: 8%; width: 66%; }
+  .th-bodil { width: 31%; }
+  .th-box { width: min(390px, 52%); }
+}
+@media (max-width: 640px) {
+  .tour-hero { height: auto; margin-top: 2vh;
+    background: linear-gradient(180deg, var(--sky-soft), var(--sun-soft) 46%, var(--card) 62%); }
+  .th-scene { position: relative; height: min(76vw, 300px); }
+  .th-bg { left: 4%; top: 15%; width: 72%; }
+  .th-bodil { right: -3%; width: 44%; }
+  .th-top { left: 18px; right: 16px; top: 14px; }
+  .th-box { position: static; width: auto; padding: 18px 18px 22px; border-radius: 0; background: var(--card); box-shadow: none; }
+  .th-go .btn.big { width: 100%; min-width: 0; }
+  .th-go .tour-dots { width: 100%; }
 }

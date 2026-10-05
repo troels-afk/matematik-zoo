@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005095712';
-import * as E from './engine.js?v=20261005095712';
-import * as Z from './zoo.js?v=20261005095712';
-import { zooGate } from './scene.js?v=20261005095712';
-import { zooMap } from './map.js?v=20261005095712';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005095712';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005095712';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005095712';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005120829';
+import * as E from './engine.js?v=20261005120829';
+import * as Z from './zoo.js?v=20261005120829';
+import { zooGate } from './scene.js?v=20261005120829';
+import { zooMap } from './map.js?v=20261005120829';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005120829';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005120829';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005120829';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -236,17 +236,14 @@ function showAbout(back = showHome) {
 // ================= Intro: sådan spiller du =================
 
 function showIntroTour(done = showHome) {
-  const st = S.state, zname = Z.zooName(st);
+  const st = S.state;
   const someBabies = FACTS.slice(0, 6).map((f, i) => {
     const b = Z.BABIES[f.key];
     return `<span class="baby has-img" style="--st:${i}"><img src="${b.img}" alt="" draggable="false"></span>`;
   }).join('');
   const pages = [
-    {
-      art: `<img class="tour-portrait" src="${Z.CAST.bodil.bust}" alt="Bodil">`,
-      title: `Velkommen til ${esc(zname)}!`,
-      body: say('bodil', `Zoo'en har været lukket hele vinteren, og jeg har brug for en ny zoo-leder. Det er dig, ${esc(st.name)}!`),
-    },
+    // Første side er en scene som på missionerne og områdesiderne (se renderHero nedenfor)
+    { hero: true, title: 'Velkommen til Matematik-Zoo!', text: "Zoo'en har været lukket hele vinteren. Vil du hjælpe Bodil med at åbne den igen?", cta: 'Åbn porten' },
     {
       art: `<div class="tour-icons">${AREAS.map((a) => `<span style="--ac:${a.color}">${a.icon}</span>`).join('')}</div>`,
       title: 'Målet: den store åbningsdag',
@@ -274,24 +271,46 @@ function showIntroTour(done = showHome) {
   ];
   let i = 0;
   const finish = () => { st.zoo.introSeen = true; save(); done(); };
+  const keys = (e) => {
+    if (e.key === 'Enter' || e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft' && i) { i--; render(); }
+    else if (e.key === 'Escape') finish();
+  };
+  const dots = () => `<div class="tour-dots">${pages.map((_, j) => `<i class="${j === i ? 'on' : ''}"></i>`).join('')}</div>`;
+  // Indgangen og flamingosøen som stor scene, Bodil nederst til højre og teksten i en lys boks
+  const renderHero = (p) => view(`
+      <section class="card tour tour-hero" aria-labelledby="tour-h">
+        <div class="th-scene" role="img" aria-label="Indgangen til zoo'en ved flamingosøen, hvor Bodil står">
+          <img class="th-bg" src="${Z.SCENES.tal.bg}" alt="" draggable="false">
+          <img class="th-bodil" src="${Z.CAST.bodil.bust}" alt="" draggable="false">
+        </div>
+        <div class="th-top"><span class="kicker">Sådan spiller du · ${i + 1}/${pages.length}</span><button class="link small" id="skip">Spring over</button></div>
+        <div class="th-box">
+          <h1 id="tour-h">${p.title}</h1>
+          <p>${p.text}</p>
+          <div class="th-go"><button class="btn big" id="next">${p.cta}</button>${dots()}</div>
+        </div>
+      </section>`, keys);
   const render = () => {
     const p = pages[i], last = i === pages.length - 1;
+    if (p.hero) {
+      renderHero(p);
+      on('#next', 'click', next);
+      on('#skip', 'click', finish);
+      return;
+    }
     view(`
       <div class="card sheet tour stack">
         <div class="spread"><span class="kicker">Sådan spiller du · ${i + 1}/${pages.length}</span><button class="link small" id="skip">Spring over</button></div>
         <div class="tour-visual">${p.art}</div>
         <h1 class="center">${p.title}</h1>
         ${p.body}
-        <div class="tour-dots">${pages.map((_, j) => `<i class="${j === i ? 'on' : ''}"></i>`).join('')}</div>
+        ${dots()}
         <div class="row" style="justify-content:center">
           ${i ? '<button class="btn ghost big" id="prev">←</button>' : ''}
           <button class="btn big" id="next">${last ? 'Åbn porten!' : 'Næste'}</button>
         </div>
-      </div>`, (e) => {
-      if (e.key === 'Enter' || e.key === 'ArrowRight') next();
-      else if (e.key === 'ArrowLeft' && i) { i--; render(); }
-      else if (e.key === 'Escape') finish();
-    });
+      </div>`, keys);
     on('#next', 'click', next);
     on('#prev', 'click', () => { i--; render(); });
     on('#skip', 'click', finish);
@@ -408,6 +427,16 @@ function showHome() {
     else if (t.dataset.bodil) bodilSheet(levels, first);
   };
   mapEl.addEventListener('click', (e) => { const t = e.target.closest('.m-tap'); if (t) act(t); });
+  // Mus eller tastatur over et område eller dets navneskilt: fremhæv begge, så man kan se, hvad der hører sammen
+  const highlight = (e, on) => {
+    const t = e.target.closest?.('[data-area]');
+    if (!t || e.pointerType === 'touch') return;
+    mapEl.querySelectorAll(`[data-area="${t.dataset.area}"]`).forEach((x) => x.classList.toggle('hl', on));
+  };
+  mapEl.addEventListener('pointerover', (e) => highlight(e, true));
+  mapEl.addEventListener('pointerout', (e) => highlight(e, false));
+  mapEl.addEventListener('focusin', (e) => highlight(e, true));
+  mapEl.addEventListener('focusout', (e) => highlight(e, false));
   // På smalle skærme kan kortet scrolles sidelæns: start med missionens figur i midten
   const scroller = $('.map-scroll'), who = $('.zm-who');
   if (who && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = who.offsetLeft - scroller.clientWidth / 2;
