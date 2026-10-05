@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005154736';
-import * as E from './engine.js?v=20261005154736';
-import { today } from './util.js?v=20261005154736';
+import { AREAS, FACTS } from './curriculum.js?v=20261005182638';
+import * as E from './engine.js?v=20261005182638';
+import { today } from './util.js?v=20261005182638';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -35,10 +35,21 @@ export const SCENES = {
 // Opgaveskærmenes scene pr. område (Batch 1, img/task/): kun miljø – opgaven står altid under.
 // Hver variant er [venstre, højre]: dyr og ting, der kigger ind fra hver sin kant af båndet i båndets højde,
 // så de aldrig zoomes ind, uanset hvor bredt båndet er. Opgaverne skifter mellem områdets to varianter.
-// Billederne viser Liv; i områder med en anden figur er udsnittene kun dyr og ting.
+// Kan et billede ikke deles uden at skære gennem en figur (indgangen, Zoo-uret), er varianten én samlet
+// tegning i højre side ('r'). Billederne viser Liv; i områder med en anden figur er udsnittene kun dyr og ting.
 // (Udsnittene laves af tools/opgavescener/ ud fra billeder-raa/batch1-opgavescener/.)
-export const TASK_SCENES = Object.fromEntries(['tal', 'gange', 'division', 'brok', 'decimal', 'geometri', 'maaling', 'data', 'algebra']
-  .map((a) => [a, [1, 2].map((n) => [`img/task/${a}-${n}l.webp`, `img/task/${a}-${n}r.webp`])]));
+const scene = (a, n, sides = 'lr') => ['l', 'r'].map((s) => (sides.includes(s) ? `img/task/${a}-${n}${s}.webp` : null));
+export const TASK_SCENES = {
+  tal: [scene('tal', 1, 'r'), scene('tal', 2)],
+  gange: [scene('gange', 1), scene('gange', 2)],
+  division: [scene('division', 1), scene('division', 2)],
+  brok: [scene('brok', 1), scene('brok', 2)],
+  decimal: [scene('decimal', 1), scene('decimal', 2)],
+  geometri: [scene('geometri', 1), scene('geometri', 2)],
+  maaling: [scene('maaling', 1, 'r'), scene('maaling', 2)],
+  data: [scene('data', 1), scene('data', 2)],
+  algebra: [scene('algebra', 1), scene('algebra', 2)],
+};
 
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)
 // intro[i] og done[i] er starten og slutningen på tasks[i] ({who} = missionens figur)

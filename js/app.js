@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005154736';
-import * as E from './engine.js?v=20261005154736';
-import * as Z from './zoo.js?v=20261005154736';
-import { zooGate } from './scene.js?v=20261005154736';
-import { zooMap } from './map.js?v=20261005154736';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005154736';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005154736';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005154736';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005182638';
+import * as E from './engine.js?v=20261005182638';
+import * as Z from './zoo.js?v=20261005182638';
+import { zooGate } from './scene.js?v=20261005182638';
+import { zooMap } from './map.js?v=20261005182638';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005182638';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005182638';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005182638';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -911,10 +911,11 @@ function taskScene(task, i) {
   const sc = task.kind !== 'warm' && Z.TASK_SCENES[ALL_SKILLS[task.skill]?.area];
   if (!sc) return '';
   const [l, r] = sc[i % sc.length];
-  return `<div class="task-scene" aria-hidden="true"><img class="ts-l" src="${l}" alt="" draggable="false"><img class="ts-r" src="${r}" alt="" draggable="false"></div>`;
+  const img = (src, cls) => (src ? `<img class="${cls}" src="${src}" alt="" draggable="false">` : '');
+  return `<div class="task-scene" aria-hidden="true">${img(l, 'ts-l')}${img(r, 'ts-r')}</div>`;
 }
 // Hent kun det aktuelle områdes scener på forhånd
-const preloadScene = (areaId) => (Z.TASK_SCENES[areaId] || []).flat().forEach((src) => { new Image().src = src; });
+const preloadScene = (areaId) => (Z.TASK_SCENES[areaId] || []).flat().filter(Boolean).forEach((src) => { new Image().src = src; });
 
 function renderTask(block, task) {
   const run = S.run;

@@ -947,6 +947,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .task-scene img { position: absolute; bottom: 0; height: 100%; width: auto; max-width: 48%; object-fit: cover; }
 .task-scene .ts-l { left: 0; object-position: right bottom; }
 .task-scene .ts-r { right: 0; object-position: left bottom; }
+.task-scene img:only-child { max-width: 100%; } /* én samlet tegning må fylde hele båndet */
 /* Én kolonne (telefon og iPad stående): lavere bånd – og ingen scene, når opgaven har sin egen tegning,
    så tastaturet ikke skubbes ned. Valgopgaver med tegning står altid i én kolonne. */
 @media (max-width: 899px), (max-aspect-ratio: 1/1) {
