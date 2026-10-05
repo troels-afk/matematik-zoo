@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005091816';
-import * as E from './engine.js?v=20261005091816';
-import { today } from './util.js?v=20261005091816';
+import { AREAS, FACTS } from './curriculum.js?v=20261005093257';
+import * as E from './engine.js?v=20261005093257';
+import { today } from './util.js?v=20261005093257';
 
 // Figurernes tegninger: ansigt (talebobler og kort), buste (missionens cirkel) og helfigur (scener).
 // Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -344,27 +344,27 @@ export const ACTIVITIES = {
   gangeflercifret: { name: 'Beregn dagens foder', desc: 'Hvor mange kilo skal giraferne og elefanterne have?' },
   gangetekst: { name: 'Fyld giraffernes vogne', desc: 'Find gangestykket i historien om foderet.' },
   divtabel: { name: 'Fordel bananerne', desc: 'Del helt lige mellem aberne – gange baglæns.' },
-  divrest: { name: 'Hvad bliver til overs?', desc: 'Del maden ud – resten går til Kaj.' },
+  divrest: { name: 'Fordel de sidste bidder', desc: 'Del maden ud – resten går til Kaj.' },
   divflercifret: { name: 'Del de store sække', desc: 'Meget foder skal deles i lige store portioner.' },
   divtekst: { name: 'Gør madskålene klar', desc: 'Lav lige store portioner og grupper til abehuset.' },
   brokfigur: { name: 'Tjek isflagerne', desc: 'Hvor stor en del af isflagen er farvet?' },
   broktallinje: { name: 'Find pingvinens plads på broen', desc: 'Hvor langt ude på broen står pingvinen?' },
   broksammenlign: { name: 'Hvem fik mest fisk?', desc: 'Sammenlign pingvinernes portioner.' },
   brokafantal: { name: 'Del fiskespandene', desc: 'Hvor mange fisk er ¾ af spanden?' },
-  ligevaerdig: { name: 'Lige store portioner', desc: 'Find to måder at skrive den samme portion på.' },
+  ligevaerdig: { name: 'Find de lige store portioner', desc: 'Find to måder at skrive den samme portion på.' },
   decfigur: { name: 'Mål medicinen op', desc: 'Tiendedele og hundrededele i målebægeret.' },
   dectallinje: { name: 'Aflæs vægten', desc: 'Hvad viser vægten, når ungen bliver vejet?' },
   decsammenlign: { name: 'Hvem vejer mest?', desc: 'Sammenlign ungernes vægt.' },
-  decplusminus: { name: 'Gør klinikkens regnskab', desc: 'Plus og minus med kilo og kroner.' },
+  decplusminus: { name: 'Hold styr på klinikkens tal', desc: 'Plus og minus med kilo og kroner.' },
   omkreds: { name: 'Byg hegnet', desc: 'Hvor langt skal hegnet være hele vejen rundt?' },
   areal: { name: 'Giv dyrene plads', desc: 'Hvor stor er den nye indhegning?' },
   vinkler: { name: 'Tjek hjørnerne', desc: 'Er hjørnet spidst, ret eller stumpt?' },
-  enheder: { name: 'Vej kødet til rovdyrene', desc: 'Kilo og gram, meter og centimeter, liter og deciliter.' },
+  enheder: { name: 'Gør foderet klar', desc: 'Kilo og gram, meter og centimeter, liter og deciliter.' },
   klokken: { name: 'Læs zoo-uret', desc: 'Hvad er klokken på uret ved løverne?' },
   tidsforskel: { name: 'Planlæg fodringen', desc: 'Hvor lang tid er der til næste fodring?' },
-  soejle: { name: 'Læs gæsternes diagram', desc: 'Hvilket dyr fik flest stemmer?' },
-  typetal: { name: 'Beskriv svarene', desc: 'Find det mest almindelige svar og midten.' },
-  sandsynlighed: { name: 'Hvad er chancen?', desc: 'Hvor stor er chancen for at se pandaen?' },
+  soejle: { name: 'Se hvilket dyr der vandt', desc: 'Hvilket dyr fik flest stemmer?' },
+  typetal: { name: 'Find gæsternes favorit', desc: 'Find det mest almindelige svar og midten.' },
+  sandsynlighed: { name: 'Spot pandaen', desc: 'Hvor stor er chancen for at se pandaen?' },
   talfolger: { name: 'Følg pote-sporet', desc: 'Find mønstret i sporene, og fortsæt.' },
   ukendt: { name: 'Knæk kodelåsen', desc: 'Hvilket tal mangler i koden?' },
 };
