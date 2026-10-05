@@ -931,3 +931,8 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .rec-act { grid-template-columns: 1fr; padding: 18px; }
   .rec-go .btn.big { width: 100%; min-width: 0; }
 }
+
+/* ---------- Fri træning åbner efter dagens mission ---------- */
+.rec-act.rec-locked { background: linear-gradient(135deg, var(--card-2), var(--card) 70%); border-color: var(--line); }
+.rec-lock { margin: 6px 0 0; font-weight: 700; color: var(--ink-2); }
+.free-open { margin: 0; font-weight: 700; color: var(--primary-ink); }

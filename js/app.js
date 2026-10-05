@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005130338';
-import * as E from './engine.js?v=20261005130338';
-import * as Z from './zoo.js?v=20261005130338';
-import { zooGate } from './scene.js?v=20261005130338';
-import { zooMap } from './map.js?v=20261005130338';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005130338';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005130338';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005130338';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005134447';
+import * as E from './engine.js?v=20261005134447';
+import * as Z from './zoo.js?v=20261005134447';
+import { zooGate } from './scene.js?v=20261005134447';
+import { zooMap } from './map.js?v=20261005134447';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005134447';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005134447';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005134447';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -251,7 +251,7 @@ function showIntroTour(done = showHome) {
         <li><span class="n">3</span><div><div class="t">Runde i zoo'en</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div><span class="ico">${ui('round')}</span></li>
       </ol>`,
       title: 'Sådan går en dag',
-      body: say('nora', 'Det tager cirka 15 minutter. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
+      body: say('nora', 'Det tager cirka 15 minutter. Bagefter kan du øve frit i områderne på kortet. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
     },
     {
       art: `<div class="tour-babies">${someBabies}</div>`,
@@ -337,6 +337,9 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheetEl?
 
 // Dagens missioner: { date, area (den seneste), done: [områder klaret i dag], mission, chips }
 const todayLog = (st) => (st.zoo.today?.date === today() ? st.zoo.today : null);
+// Fri træning i områderne åbner, når dagens mission er klaret – dag for dag. Kortet, områdesiderne,
+// "Se hvordan", Babyhuset og Dyrebogen kan altid ses, og Øvebanen (lektier) er altid åben.
+const freePlayOpen = (st) => !!todayLog(st)?.mission;
 
 function isoWeek(d = new Date()) {
   const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -404,7 +407,7 @@ function showHome() {
 
     ${doneToday ? missionDone(log) : missionCard(st, mission, open)}
 
-    <div class="section-title"><h2>Din zoo</h2><span class="muted small">Tryk på et område for at øve noget bestemt</span></div>
+    <div class="section-title"><h2>Din zoo</h2><span class="muted small">${doneToday ? 'Tryk på et område for at øve noget bestemt' : '🔒 Klar dagens mission – så kan du øve frit i områderne'}</span></div>
     <section class="map-wrap">
       <div class="map-scroll">${zooMap(mapData)}</div>
     </section>
@@ -529,6 +532,7 @@ function missionDone(log) {
         <h1>Mission klaret!</h1>
         <p class="mission-need">${missionDoneHtml(t)}</p>
         ${chips.length ? `<ul class="payoff-extras">${chips.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
+        <p class="free-open">🔓 Fri træning er åben i dag – tryk på et område på kortet.</p>
         <div class="mission-go">
           <button class="btn ghost" id="again">Tag en vagt mere</button>
           <button class="link" id="see-baby">Se Babyhuset</button>
@@ -633,16 +637,18 @@ function showPlace(areaId) {
   // den der er længst tid siden (samme valg som dagens træning bruger)
   const recId = E.currentSkill(st, areaId) || [...a.skills].sort((x, y) => (st.skills[x.id]?.last || 0) - (st.skills[y.id]?.last || 0))[0].id;
   const recIdx = a.skills.findIndex((sk) => sk.id === recId), rec = a.skills[recIdx], recStatus = E.skillStatus(st, rec.id);
+  const free = freePlayOpen(st);
   const recBlock = `
-    <section class="card rec-act">
+    <section class="card rec-act ${free ? '' : 'rec-locked'}">
       <div class="rec-body">
         <span class="kicker">Næste opgave for dig · aktivitet ${recIdx + 1} af ${a.skills.length}</span>
         <h2>${actOf(rec).name} <span class="st ${recStatus}">${label[recStatus]}</span></h2>
         <p class="rec-desc">${actOf(rec).desc}</p>
         <span class="act-skill">${rec.name}</span>
+        ${free ? '' : '<p class="rec-lock">🔒 Fri træning åbner, når dagens mission er klaret.</p>'}
       </div>
       <div class="rec-go">
-        <button class="btn big" data-practice="${rec.id}">Start aktivitet</button>
+        ${free ? `<button class="btn big" data-practice="${rec.id}">Start aktivitet</button>` : '<button class="btn big" id="to-mission">Gå til dagens mission</button>'}
         <button class="link" data-intro="${rec.id}">Se hvordan</button>
       </div>
     </section>`;
@@ -665,7 +671,7 @@ function showPlace(areaId) {
         <span class="act-desc">${act.desc}</span>
         <span class="act-skill">${sk.name}</span>
       </div>
-      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button><button class="btn sm" data-practice="${sk.id}">Start</button></div>
+      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button>${free ? `<button class="btn sm" data-practice="${sk.id}">Start</button>` : ''}</div>
     </li>`;
   }).join('');
   view(`
@@ -688,6 +694,7 @@ function showPlace(areaId) {
     <ol class="acts">${acts}</ol>` : ''}`, (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
   on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice); });
+  on('#to-mission', 'click', () => { sfx('tap'); showHome(); });
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), { btn: `Tilbage til ${a.place}`, back: `Tilbage til ${a.place}` }));
 }
 
@@ -1215,7 +1222,7 @@ function finish() {
     };
     save(true);
     S.run = null;
-    return showPayoff(st, res, b, after, bigWin);
+    return showPayoff(st, res, b, after, bigWin, !prev?.mission);
   }
   save(true);
   S.run = null;
@@ -1298,7 +1305,7 @@ function missionResults(st, run, b, after, born, grew, bonus = []) {
 }
 
 // Missionens slutning: samme scene som ved starten, nu i "efter"-tilstand
-function showPayoff(st, res, b, after, bigWin) {
+function showPayoff(st, res, b, after, bigWin, freeNew = false) {
   const { t, main } = res;
   const art = main.art ? `<img src="${main.art}" alt="">` : main.icon ? ui(main.icon) : `<span aria-hidden="true">${main.emoji}</span>`;
   view(`
@@ -1318,6 +1325,7 @@ function showPayoff(st, res, b, after, bigWin) {
           <button class="btn big" id="home">Se din zoo</button>
           ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
         </div>
+        ${freeNew ? '<p class="free-open">🔓 Nu er fri træning åben på kortet resten af dagen.</p>' : ''}
       </div>
     </section>`, (e) => { if (e.key === 'Enter') showHome(); });
   on('#home', 'click', showHome);
