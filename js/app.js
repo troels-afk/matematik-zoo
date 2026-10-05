@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005194735';
-import * as E from './engine.js?v=20261005194735';
-import * as Z from './zoo.js?v=20261005194735';
-import { zooGate } from './scene.js?v=20261005194735';
-import { zooMap } from './map.js?v=20261005194735';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005194735';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005194735';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005194735';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005204631';
+import * as E from './engine.js?v=20261005204631';
+import * as Z from './zoo.js?v=20261005204631';
+import { zooGate } from './scene.js?v=20261005204631';
+import { zooMap } from './map.js?v=20261005204631';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005204631';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005204631';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005204631';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1583,7 +1583,7 @@ function showParent() {
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button>
       <div style="flex:1"><h1 style="margin:0">Forældreoverblik</h1><span class="muted">${esc(st.name)} · ${esc(Z.zooName(st))}</span></div>
-      <button class="btn ghost" id="about-p">📚 Om appen</button></div>
+      <button class="btn ghost" id="about-p" aria-label="Om appen">📚<span class="about-lbl"> Om appen</span></button></div>
 
     <div class="grid2">
       <div class="card stack">

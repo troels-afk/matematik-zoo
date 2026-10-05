@@ -449,6 +449,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .baby-banner .t { font-size: 1.12rem; }
 .baby .zz { font-size: 1rem; top: -2px; right: -2px; }
 .book { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+@media (max-width: 420px) { .book { grid-template-columns: repeat(2, minmax(0, 1fr)); } } /* telefon: to unger pr. række */
 .avatar { width: 62px; height: 62px; font-size: 34px; }
 .avatar.sm { width: 46px; height: 46px; font-size: 24px; }
 .avatar.lg { width: 84px; height: 84px; font-size: 46px; }
@@ -467,6 +468,18 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .about .card h2 { margin-bottom: .5em; }
 .about .card p + p { margin-top: .6em; }
 .about table td:first-child { white-space: nowrap; font-weight: 700; }
+#about-p { flex: none; white-space: nowrap; }
+@media (max-width: 480px) { #about-p .about-lbl { display: none; } } /* telefon: kun 📚, så titlen kan stå */
+/* Telefon: pensum-tabellen som en liste (sted · emne, færdighederne under) i stedet for at rulle sidelæns */
+@media (max-width: 560px) {
+  .about table, .about tbody, .about tr, .about td { display: block; }
+  .about thead { display: none; }
+  .about tr { padding: 8px 0; border-bottom: 1px solid var(--line-2); }
+  .about td { padding: 0; border: 0; }
+  .about td:first-child, .about td:nth-child(2) { display: inline; }
+  .about td:nth-child(2)::before { content: ' · '; font-weight: 700; color: var(--ink-3); }
+  .about td:nth-child(3) { margin-top: 2px; color: var(--ink-2); }
+}
 .principle { display: flex; gap: 16px; align-items: flex-start; }
 .principle .pr-ic { width: 52px; height: 52px; border-radius: 16px; background: var(--lav-soft); display: grid; place-items: center; font-size: 1.6rem; flex: none; }
 .principle h3 { margin: 0 0 4px; }
@@ -899,8 +912,9 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .ex-lead-pic { display: block; flex: none; width: min(250px, 42%); height: auto; }
 .ex-lead-row.solo { justify-content: center; margin-bottom: 6px; }
 .ex-lead-row.solo .ex-lead-pic { width: min(220px, 70%); }
-.ex-pic { display: grid; place-items: end center; height: 136px; } /* fast højde: overskrifterne står på linje */
-.ex-pic-img { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; }
+/* fast højde, så overskrifterne står på linje; billedet holder sig inden for (også i brede kort på telefon) */
+.ex-pic { display: flex; align-items: flex-end; justify-content: center; height: 136px; }
+.ex-pic-img { display: block; max-width: 100%; max-height: 136px; width: auto; height: auto; }
 .hint-row { display: flex; align-items: center; gap: 12px; }
 .hint-pic { display: block; flex: none; width: 112px; height: auto; }
 .explain-pic { display: block; width: min(220px, 100%); height: auto; }
