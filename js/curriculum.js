@@ -4,8 +4,8 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005121537';
-import * as V from './visuals.js?v=20261005121537';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005123513';
+import * as V from './visuals.js?v=20261005123513';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
@@ -65,7 +65,18 @@ const positionssystem = {
   desc: 'Hvad et ciffer er værd, alt efter hvor det står',
   intro: {
     text: 'Et ciffer er mere værd, jo længere til venstre det står. I 4.732 er 7-tallet <b>700</b> værd, fordi det står på hundredernes plads.',
-    visual: () => V.placeValue(4732),
+    lead: 'Hvert ciffer i et billetnummer står på en plads – og pladsen bestemmer, hvor meget cifferet er værd.',
+    cards: [
+      { title: 'Pladsen bestemmer værdien', visual: () => V.miniPlace('4732', { hi: 1, value: '= 700' }), rules: ['7 på hundredernes plads = 700'], note: 'I 4.732 står 7-tallet på hundredernes plads, så det er 700 værd.' },
+      { title: 'Nul holder pladsen', visual: () => V.miniPlace('4032', { hi: 1, value: '0 hundreder' }), rules: ['4.032 = 4.000 + 30 + 2'], note: 'Der er ingen hundreder – men nullet skal stå der, ellers bliver tallet 432.' },
+    ],
+    tip: {
+      title: 'Sådan skiller du et tal ad',
+      rows: [
+        ['Som plus', '', '4.732 = 4.000 + 700 + 30 + 2'],
+        ['Blandet', '', '3 tiere og 2 tusinder = 2.030'],
+      ],
+    },
   },
   gen(level) {
     const len = level + 2;
@@ -108,7 +119,20 @@ const afrunding = {
   desc: 'Afrund til nærmeste tier, hundrede og tusind',
   intro: {
     text: 'Når vi afrunder, finder vi det runde tal, der ligger <b>tættest på</b>. 47 ligger mellem 40 og 50 – tættest på 50. Ligger tallet præcis midt imellem, runder vi <b>op</b>.',
-    visual: () => numberLineRound(47, 10),
+    lead: 'Bodil skriver gæstetallet på tavlen som et rundt tal: det runde tal, der ligger tættest på.',
+    cards: [
+      { title: 'Tættest på', visual: () => V.miniLine({ min: 40, max: 50, div: 10, label: (i, v) => (i % 10 === 0 ? String(v) : null), marks: [{ v: 47, text: '47', below: true }], jumps: [{ from: 47, to: 40, text: '7', c: 'v-muted', lift: 26 }, { from: 47, to: 50, text: '3', lift: 26 }] }), rules: ['47 ≈ 50'], note: '47 er kun 3 fra 50, men 7 fra 40. Så runder vi til 50.' },
+      { title: 'Præcis midt imellem', visual: () => V.miniLine({ min: 40, max: 50, div: 10, label: (i, v) => (i % 10 === 0 ? String(v) : null), marks: [{ v: 45, text: '45', below: true }], jumps: [{ from: 45, to: 50, text: 'op', lift: 26 }] }), rules: ['45 ≈ 50'], note: 'Ligger tallet præcis i midten, runder vi op.' },
+      { title: 'Hundreder og tusinder', visual: () => V.miniLine({ min: 300, max: 400, div: 10, label: (i, v) => (i % 10 === 0 ? String(v) : null), marks: [{ v: 362, text: '362', below: true }], jumps: [{ from: 362, to: 300, text: '62', c: 'v-muted', lift: 26 }, { from: 362, to: 400, text: '38', lift: 26 }] }), rules: ['362 ≈ 400', '1.350 ≈ 1.000'], note: 'Det virker på samme måde med hele hundreder og tusinder.' },
+    ],
+    tip: {
+      title: 'Tommelfingerregel',
+      rows: [
+        ['Kig på cifret efter', '', 'runder du til tiere, så kig på enerne'],
+        ['0, 1, 2, 3, 4', 'ned', '43 ≈ 40'],
+        ['5, 6, 7, 8, 9', 'op', '45 ≈ 50 · 47 ≈ 50'],
+      ],
+    },
   },
   gen(level) {
     const step = [10, 100, 1000][level - 1];
@@ -148,6 +172,19 @@ const sammenlign = {
   desc: 'Find det største og mindste tal',
   intro: {
     text: 'Sammenlign cifrene <b>fra venstre</b>. Først tusinderne, så hundrederne, så tierne … Det første sted, hvor de er forskellige, afgør hvilket tal der er størst. 4.<b>7</b>12 er større end 4.<b>2</b>98.',
+    lead: 'Hvilken dag kom der flest gæster? Sammenlign tallene ciffer for ciffer.',
+    cards: [
+      { title: 'Start fra venstre', visual: () => V.miniCompare(['4712', '4298'], { hi: 1, heads: ['1.000', '100', '10', '1'], sym: '>' }), rules: ['4.712 > 4.298'], note: 'Tusinderne er ens. Ved hundrederne er 7 mere end 2 – så er 4.712 størst.' },
+      { title: 'Flest cifre', visual: () => V.miniCompare([' 985', '1012'], { hi: 0, heads: ['1.000', '100', '10', '1'], sym: '<' }), rules: ['985 < 1.012'], note: 'Et tal med tusinder er større end et tal uden – selvom 985 har store cifre.' },
+    ],
+    tip: {
+      title: 'Tegnene',
+      rows: [
+        ['Større end', '', '7 > 2'],
+        ['Mindre end', '', '2 < 7'],
+        ['Husk', '', 'den åbne side vender mod det største tal'],
+      ],
+    },
   },
   gen(level) {
     let nums;
@@ -191,6 +228,15 @@ const plusminus = {
   desc: 'Læg sammen og træk fra med store tal',
   intro: {
     text: 'Læg <b>hundreder, tiere og enere</b> sammen hver for sig:<br>347 + 285 = (300+200) + (40+80) + (7+5) = 500 + 120 + 12 = <b>632</b>.<br>Ved minus kan du trække fra i bidder: 632 − 285 = 632 − 200 − 80 − 5 = <b>347</b>.',
+    lead: 'Kassen skal gøres op: dagens billetsalg lægges sammen og trækkes fra.',
+    cards: [
+      { title: 'Plus: hver plads for sig', visual: () => V.miniTable({ heads: ['100', '10', '1'], rows: [['300', '40', '7'], ['200', '80', '5']], sum: ['500', '120', '12'], total: '= 632' }), rules: ['347 + 285 = 632'], note: 'Læg hundreder, tiere og enere sammen hver for sig – og så det hele.' },
+      { title: 'Minus: træk fra i bidder', visual: () => V.miniChain(['632', '432', '352', '347'], ['−200', '−80', '−5']), rules: ['632 − 285 = 347'], note: '285 er 200 + 80 + 5. Træk én bid fra ad gangen.' },
+    ],
+    tip: {
+      title: 'Tjek dit svar',
+      rows: [['Minus → plus', '', '347 + 285 = 632 ✓']],
+    },
   },
   gen(level) {
     const ranges = [[15, 89], [120, 899], [1200, 8999]];
@@ -239,7 +285,12 @@ const gange10 = {
   desc: '10 × 34, 30 × 7, 40 × 60',
   intro: {
     text: 'Når man ganger med 10, bliver hvert ciffer <b>10 gange mere værd</b> og rykker én plads til venstre. 3 tiere bliver til 3 hundreder, og 4 enere bliver til 4 tiere. Enernes plads bliver tom, så der skriver vi 0: 34 × 10 = <b>340</b>.<br>30 × 7: 30 er 3 tiere. 3 tiere × 7 = 21 tiere = <b>210</b>.',
-    visual: () => V.placeShift(34, 10),
+    lead: 'Foderet pakkes i kasser med 10 og 100. Når man ganger med 10 eller 100, flytter cifrene plads.',
+    cards: [
+      { title: '× 10', visual: () => V.miniShift('34', '340'), rules: ['34 × 10 = 340'], note: 'Hvert ciffer rykker én plads til venstre og bliver 10 gange mere værd. Der kommer et 0 på enernes plads.' },
+      { title: '× 100', visual: () => V.miniShift('34', '3400'), rules: ['34 × 100 = 3.400'], note: "Med 100 rykker cifrene to pladser – og der kommer to 0'er på." },
+      { title: 'Runde tal', rules: ['30 × 7 = 210'], note: '30 er 3 tiere. 3 × 7 = 21 – så 3 tiere × 7 er 21 tiere = 210.' },
+    ],
   },
   gen(level) {
     let a, b;
@@ -272,7 +323,15 @@ const gangeflercifret = {
   desc: '47 × 6 ved at dele tallet op',
   intro: {
     text: 'Del det store tal op i tiere og enere, og gang hver del for sig:<br>47 × 6 = 40×6 + 7×6 = 240 + 42 = <b>282</b>.',
-    visual: () => V.areaSplit([40, 7], 6),
+    lead: 'Giraferne og elefanterne spiser meget. Store gangestykker bliver lette, når du deler tallet op.',
+    cards: [
+      { title: 'Del tallet op', visual: () => V.miniSplit([40, 7], 6), rules: ['47 × 6 = 282'], note: 'Gang tierne og enerne hver for sig, og læg dem sammen bagefter.' },
+      { title: 'Også med hundreder', visual: () => V.miniSplit([200, 30, 6], 4), rules: ['236 × 4 = 944'], note: 'Hundreder, tiere og enere – hver for sig, og så det hele.' },
+    ],
+    tip: {
+      title: 'Lav et overslag',
+      rows: [['Passer det?', '', '47 × 6 er lidt under 50 × 6 = 300']],
+    },
   },
   gen(level) {
     let a, b;
@@ -297,7 +356,18 @@ const gangetekst = {
   desc: 'Find gangestykket i historien',
   intro: {
     text: 'Kig efter <b>lige store grupper</b>: "5 poser med 8 i hver" er 5 × 8. Spørg dig selv: hvor mange grupper, og hvor mange i hver?',
-    visual: () => V.dotArray(5, 8),
+    lead: 'Historien gemmer på et gangestykke. Find de lige store grupper.',
+    cards: [
+      { title: 'Lige store grupper', visual: () => V.miniGroups({ groups: 5, per: 8 }), rules: ['5 poser med 8 i hver = 5 × 8 = 40'], note: 'Der er 5 grupper, og der er 8 i hver gruppe.' },
+      { title: 'Gange så mange', visual: () => V.miniGroups({ groups: 3, per: 4, label: '3 × 4 = 12' }), rules: ['3 gange så mange som 4 = 12'], note: 'Giraffen spiser 4 kg. Elefanten spiser 3 gange så meget: 12 kg.' },
+    ],
+    tip: {
+      title: 'Sådan finder du gangestykket',
+      rows: [
+        ['Kig efter', '', '"i hver", "hver" og "gange så mange"'],
+        ['Spørg', '', 'Hvor mange grupper – og hvor mange i hver?'],
+      ],
+    },
   },
   gen(level) {
     let a, b;
@@ -337,7 +407,11 @@ const divtabel = {
   desc: '56 : 7 – gange baglæns',
   intro: {
     text: 'Division er gange baglæns. For at regne 24 : 6 spørger du: <b>6 gange hvad giver 24?</b> 6 × 4 = 24, så 24 : 6 = <b>4</b>.',
-    visual: () => V.groups(24, 6),
+    lead: 'Bananerne skal deles helt lige mellem aberne. Division er gange baglæns.',
+    cards: [
+      { title: 'Del lige ud', visual: () => V.miniGroups({ groups: 6, per: 4, label: '24 : 6 = 4' }), rules: ['24 : 6 = 4'], note: '24 bananer til 6 aber: hver abe får 4.' },
+      { title: 'Gange baglæns', visual: () => V.miniBack('× 6', ': 6', 24, 4), rules: ['6 × 4 = 24', 'så 24 : 6 = 4'], note: 'Spørg dig selv: 6 gange hvad giver 24?' },
+    ],
   },
   gen(level) {
     const d = pick([[2, 5, 10], [3, 4, 2, 5], [6, 7, 8, 9]][level - 1]);
@@ -357,6 +431,12 @@ const divrest = {
   desc: '23 : 4 = 5 rest 3',
   intro: {
     text: 'Nogle gange går det ikke op. 23 : 4: Hvor mange hele 4-taller er der i 23? 4 × 5 = 20, og så er der <b>3 tilbage</b>. Svaret er <b>5 rest 3</b>.<br>Resten skal altid være mindre end det, man deler med.',
+    lead: 'Nogle gange går delingen ikke op. Det, der bliver til overs, er resten – og den får Kaj!',
+    cards: [
+      { title: 'Det, der er tilbage', visual: () => V.miniGroups({ groups: 5, per: 4, rest: 3 }), rules: ['23 : 4 = 5 rest 3'], note: "Hvor mange hele 4'ere er der i 23? Der er 5 (det er 20), og 3 er tilbage." },
+      { title: 'Hop med 4', visual: () => V.miniLine({ min: 0, max: 24, div: 6, label: (i, v) => (v <= 20 ? String(v) : null), marks: [{ v: 23, text: '23', below: true }], jumps: [0, 4, 8, 12, 16].map((a) => ({ from: a, to: a + 4, text: '', lift: 18 })).concat([{ from: 20, to: 23, text: '3', c: 'v-muted', lift: 16 }]) }), rules: ['5 hop = 20', '23 − 20 = 3'], note: 'Hop 4 ad gangen, så langt du kan. Det, der mangler op til 23, er resten.' },
+      { title: 'Resten er altid mindst', rules: ['rest < det, man deler med'], note: 'Deler du med 4, kan resten kun være 0, 1, 2 eller 3. Er der 4 tilbage, kan der laves en gruppe mere.' },
+    ],
   },
   gen(level) {
     const [dr, qr] = [[[2, 5], [2, 6]], [[3, 6], [3, 9]], [[6, 9], [4, 10]]][level - 1];
@@ -378,6 +458,15 @@ const divflercifret = {
   desc: '84 : 4, 456 : 3',
   intro: {
     text: 'Del tallet op i bidder, der er lette at dele:<br>72 : 4 → 72 = 40 + 32. 40 : 4 = 10 og 32 : 4 = 8. I alt <b>18</b>.',
+    lead: 'Store tal deles lettest i bidder, som er nemme at dele.',
+    cards: [
+      { title: 'Del i lette bidder', visual: () => V.miniSplitTree(72, [40, 32], 4), rules: ['72 : 4 = 18'], note: '40 : 4 = 10 og 32 : 4 = 8. Tilsammen 18.' },
+      { title: 'Store tal', visual: () => V.miniSplitTree(156, [120, 36], 3), rules: ['156 : 3 = 52'], note: '120 : 3 = 40 og 36 : 3 = 12. Tilsammen 52.' },
+    ],
+    tip: {
+      title: 'Tjek dit svar',
+      rows: [['Gang tilbage', '', '18 × 4 = 72 ✓']],
+    },
   },
   gen(level) {
     let d, q;
@@ -405,6 +494,21 @@ const divtekst = {
   desc: 'Del ligeligt og lav grupper',
   intro: {
     text: 'Division bruges når noget skal <b>deles ligeligt</b> eller <b>deles i grupper</b>. Pas på med resten: Skal 25 personer køre i biler med 4 pladser, skal der bruges <b>7</b> biler – ellers er der én, der ikke kommer med!',
+    lead: 'Division bruges, når noget skal deles ligeligt – eller deles i grupper.',
+    cards: [
+      { title: 'Del ligeligt', visual: () => V.miniGroups({ groups: 3, per: 5 }), rules: ['15 : 3 = 5'], note: '15 bananer deles mellem 3 aber: 5 til hver.' },
+      { title: 'Del i grupper', visual: () => V.miniGroups({ groups: 6, per: 4 }), rules: ['24 : 4 = 6'], note: '24 børn i grupper med 4 i hver: 6 grupper.' },
+      { title: 'Pas på resten', visual: () => V.miniGroups({ groups: 7, per: 4, filled: 25 }), rules: ['25 : 4 = 6 rest 1 → 7 vogne'], note: 'Alle 25 gæster skal med zoo-toget, så der skal bruges 7 vogne.' },
+    ],
+    tip: {
+      title: 'Hvad spørger de om?',
+      rows: [
+        ['Hvor mange til hver?', '', 'del ligeligt'],
+        ['Hvor mange grupper?', '', 'del i grupper'],
+        ['Alle skal med', '', 'resten kræver en ekstra'],
+        ['Hvor mange tilbage?', '', 'svaret er resten'],
+      ],
+    },
   },
   gen(level) {
     if (level === 1) {
@@ -447,7 +551,11 @@ const brokfigur = {
   desc: 'Hvor stor en del er farvet?',
   intro: {
     text: `En brøk fortæller, hvor mange dele ud af en helhed. <b>Nævneren</b> (nederst) er hvor mange lige store dele, helheden er delt i. <b>Tælleren</b> (øverst) er hvor mange dele vi taler om. Her er ${frac(3, 4)} farvet.`,
-    visual: () => V.fractionCircle(4, 3),
+    lead: 'En brøk fortæller, hvor meget af en helhed vi taler om.',
+    cards: [
+      { title: 'Tæller og nævner', visual: () => V.miniFracPie(4, 3), rules: [`${frac(3, 4)} = 3 af 4 dele`], note: 'Nævneren (nederst) er hvor mange dele, isflagen er delt i. Tælleren (øverst) er hvor mange der er farvet.' },
+      { title: 'Lige store dele', visual: () => V.miniEqualParts(), rules: [`${frac(1, 4)} = 1 af 4 lige store dele`], note: 'Delene skal være lige store – ellers er det ikke fjerdedele.' },
+    ],
   },
   gen(level) {
     const n = pick([[2, 3, 4], [5, 6, 8], [6, 8, 10, 12]][level - 1]);
@@ -467,7 +575,11 @@ const broktallinje = {
   desc: 'Find brøken, pilen peger på',
   intro: {
     text: `Stykket fra 0 til 1 kan deles i lige store dele. Er det delt i 4, er hvert stykke ${frac(1, 4)}. Pilen står på det 3. stykke – altså ${frac(3, 4)}.`,
-    visual: () => fracLine(4, 3, 1, '?'),
+    lead: 'Broen fra 0 til 1 er delt i lige store stykker – ligesom en brøk.',
+    cards: [
+      { title: 'Del broen', visual: () => V.miniLine({ min: 0, max: 1, div: 4, label: (i) => (i === 0 ? '0' : i === 4 ? '1' : [i, 4]), h: 114 }), rules: [`hvert stykke er ${frac(1, 4)}`], note: 'Broen er delt i 4 lige store stykker.' },
+      { title: 'Tæl stykkerne', visual: () => V.miniLine({ min: 0, max: 1, div: 4, label: (i) => (i === 0 ? '0' : i === 4 ? '1' : null), jumps: [[0, 0.25], [0.25, 0.5], [0.5, 0.75]].map(([a, b], k) => ({ from: a, to: b, text: String(k + 1), lift: 20 })), marks: [{ v: 0.75, text: ['3', '4'] }], h: 100 }), rules: [`3 stykker = ${frac(3, 4)}`], note: `Pingvinen står efter 3 stykker – altså ${frac(3, 4)} ude på broen.` },
+    ],
   },
   gen(level) {
     let n, k, units = 1;
@@ -496,7 +608,11 @@ const broksammenlign = {
   desc: 'Hvilken brøk er størst?',
   intro: {
     text: `<b>Samme nævner:</b> flest dele vinder – ${frac(3, 5)} &gt; ${frac(2, 5)}.<br><b>Samme tæller:</b> jo flere stykker kagen deles i, jo <i>mindre</i> er hvert stykke – ${frac(1, 3)} &gt; ${frac(1, 6)}.`,
-    visual: () => V.fractionBars([{ n: 3, k: 1, label: frac(1, 3) }, { n: 6, k: 1, label: frac(1, 6) }]),
+    lead: 'Hvem fik mest fisk? Sådan sammenligner du to brøker.',
+    cards: [
+      { title: 'Samme nævner', visual: () => V.miniFracBars([{ n: 5, k: 3 }, { n: 5, k: 2 }]), rules: [`${frac(3, 5)} > ${frac(2, 5)}`], note: 'Stykkerne er lige store – så vinder den, der har flest stykker.' },
+      { title: 'Samme tæller', visual: () => V.miniFracBars([{ n: 3, k: 1 }, { n: 6, k: 1 }]), rules: [`${frac(1, 3)} > ${frac(1, 6)}`], note: 'Jo flere stykker fisken deles i, jo mindre bliver hvert stykke.' },
+    ],
   },
   gen(level) {
     let a, b, c, d;
@@ -537,7 +653,11 @@ const brokafantal = {
   desc: '¾ af 20',
   intro: {
     text: `${frac(3, 4)} af 20: Del 20 i <b>4</b> lige store grupper (5 i hver). Tag <b>3</b> af grupperne: 3 × 5 = <b>15</b>.`,
-    visual: () => V.groups(20, 4, 3),
+    lead: `Hvor mange fisk er ${frac(3, 4)} af spanden? Del først – og gang så.`,
+    cards: [
+      { title: 'Del i grupper', visual: () => V.miniGroups({ groups: 4, per: 5, hl: 3 }), rules: [`${frac(3, 4)} af 20 = 15`], note: 'Del de 20 fisk i 4 lige store grupper med 5 i hver. Tag 3 af grupperne.' },
+      { title: 'To trin', visual: () => V.miniChain(['20', '5', '15'], [': 4', '× 3']), rules: ['20 : 4 = 5', '5 × 3 = 15'], note: 'Del med nævneren, og gang med tælleren.' },
+    ],
   },
   gen(level) {
     let n, k, total;
@@ -568,7 +688,15 @@ const ligevaerdig = {
   desc: '½ = ?/6',
   intro: {
     text: `${frac(1, 2)} og ${frac(3, 6)} er lige store! Gang (eller del) tæller og nævner med <b>det samme tal</b>, så får du en brøk med samme værdi: ${frac(1, 2)} = ${frac('1×3', '2×3')} = ${frac(3, 6)}.`,
-    visual: () => V.fractionBars([{ n: 2, k: 1, label: frac(1, 2) }, { n: 6, k: 3, label: frac(3, 6) }]),
+    lead: 'To brøker kan se forskellige ud og alligevel være lige store.',
+    cards: [
+      { title: 'Samme portion', visual: () => V.miniFracBars([{ n: 2, k: 1 }, { n: 6, k: 3 }]), rules: [`${frac(1, 2)} = ${frac(3, 6)}`], note: 'Halvdelen af spanden er det samme som 3 af 6 dele.' },
+      { title: 'Gang oppe og nede', visual: () => V.miniFracScale(1, 2, 3), rules: [`${frac(1, 2)} = ${frac(2, 4)} = ${frac(3, 6)}`], note: 'Gang tæller og nævner med det samme tal – så er brøken lige så stor.' },
+    ],
+    tip: {
+      title: 'Det virker også baglæns',
+      rows: [['Del', '', `${frac(6, 8)} = ${frac(3, 4)} (del begge med 2)`]],
+    },
   },
   gen(level) {
     let a, b, m;
@@ -606,7 +734,19 @@ const decfigur = {
   desc: 'Decimaltal i figurer',
   intro: {
     text: 'Deler vi 1 hel i 10 dele, er hver del en <b>tiendedel</b> = 0,1. Deler vi i 100 dele, er hver del en <b>hundrededel</b> = 0,01. Her er 3 af 10 farvet: <b>0,3</b>.',
-    visual: () => V.tenBars(3),
+    lead: 'Medicinen skal måles helt præcist – i tiendedele og hundrededele.',
+    cards: [
+      { title: 'Tiendedele', visual: () => V.miniTenths(3), rules: [`${frac(1, 10)} = 0,1`], note: '1 hel delt i 10 lige store dele: hver del er 0,1.' },
+      { title: 'Hundrededele', visual: () => V.hundredGrid(7), rules: [`${frac(1, 100)} = 0,01`], note: 'Delt i 100 dele er hver lille del 0,01. Her er 7 farvet: 0,07.' },
+    ],
+    tip: {
+      title: 'Pladserne efter kommaet',
+      rows: [
+        ['0,3', '', '3 tiendedele'],
+        ['0,07', '', '7 hundrededele'],
+        ['0,37', '', '3 tiendedele og 7 hundrededele'],
+      ],
+    },
   },
   gen(level) {
     if (level === 1) {
@@ -640,7 +780,12 @@ const dectallinje = {
   desc: 'Find tallet, pilen peger på',
   intro: {
     text: 'Mellem 0 og 1 er der 10 små stykker på 0,1. Pilen står på det 7. stykke: <b>0,7</b>.',
-    visual: () => V.numberLine({ min: 0, max: 1, div: 10, labels: (i) => (i % 10 === 0 ? String(i / 10) : null), mark: 0.7 }),
+    lead: 'Vægten er en tallinje. Mellem to hele tal er der 10 små stykker.',
+    cards: [
+      { title: 'Mellem 0 og 1', visual: () => V.miniLine({ min: 0, max: 1, div: 10, label: (i) => (i === 0 ? '0' : i === 10 ? '1' : i === 5 ? '0,5' : null), marks: [{ v: 0.7, text: '0,7' }] }), rules: ['hvert lille stykke = 0,1'], note: 'Pilen står 7 små stykker fra 0: 0,7.' },
+      { title: 'Mellem to hele tal', visual: () => V.miniLine({ min: 2, max: 3, div: 10, label: (i) => (i === 0 ? '2' : i === 10 ? '3' : null), marks: [{ v: 2.4, text: '2,4' }] }), rules: ['2,4 = 2 hele og 4 tiendedele'], note: 'Det virker på samme måde mellem 2 og 3.' },
+      { title: 'Zoom ind', visual: () => V.miniLine({ min: 2.3, max: 2.4, div: 10, label: (i) => (i === 0 ? '2,3' : i === 10 ? '2,4' : null), marks: [{ v: 2.36, text: '2,36' }] }), rules: ['hvert lille stykke = 0,01'], note: 'Mellem 2,3 og 2,4 er der igen 10 små stykker – nu på 0,01.' },
+    ],
   },
   gen(level) {
     if (level === 1) {
@@ -680,6 +825,18 @@ const decsammenlign = {
   desc: 'Er 0,5 eller 0,45 størst?',
   intro: {
     text: 'Pas på: <b>flere cifre betyder ikke større!</b> 0,5 er større end 0,45. Tip: skriv dem med lige mange decimaler – 0,<b>50</b> og 0,<b>45</b> – så kan du sammenligne som hele tal.',
+    lead: 'Hvilken unge vejer mest? Pas på – flere cifre betyder ikke større.',
+    cards: [
+      { title: 'Flere cifre er ikke større', visual: () => V.miniDecBars([{ v: 0.5, label: '0,5' }, { v: 0.45, label: '0,45' }]), rules: ['0,5 > 0,45'], note: '0,5 er 5 tiendedele. 0,45 er kun 4 tiendedele og lidt mere.' },
+      { title: 'Gør dem lige lange', visual: () => V.miniCompare(['0,50', '0,45'], { hi: 2, added: [[0, 3]] }), rules: ['0,50 > 0,45'], note: 'Sæt et 0 på, så de har lige mange decimaler. Så kan du sammenligne som 50 og 45.' },
+    ],
+    tip: {
+      title: 'Hele tal først',
+      rows: [
+        ['Først', '', 'de hele: 2,1 > 1,95, fordi 2 > 1'],
+        ['Så', '', 'tiendedelene – og så hundrededelene'],
+      ],
+    },
   },
   gen(level) {
     const vals = new Set();
@@ -711,6 +868,15 @@ const decplusminus = {
   desc: 'Plus og minus – også med penge',
   intro: {
     text: 'Stil kommaerne under hinanden, og regn som normalt. 0,7 + 0,6 = 13 tiendedele = <b>1,3</b>.<br>Med penge: 12,50 kr. + 7,25 kr. = 19 kr. + 0,75 kr. = <b>19,75 kr.</b>',
+    lead: 'Klinikkens tal har komma: kilo, liter og kroner.',
+    cards: [
+      { title: 'Kommaerne under hinanden', visual: () => V.miniStack(['0,7', '0,6'], '+', '1,3'), rules: ['0,7 + 0,6 = 1,3'], note: '7 tiendedele og 6 tiendedele er 13 tiendedele – det er 1,3.' },
+      { title: 'Med penge', visual: () => V.miniStack(['12,50', '7,25'], '+', '19,75'), rules: ['12,50 kr. + 7,25 kr. = 19,75 kr.'], note: 'Kroner for sig og øre for sig.' },
+    ],
+    tip: {
+      title: 'Minus virker på samme måde',
+      rows: [['Minus', '', '2,4 − 0,7 = 1,7 (24 − 7 tiendedele = 17 tiendedele)']],
+    },
   },
   gen(level) {
     if (level < 3) {
@@ -764,7 +930,15 @@ const omkreds = {
   desc: 'Hele vejen rundt om en figur',
   intro: {
     text: 'Omkredsen er længden <b>hele vejen rundt</b>. Et rektangel på 5 cm × 3 cm har omkreds 5 + 3 + 5 + 3 = <b>16 cm</b>.',
-    visual: () => V.rectShape(5, 3),
+    lead: 'Hegnet skal hele vejen rundt om anlægget. Den længde kaldes omkredsen.',
+    cards: [
+      { title: 'Hele vejen rundt', visual: () => V.miniRect(5, 3, { perim: true }), rules: ['5 + 3 + 5 + 3 = 16 cm'], note: 'Læg alle siderne sammen.' },
+      { title: 'Find den manglende side', visual: () => V.miniRect(6, 4, { perim: true, unit: 'm', top: '? m', below: 'hele vejen rundt: 20 m' }), rules: ['20 − 4 − 4 = 12', '12 : 2 = 6 m'], note: 'Træk de kendte sider fra, og del resten i to.' },
+    ],
+    tip: {
+      title: 'Smart genvej',
+      rows: [['Rektangel', '', '(5 + 3) × 2 = 16 – to lange og to korte sider']],
+    },
   },
   gen(level) {
     if (level === 3) {
@@ -797,7 +971,18 @@ const areal = {
   desc: 'Hvor stor en flade er',
   intro: {
     text: 'Arealet er hvor mange <b>kvadrater</b> der kan være inde i figuren. Et rektangel på 5 × 3 har 3 rækker med 5 kvadrater: 5 × 3 = <b>15 cm²</b>.',
-    visual: () => V.rectShape(5, 3, { grid: true }),
+    lead: 'Hvor stor er indhegningen? Arealet er, hvor mange kvadrater der er plads til.',
+    cards: [
+      { title: 'Tæl kvadraterne', visual: () => V.miniRect(5, 3, { grid: true, unit: 'm' }), rules: ['5 × 3 = 15 m²'], note: '3 rækker med 5 kvadrater i hver.' },
+      { title: 'Sammensatte figurer', visual: () => V.miniLShape(), rules: ['4 + 8 = 12 m²'], note: 'Del figuren i to rektangler, find arealet af hver, og læg dem sammen.' },
+    ],
+    tip: {
+      title: 'Enheden',
+      rows: [
+        ['m²', '', 'kvadratmeter – et kvadrat på 1 m × 1 m'],
+        ['cm²', '', 'kvadratcentimeter – et kvadrat på 1 cm × 1 cm'],
+      ],
+    },
   },
   gen(level) {
     if (level === 1) {
@@ -919,7 +1104,19 @@ const klokken = {
   desc: 'Aflæs et analogt ur',
   intro: {
     text: 'Den <b>lille viser</b> viser timerne. Den <b>store viser</b> viser minutterne – hvert tal på uret er 5 minutter. Her er klokken <b>3:15</b> (kvart over 3). Husk: ved "halv 4" er klokken 3:30!',
-    visual: () => V.clock(3, 15),
+    lead: 'Zoo-uret har to visere. Den lille viser timerne, den store minutterne.',
+    cards: [
+      { title: 'Lille og stor viser', visual: () => V.miniClock(3, 15, 'kvart over 3'), rules: ['hvert tal = 5 minutter'], note: 'Den store viser står på 3: 3 × 5 = 15 minutter.' },
+      { title: 'Halv', visual: () => V.miniClock(3, 30, 'halv 4'), rules: ['halv 4 = 3:30'], note: 'Pas på: "halv 4" betyder en halv time FØR 4.' },
+    ],
+    tip: {
+      title: 'Kvart og halv',
+      rows: [
+        ['kvart over 3', '', '3:15'],
+        ['halv 4', '', '3:30'],
+        ['kvart i 4', '', '3:45'],
+      ],
+    },
   },
   gen(level) {
     const ms = [[0, 30], [0, 15, 30, 45], [5, 10, 20, 25, 35, 40, 50, 55, 15, 45]][level - 1];
@@ -950,6 +1147,11 @@ const tidsforskel = {
   desc: 'Tiden mellem to klokkeslæt',
   intro: {
     text: 'Tæl op til en hel time først. Fra 13:45 til 14:20:<br>13:45 → 14:00 er <b>15 min</b>. 14:00 → 14:20 er <b>20 min</b>. I alt <b>35 minutter</b>.',
+    lead: 'Hvor lang tid er der til næste fodring? Tæl op i to spring.',
+    cards: [
+      { title: 'Tæl op til hel time', visual: () => V.miniTimeline(['13:45', '14:00', '14:20'], [15, 20]), rules: ['15 + 20 = 35 minutter'], note: 'Fra 13:45 til 14:00 er 15 minutter. Så 20 minutter mere.' },
+      { title: 'En time er 60 minutter', rules: ['1 time = 60 min', '½ time = 30 min', '¼ time = 15 min'], note: 'Varer noget 1 time og 10 minutter, er det 60 + 10 = 70 minutter.' },
+    ],
   },
   gen(level) {
     let h1, m1, h2, m2;
@@ -983,7 +1185,12 @@ const vinkler = {
   desc: 'Spids, ret, stump eller lige',
   intro: {
     text: 'En <b>ret</b> vinkel er 90° – som hjørnet på et stykke papir. Er vinklen mindre, er den <b>spids</b>. Er den større, er den <b>stump</b>. En <b>lige</b> vinkel er 180° – en helt lige linje.',
-    visual: () => V.angle(90, 10),
+    lead: 'Hjørnerne i anlæggene har forskellige vinkler.',
+    cards: [
+      { title: 'Ret vinkel', visual: () => V.miniAngles([[90, 'ret · 90°']]), rules: ['90°'], note: 'Som hjørnet på et stykke papir.' },
+      { title: 'Spids og stump', visual: () => V.miniAngles([[45, 'spids'], [130, 'stump']]), rules: ['spids: under 90°', 'stump: over 90°'], note: 'Mindre end en ret vinkel er spids. Større er stump.' },
+      { title: 'Lige vinkel', visual: () => V.miniStraight(), rules: ['180°'], note: 'En helt lige linje – det er to rette vinkler.' },
+    ],
   },
   gen(level) {
     const opts = level === 3 ? ['spids', 'ret', 'stump', 'lige'] : ['spids', 'ret', 'stump'];
@@ -1022,6 +1229,18 @@ const soejle = {
   desc: 'Aflæs og regn med diagrammer',
   intro: {
     text: 'Et søjlediagram viser tal som søjler. Aflæs højden på tallene ude til venstre. Kig godt efter, <b>hvor meget hver streg er værd</b> – det er ikke altid 1!',
+    lead: 'Gæsterne har stemt på deres yndlingsdyr. Søjlediagrammet viser stemmerne.',
+    cards: [
+      { title: 'Aflæs søjlen', visual: () => V.miniBars([6, 9, 4], ['Panda', 'Koala', 'Ræv'], { step: 2, hi: 1, max: 10 }), rules: ['Koala: 9 stemmer'], note: 'Følg toppen af søjlen hen til tallene ude til venstre. Den står midt mellem 8 og 10 – altså 9.' },
+      { title: 'Hvad er hver streg værd?', visual: () => V.miniBars([15, 25, 10], ['Ma', 'Ti', 'On'], { step: 5, hi: 0 }), rules: ['her: hver streg = 5'], note: 'Tallene går i spring på 5 – så søjlen om mandagen er 15 is, ikke 3.' },
+    ],
+    tip: {
+      title: 'Typiske spørgsmål',
+      rows: [
+        ['Hvor mange flere?', '', 'træk fra: 25 − 15 = 10'],
+        ['Hvor mange i alt?', '', 'læg sammen: 15 + 25 + 10 = 50'],
+      ],
+    },
   },
   gen(level) {
     const th = pick(THEMES);
@@ -1066,6 +1285,12 @@ const typetal = {
   desc: 'Beskriv en række tal',
   intro: {
     text: '<b>Typetal:</b> det tal, der er flest af.<br><b>Variationsbredde:</b> største tal − mindste tal.<br><b>Median:</b> sæt tallene i rækkefølge – medianen er det midterste.',
+    lead: 'Gæsterne har svaret 2, 4, 5, 9 og 9. Tre ord beskriver sådan en række tal.',
+    cards: [
+      { title: 'Typetal', visual: () => V.miniTiles([2, 4, 5, 9, 9], { hi: [3, 4] }), rules: ['typetal = 9'], note: 'Det tal, der er flest af.' },
+      { title: 'Median', visual: () => V.miniTiles([2, 4, 5, 9, 9], { hi: [2], mid: 'midten' }), rules: ['median = 5'], note: 'Sæt tallene i rækkefølge – medianen er det midterste.' },
+      { title: 'Variationsbredde', visual: () => V.miniTiles([2, 4, 5, 9, 9], { hi: [0, 4], span: '9 − 2 = 7' }), rules: ['variationsbredde = 7'], note: 'Største tal minus mindste tal.' },
+    ],
   },
   gen(level) {
     const ctx = pick(['Antal fisk hver pingvin spiste', 'Antal bananer hver abe fik', 'Antal timer løverne sov hver dag', 'Antal æg i hver af svanernes reder']);
@@ -1111,7 +1336,15 @@ const sandsynlighed = {
   desc: 'Hvor stor er chancen?',
   intro: {
     text: '<b>Umulig</b>: kan ikke ske. <b>Sikker</b>: sker helt sikkert. <b>Lige chance</b>: halvdelen af gangene.<br><b>Sandsynlig</b>: sker oftest. <b>Usandsynlig</b>: sker sjældent.<br>Chancen for rød i en pose med 1 rød og 3 blå er <b>1 ud af 4</b> = ' + frac(1, 4) + '.',
-    visual: () => V.bag([{ color: 'red', n: 1 }, { color: 'blue', n: 3 }]),
+    lead: 'Hvor stor er chancen for at spotte pandaen? Chancen kan siges med ord – og med en brøk.',
+    cards: [
+      { title: 'Chancen i ord', visual: () => V.miniChance(), rules: ['umulig', 'usandsynlig', 'lige chance', 'sandsynlig', 'sikker'], note: 'Fra noget, der aldrig sker, til noget, der altid sker.' },
+      { title: 'Chancen som brøk', visual: () => V.bag([{ color: 'red', n: 1 }, { color: 'blue', n: 3 }]), rules: [`1 ud af 4 = ${frac(1, 4)}`], note: 'Der er 4 kugler i posen, og 1 af dem er rød.' },
+    ],
+    tip: {
+      title: 'Størst chance',
+      rows: [['Flest', '', 'den farve, der er flest af, har størst chance']],
+    },
   },
   gen(level) {
     const [c1, c2, c3] = shuffle(COLORS);
@@ -1170,6 +1403,18 @@ const talfolger = {
   desc: 'Find mønstret og fortsæt',
   intro: {
     text: 'Kig på, hvad der sker fra det ene tal til det næste. 3, 7, 11, 15 … Der lægges <b>4</b> til hver gang, så næste tal er <b>19</b>.',
+    lead: 'Pote-sporet følger et mønster. Find springet – så kender du næste tal.',
+    cards: [
+      { title: 'Find springet', visual: () => V.miniSeq([3, 7, 11, 15, '?'], '+4'), rules: ['+4 hver gang → 19'], note: 'Kig på, hvad der sker fra det ene tal til det næste.' },
+      { title: 'Det kan også gå nedad', visual: () => V.miniSeq([50, 45, 40, 35, '?'], '−5'), rules: ['−5 hver gang → 30'], note: 'Sporet kan også blive mindre for hvert skridt.' },
+    ],
+    tip: {
+      title: 'Andre mønstre',
+      rows: [
+        ['× 2 eller × 3', '', '2, 4, 8, 16 … · 1, 3, 9, 27 …'],
+        ['Voksende spring', '', '1, 2, 4, 7, 11 … springet bliver 1 større'],
+      ],
+    },
   },
   gen(level) {
     let seq, rule;
@@ -1210,6 +1455,15 @@ const ukendt = {
   desc: 'Små ligninger: ? + 7 = 15',
   intro: {
     text: `Regn <b>baglæns</b> med det modsatte regnestykke.<br>${box()} + 7 = 15 → 15 − 7 = <b>8</b>.<br>4 × ${box()} = 28 → 28 : 4 = <b>7</b>.`,
+    lead: 'Koden mangler et tal. Regn baglæns med det modsatte regnestykke.',
+    cards: [
+      { title: 'Plus og minus', visual: () => V.miniBack('+ 7', '− 7', 15, 8), rules: [`${box()} + 7 = 15`, '15 − 7 = 8'], note: 'Plus bliver til minus, når du regner baglæns.' },
+      { title: 'Gange og division', visual: () => V.miniBack('× 4', ': 4', 28, 7), rules: [`4 × ${box()} = 28`, '28 : 4 = 7'], note: 'Gange bliver til division.' },
+    ],
+    tip: {
+      title: 'Tjek koden',
+      rows: [['Sæt ind', '', '8 + 7 = 15 ✓']],
+    },
   },
   gen(level) {
     const B = box();

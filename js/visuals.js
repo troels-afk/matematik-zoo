@@ -273,34 +273,6 @@ export function decimalPlaces(whole, t, h = null) {
 }
 const t0 = (x, y, s) => `<text x="${x}" y="${y}" class="v-text v-small" text-anchor="middle">${s}</text>`;
 
-// Positionstabel før og efter ×10/×100: cifrene rykker til venstre
-export function placeShift(n, factor) {
-  const heads = ['tusinder', 'hundreder', 'tiere', 'enere'];
-  const cw = 110, x0 = 20, rowH = 56, y1 = 60, y2 = y1 + rowH + 50;
-  const digitsAt = (v) => String(v).padStart(4, ' ').split('');
-  const before = digitsAt(n), after = digitsAt(n * factor);
-  let b = '';
-  heads.forEach((h, i) => {
-    b += `<rect x="${x0 + i * cw}" y="10" width="${cw}" height="40" class="v-soft v-line"/>`;
-    b += t(x0 + i * cw + cw / 2, 37, h, 'class="v-text v-small"');
-  });
-  [[before, y1, `${n}`], [after, y2, `${n} × ${factor}`]].forEach(([ds, y, label]) => {
-    ds.forEach((d, i) => {
-      b += `<rect x="${x0 + i * cw}" y="${y}" width="${cw}" height="${rowH}" class="v-empty v-line"/>`;
-      if (d.trim()) b += t(x0 + i * cw + cw / 2, y + 40, d, `class="v-text v-big${label.includes('×') && i === 3 ? ' v-strong' : ''}"`);
-    });
-    b += `<text x="${x0 + 4 * cw + 14}" y="${y + 36}" class="v-text">${label}</text>`;
-  });
-  // pile fra hvert ciffer til dets nye plads
-  const shift = Math.log10(factor);
-  before.forEach((d, i) => {
-    if (!d.trim()) return;
-    const xa = x0 + i * cw + cw / 2, xb = x0 + (i - shift) * cw + cw / 2;
-    b += `<path d="M${xa} ${y1 + rowH + 4} Q${(xa + xb) / 2} ${y1 + rowH + 30} ${xb + 8} ${y2 - 8}" class="v-mark-line" fill="none" stroke-width="3"/>`;
-    b += `<path d="M${xb + 8} ${y2 - 4} l-9 -8 l11 -3 z" class="v-mark"/>`;
-  });
-  return svg(x0 + 4 * cw + 150, y2 + rowH + 12, b);
-}
 
 // Prikker fordelt i grupper (division og brøk af antal); de første hl grupper fremhæves
 export function groups(total, g, hl = 0) {
@@ -367,4 +339,399 @@ export function volumeUnits() {
   b += `<path d="M80 32 H92 M80 78 H94" class="v-line-thin" stroke-width="1.5"/>`;
   b += t(196, 112, '10 dl', 'class="v-text v-small"') + t(196, 128, '= 1 l', 'class="v-text v-small"');
   return mini(b);
+}
+
+// ---------- Minitegninger til forklaringskortene ----------
+// Alle er 240 bred med stor skrift, så de kan læses i et lille kort (ca. 220 px) – også på telefon.
+const nf = (n) => (typeof n === 'number' ? n.toLocaleString('da-DK') : n);
+const tx = (x, y, s, c = 'v-text', a = 'middle', st = '') => `<text x="${x}" y="${y}" class="${c}" text-anchor="${a}"${st ? ` style="${st}"` : ''}>${s}</text>`;
+const cell = (x, y, w, h, c = 'v-box', r = 7) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" class="${c}"/>`;
+// Pilespids i (x, y), der peger væk fra (fx, fy)
+const head = (x, y, fx, fy, c = 'v-mark') => {
+  const dx = x - fx, dy = y - fy, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l, bx = x - ux * 10, by = y - uy * 10;
+  return `<path d="M${x} ${y} L${(bx - uy * 5.5).toFixed(1)} ${(by + ux * 5.5).toFixed(1)} L${(bx + uy * 5.5).toFixed(1)} ${(by - ux * 5.5).toFixed(1)} Z" class="${c}"/>`;
+};
+// Bue med pil fra x1 til x2 (over linjen y, eller under med down)
+const arc = (x1, x2, y, lift, label, { down = false, c = 'v-mark' } = {}) => {
+  const m = (x1 + x2) / 2, cy = down ? y + lift : y - lift;
+  return `<path d="M${x1} ${y} Q${m} ${cy} ${x2} ${y}" fill="none" class="${c}-line" stroke-width="2.5"/>${head(x2, y, m, cy, c)}`
+    + (label ? tx(m, down ? y + lift / 2 + 20 : y - lift / 2 - 8, label, `v-text v-small ${c === 'v-mark' ? 'v-strong' : c === 'v-muted' ? 'v-muted' : ''}`) : '');
+};
+// Brøk skrevet lodret (tæller over streg over nævner), centreret om x med stregen i højde y
+const fr = (x, y, n, d, size = 20, c = 'v-text') => `${tx(x, y - size * 0.28, n, c, 'middle', `font-size:${size}px`)}`
+  + `<line x1="${x - size * 0.62}" y1="${y}" x2="${x + size * 0.62}" y2="${y}" class="v-line" stroke-width="2"/>${tx(x, y + size * 0.98, d, c, 'middle', `font-size:${size}px`)}`;
+
+// Tallinje: label(i, v) giver tekst (eller [tæller, nævner]) under stregerne; marks = prikker; jumps = buer med pil
+export function miniLine({ min, max, div, label = () => null, marks = [], jumps = [], h = 100, y = 64 }) {
+  const x0 = 24, x1 = 216, X = (v) => x0 + ((v - min) / (max - min)) * (x1 - x0);
+  let b = `<line x1="${x0 - 10}" y1="${y}" x2="${x1 + 10}" y2="${y}" class="v-line" stroke-width="2.5"/>`;
+  for (let i = 0; i <= div; i++) {
+    const v = min + ((max - min) * i) / div, lab = label(i, v), big = lab != null;
+    b += `<line x1="${X(v)}" y1="${y - (big ? 8 : 5)}" x2="${X(v)}" y2="${y + (big ? 8 : 5)}" class="v-line" stroke-width="${big ? 2.5 : 1.6}"/>`;
+    if (big) b += Array.isArray(lab) ? fr(X(v), y + 26, lab[0], lab[1], 15) : tx(X(v), y + 28, lab, 'v-text v-small');
+  }
+  for (const j of jumps) b += arc(X(j.from), X(j.to), y - 7, j.lift || 30, j.text, { c: j.c || 'v-mark' });
+  for (const m of marks) {
+    b += `<circle cx="${X(m.v)}" cy="${y}" r="6.5" class="v-mark"/>`;
+    if (m.text) b += Array.isArray(m.text) ? fr(X(m.v), y - 34, m.text[0], m.text[1], 15, 'v-text v-strong')
+      : tx(X(m.v), m.below ? y + 28 : y - 16, m.text, 'v-text v-small v-strong');
+  }
+  return mini(b, 240, h);
+}
+
+// Cifrenes pladser (1000, 100, 10, 1) med ét ciffer fremhævet og dets værdi under
+export function miniPlace(digits, { hi = -1, value = '' } = {}) {
+  const n = digits.length, cw = n > 4 ? 38 : 44, gap = 6, W = n * cw + (n - 1) * gap, x0 = (240 - W) / 2;
+  const heads = ['10.000', '1.000', '100', '10', '1'].slice(-n);
+  let b = '';
+  [...digits].forEach((d, i) => {
+    const x = x0 + i * (cw + gap);
+    b += tx(x + cw / 2, 17, heads[i], 'v-text v-tiny v-muted') + cell(x, 24, cw, 42, i === hi ? 'v-hi' : 'v-box');
+    b += tx(x + cw / 2, 53, d, 'v-text', 'middle', 'font-size:24px');
+  });
+  if (hi >= 0 && value) b += tx(x0 + hi * (cw + gap) + cw / 2, 94, value, 'v-text v-strong');
+  return mini(b, 240, value ? 104 : 74);
+}
+
+// To tal under hinanden, ciffer for ciffer – det første sted, de er forskellige, er fremhævet.
+// ' ' = tom plads (stiplet), ',' = komma; added = [[række, plads]] for et tilføjet 0
+export function miniCompare(rows, { hi = -1, heads = null, sym = '', added = [] } = {}) {
+  const chars = rows.map((r) => [...r]), widths = chars[0].map((c) => (c === ',' ? 12 : 36));
+  const W = widths.reduce((s, w) => s + w + 4, -4) + (sym ? 34 : 0), x0 = (240 - W) / 2, top = heads ? 24 : 8;
+  const xs = []; let x = x0;
+  widths.forEach((w) => { xs.push(x); x += w + 4; });
+  let b = '';
+  if (heads) heads.forEach((h, i) => { if (h) b += tx(xs[i] + widths[i] / 2, 16, h, 'v-text v-tiny v-muted'); });
+  chars.forEach((row, r) => {
+    const y = top + r * 44;
+    row.forEach((c, i) => {
+      const w = widths[i];
+      if (c === ',') { b += tx(xs[i] + w / 2, y + 30, ',', 'v-text'); return; }
+      b += cell(xs[i], y, w, 38, i === hi ? 'v-hi' : c === ' ' ? 'v-box v-dash' : 'v-box');
+      if (c !== ' ') b += tx(xs[i] + w / 2, y + 27, c, added.some(([rr, ii]) => rr === r && ii === i) ? 'v-text v-added' : 'v-text');
+    });
+  });
+  if (sym) b += tx(x + 14, top + 52, sym, 'v-text v-strong', 'middle', 'font-size:30px');
+  return mini(b, 240, top + 92);
+}
+
+// Lille regnetabel: kolonner (fx 100 · 10 · 1), rækker der lægges sammen, sumrække og resultat
+export function miniTable({ heads, rows, sum, total = '' }) {
+  const cw = 58, x0 = 240 - 16 - heads.length * cw;
+  let b = '';
+  heads.forEach((h, i) => { b += cell(x0 + i * cw + 3, 22, cw - 6, rows.length * 26 + 44, 'v-col', 8) + tx(x0 + i * cw + cw / 2, 16, h, 'v-text v-tiny v-muted'); });
+  rows.forEach((r, k) => {
+    const y = 44 + k * 26;
+    if (k === rows.length - 1) b += tx(x0 - 14, y, '+', 'v-text');
+    r.forEach((v, i) => { b += tx(x0 + i * cw + cw / 2, y, v, 'v-text'); });
+  });
+  const ly = 44 + (rows.length - 1) * 26 + 10;
+  b += `<line x1="${x0 - 24}" y1="${ly}" x2="${x0 + heads.length * cw}" y2="${ly}" class="v-line" stroke-width="2"/>`;
+  sum.forEach((v, i) => { b += tx(x0 + i * cw + cw / 2, ly + 24, v, 'v-text v-strong'); });
+  if (total) b += tx(120, ly + 54, total, 'v-text v-strong');
+  return mini(b, 240, ly + (total ? 62 : 34));
+}
+
+// Kæde af tal med pile imellem, fx 632 → 432 → 352 → 347 (−200, −80, −5)
+export function miniChain(items, ops, { hi = items.length - 1 } = {}) {
+  const ws = items.map((s) => Math.max(40, String(s).length * 12 + 16)), aw = 30;
+  const W = ws.reduce((s, w) => s + w, 0) + (items.length - 1) * aw, VW = Math.max(240, W + 12);
+  let x = (VW - W) / 2, b = '';
+  items.forEach((s, i) => {
+    b += cell(x, 42, ws[i], 36, i === hi ? 'v-hi' : 'v-box') + tx(x + ws[i] / 2, 67, s, 'v-text');
+    if (i < items.length - 1) {
+      const a = x + ws[i] + 3, c = x + ws[i] + aw - 3;
+      b += `<line x1="${a}" y1="60" x2="${c - 6}" y2="60" class="v-mark-line" stroke-width="2.5"/>${head(c, 60, a, 60)}`;
+      b += tx((a + c) / 2, 30, ops[i], 'v-text v-small v-strong');
+    }
+    x += ws[i] + aw;
+  });
+  return mini(b, VW, 92);
+}
+
+// Ganges med 10 eller 100: cifrene rykker en eller to pladser til venstre, og der kommer 0 bagpå
+export function miniShift(from, to) {
+  const n = to.length, k = to.length - from.length, cw = n > 3 ? 34 : 40, gap = 6;
+  const W = n * cw + (n - 1) * gap, x0 = (240 - W) / 2 + 16;
+  const heads = ['1.000', '100', '10', '1'].slice(-n), X = (i) => x0 + i * (cw + gap);
+  let b = tx(26, 82, `× ${10 ** k}`, 'v-text v-small v-strong');
+  heads.forEach((h, i) => { b += tx(X(i) + cw / 2, 15, h, 'v-text v-tiny v-muted'); });
+  [...from.padStart(n, ' ')].forEach((d, i) => { b += cell(X(i), 22, cw, 34, d === ' ' ? 'v-box v-dash' : 'v-box') + (d === ' ' ? '' : tx(X(i) + cw / 2, 46, d, 'v-text')); });
+  [...to].forEach((d, i) => { b += cell(X(i), 92, cw, 34, i >= n - k ? 'v-hi' : 'v-box') + tx(X(i) + cw / 2, 116, d, 'v-text'); });
+  [...from].forEach((_, j) => {
+    const i1 = n - from.length + j, i2 = i1 - k, xa = X(i1) + cw / 2, xb = X(i2) + cw / 2;
+    b += `<line x1="${xa}" y1="59" x2="${xb + (xa - xb) * 0.12}" y2="84" class="v-mark-line" stroke-width="2.2"/>${head(xb, 89, xa, 59)}`;
+  });
+  return mini(b, 240, 132);
+}
+
+// Arealmodel: 47 × 6 = 40 × 6 + 7 × 6
+export function miniSplit(parts, m) {
+  const total = parts.reduce((s, p) => s + p, 0), W = 186, x0 = 40;
+  let ws = parts.map((p) => Math.max(48, (p / total) * W));
+  const k = W / ws.reduce((s, w) => s + w, 0); ws = ws.map((w) => w * k);
+  let x = x0, b = tx(x0 - 14, 56, m, 'v-text');
+  parts.forEach((p, i) => {
+    const w = ws[i];
+    b += tx(x + w / 2, 16, nf(p), 'v-text v-small');
+    b += `<rect x="${x}" y="24" width="${w}" height="50" class="${i % 2 ? 'v-soft' : 'v-empty'} v-line" stroke-width="2"/>`;
+    b += tx(x + w / 2, 56, nf(p * m), w < 56 ? 'v-text v-small v-strong' : 'v-text v-strong');
+    x += w;
+  });
+  b += tx(120, 104, `${parts.map((p) => nf(p * m)).join(' + ')} = ${nf(total * m)}`, 'v-text v-small v-strong');
+  return mini(b, 240, 114);
+}
+
+// Prikker i lige store grupper. hl = fremhævede grupper, rest = prikker til overs,
+// filled = hvor mange pladser der er fyldt (resten står tomme, fx sæder i en vogn)
+export function miniGroups({ groups, per, hl = 0, rest = 0, filled = null, label = '' }) {
+  const cols = per <= 4 ? 2 : per <= 9 ? 3 : 4, rowsIn = Math.ceil(per / cols), d = 13, pad = 6, gap = 6;
+  const bw = cols * d + pad * 2, bh = rowsIn * d + pad * 2, restW = rest ? 22 + Math.ceil(rest / 2) * d : 0;
+  const fit = Math.max(1, Math.floor((240 - restW + gap) / (bw + gap))), rows = Math.ceil(groups / fit), perRow = Math.ceil(groups / rows);
+  const W = perRow * (bw + gap) - gap + restW, x0 = (240 - W) / 2;
+  let b = '', count = 0;
+  for (let g = 0; g < groups; g++) {
+    const gx = x0 + (g % perRow) * (bw + gap), gy = 6 + Math.floor(g / perRow) * (bh + gap);
+    b += cell(gx, gy, bw, bh, g < hl ? 'v-hi' : 'v-box', 8);
+    for (let i = 0; i < per; i++, count++) {
+      const on = filled == null || count < filled;
+      b += `<circle cx="${gx + pad + d / 2 + (i % cols) * d}" cy="${gy + pad + d / 2 + Math.floor(i / cols) * d}" r="5" class="${on ? (g < hl ? 'v-mark' : 'v-fill') : 'v-empty v-line'}"${on ? '' : ' stroke-width="1.5"'}/>`;
+    }
+  }
+  if (rest) {
+    const rx = x0 + perRow * (bw + gap) + 12;
+    for (let i = 0; i < rest; i++) b += `<circle cx="${rx + Math.floor(i / 2) * d}" cy="${6 + pad + d / 2 + (i % 2) * d}" r="5" class="v-mark"/>`;
+    b += tx(rx + (Math.ceil(rest / 2) * d) / 2 - 6, 6 + pad + 2 * d + 16, 'rest', 'v-text v-tiny v-strong');
+  }
+  const H = 6 + rows * (bh + gap) + (label ? 24 : 0);
+  if (label) b += tx(120, H - 6, label, 'v-text v-small v-strong');
+  return mini(b, 240, H + 2);
+}
+
+// Lagkage delt i n lige store dele, k farvet – med brøken og hvad tæller og nævner betyder
+export function miniFracPie(n, k) {
+  const cx = 62, cy = 66, r = 50;
+  let b = '';
+  for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * 2 * Math.PI - Math.PI / 2, a1 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
+    b += `<path d="M${cx} ${cy} L${(cx + r * Math.cos(a0)).toFixed(1)} ${(cy + r * Math.sin(a0)).toFixed(1)} A${r} ${r} 0 0 1 ${(cx + r * Math.cos(a1)).toFixed(1)} ${(cy + r * Math.sin(a1)).toFixed(1)} Z" class="${i < k ? 'v-fill' : 'v-empty'} v-line" stroke-width="2"/>`;
+  }
+  b += fr(146, 66, k, n, 30, 'v-text v-strong');
+  b += tx(170, 52, 'farvet', 'v-text v-small v-muted', 'start') + tx(170, 98, 'dele i alt', 'v-text v-small v-muted', 'start');
+  return mini(b, 240, 132);
+}
+
+// Lige store dele (rigtig brøk) over for ulige store dele
+export function miniEqualParts() {
+  const bar = (x, cuts, ok) => `<rect x="${x}" y="22" width="96" height="50" rx="4" class="v-empty v-line" stroke-width="2"/>`
+    + cuts.map((c) => `<line x1="${x + c}" y1="22" x2="${x + c}" y2="72" class="v-line" stroke-width="2"/>`).join('')
+    + `<rect x="${x}" y="22" width="${cuts[0]}" height="50" rx="4" class="${ok ? 'v-fill' : 'v-mark'}" opacity=".85"/>`
+    + tx(x + 48, 98, ok ? 'lige store ✓' : 'ikke lige ✗', `v-text v-small ${ok ? 'v-strong' : 'v-added'}`);
+  return mini(bar(14, [24, 48, 72], true) + bar(130, [12, 44, 66], false), 240, 108);
+}
+
+// Brøkstænger under hinanden, fx 1/3 over for 1/6 (samme helhed)
+export function miniFracBars(list) {
+  const x0 = 72, W = 150, h = 28;
+  let b = '';
+  list.forEach((f, r) => {
+    const y = 12 + r * 52;
+    b += fr(34, y + 12, f.k, f.n, 17);
+    for (let i = 0; i < f.n; i++) b += `<rect x="${(x0 + (i * W) / f.n).toFixed(1)}" y="${y}" width="${(W / f.n).toFixed(1)}" height="${h}" class="${i < f.k ? 'v-fill' : 'v-empty'} v-line" stroke-width="2"/>`;
+  });
+  return mini(b, 240, 12 + list.length * 52 - 10);
+}
+
+// Samme brøk på to måder: gang tæller og nævner med det samme tal
+export function miniFracScale(n, d, m) {
+  let b = fr(62, 66, n, d, 32, 'v-text') + fr(178, 66, n * m, d * m, 32, 'v-text v-strong');
+  b += arc(84, 156, 32, 20, `× ${m}`) + arc(84, 156, 104, 20, `× ${m}`, { down: true });
+  return mini(b, 240, 142);
+}
+
+// 1 hel delt i 10: k tiendedele farvet
+export function miniTenths(k) {
+  let b = '';
+  for (let i = 0; i < 10; i++) b += `<rect x="${30 + i * 18}" y="18" width="18" height="38" class="${i < k ? 'v-fill' : 'v-empty'} v-line" stroke-width="2"/>`;
+  b += tx(120, 86, `${k} af 10 = 0,${k}`, 'v-text v-strong');
+  return mini(b, 240, 98);
+}
+
+// To decimaltal som stænger (hver stang er 1 hel) – fx 0,5 er længere end 0,45
+export function miniDecBars(list) {
+  const x0 = 72, W = 150;
+  let b = '';
+  list.forEach(({ v, label }, r) => {
+    const y = 14 + r * 46;
+    b += tx(x0 - 12, y + 21, label, 'v-text', 'end');
+    b += `<rect x="${x0}" y="${y}" width="${W}" height="28" rx="4" class="v-empty v-line" stroke-width="2"/><rect x="${x0}" y="${y}" width="${W * v}" height="28" rx="4" class="${r ? 'v-soft' : 'v-fill'}"/>`;
+    for (let i = 1; i < 10; i++) b += `<line x1="${x0 + (i * W) / 10}" y1="${y + 20}" x2="${x0 + (i * W) / 10}" y2="${y + 28}" class="v-line" stroke-width="1.4"/>`;
+  });
+  return mini(b, 240, 14 + list.length * 46);
+}
+
+// Opstilling: tallene under hinanden (kommaerne under hinanden), streg og resultat
+export function miniStack(rows, op, result) {
+  const all = [...rows, result], n = Math.max(...all.map((s) => s.length)), cw = 17, x1 = 190;
+  const X = (len, i) => x1 - (len - i) * cw + cw / 2;
+  let b = '';
+  const ci = rows[0].indexOf(',');
+  if (ci >= 0) b += cell(X(rows[0].length, ci) - 9, 8, 18, rows.length * 28 + 42, 'v-col', 6);
+  rows.forEach((s, r) => { [...s].forEach((ch, i) => { b += tx(X(s.length, i), 30 + r * 28, ch, 'v-text'); }); });
+  b += tx(x1 - n * cw - 16, 30 + (rows.length - 1) * 28, op, 'v-text');
+  const ly = 38 + (rows.length - 1) * 28;
+  b += `<line x1="${x1 - n * cw - 26}" y1="${ly}" x2="${x1 + 6}" y2="${ly}" class="v-line" stroke-width="2"/>`;
+  [...result].forEach((ch, i) => { b += tx(X(result.length, i), ly + 26, ch, 'v-text v-strong'); });
+  return mini(b, 240, ly + 38);
+}
+
+// Rektangel med sidelængder. perim = hele vejen rundt (orange), grid = kvadrater indeni
+export function miniRect(w, h, { perim = false, grid = false, unit = 'cm', top = null, right = null, inside = '', below = '' } = {}) {
+  const s = Math.min(26, 150 / w, 70 / h), W = w * s, H = h * s, x = (240 - W) / 2 - 12, y = 30;
+  let b = `<rect x="${x}" y="${y}" width="${W}" height="${H}" class="${grid ? 'v-soft' : 'v-empty'} v-line" stroke-width="2"/>`;
+  if (grid) {
+    for (let i = 1; i < w; i++) b += `<line x1="${x + i * s}" y1="${y}" x2="${x + i * s}" y2="${y + H}" class="v-line" stroke-width="1.2"/>`;
+    for (let j = 1; j < h; j++) b += `<line x1="${x}" y1="${y + j * s}" x2="${x + W}" y2="${y + j * s}" class="v-line" stroke-width="1.2"/>`;
+  }
+  if (perim) b += `<rect x="${x}" y="${y}" width="${W}" height="${H}" fill="none" class="v-mark-line" stroke-width="5" stroke-linejoin="round"/>`;
+  b += tx(x + W / 2, y - 9, top ?? `${w} ${unit}`, 'v-text v-small') + tx(x + W + 8, y + H / 2 + 6, right ?? `${h} ${unit}`, 'v-text v-small', 'start');
+  if (inside) b += tx(x + W / 2, y + H / 2 + 7, inside, 'v-text v-strong');
+  if (below) b += tx(x + W / 2, y + H + 26, below, 'v-text v-small v-strong');
+  return mini(b, 240, y + H + (below ? 36 : 14));
+}
+
+// Sammensat figur (L): del den i to rektangler og læg arealerne sammen
+export function miniLShape() {
+  const s = 22, x = 34, y = 18;
+  let b = `<path d="M${x} ${y} H${x + 2 * s} V${y + 2 * s} H${x + 4 * s} V${y + 4 * s} H${x} Z" class="v-soft v-line" stroke-width="2"/>`;
+  for (let i = 1; i < 4; i++) b += `<line x1="${x + i * s}" y1="${i < 2 ? y : y + 2 * s}" x2="${x + i * s}" y2="${y + 4 * s}" class="v-line" stroke-width="1.2"/>`;
+  for (let j = 1; j < 4; j++) b += `<line x1="${x}" y1="${y + j * s}" x2="${j < 2 ? x + 2 * s : x + 4 * s}" y2="${y + j * s}" class="v-line" stroke-width="1.2"/>`;
+  b += `<line x1="${x}" y1="${y + 2 * s}" x2="${x + 2 * s}" y2="${y + 2 * s}" class="v-mark-line" stroke-width="3.5" stroke-dasharray="6 4"/>`;
+  b += `<circle cx="${x + s}" cy="${y + s}" r="13" class="v-label"/><circle cx="${x + 2 * s}" cy="${y + 3 * s}" r="13" class="v-label"/>`;
+  b += tx(x + s, y + s + 7, '4', 'v-text v-strong') + tx(x + 2 * s, y + 3 * s + 7, '8', 'v-text v-strong');
+  b += tx(186, 58, '4 + 8', 'v-text') + tx(186, 86, '= 12 m²', 'v-text v-strong');
+  return mini(b, 240, y + 4 * s + 12);
+}
+
+// Vinkler side om side, fx [[45, 'spids'], [90, 'ret'], [130, 'stump']]
+export function miniAngles(list) {
+  const cw = 240 / list.length;
+  let b = '';
+  list.forEach(([deg, name], i) => {
+    const vx = i * cw + cw / 2 - (deg > 90 ? 6 : 20), vy = 78, L = Math.min(54, cw - 18), a = (deg * Math.PI) / 180;
+    const ex = vx + L * Math.cos(a), ey = vy - L * Math.sin(a);
+    b += deg === 90
+      ? `<path d="M${vx + 13} ${vy} V${vy - 13} H${vx}" fill="none" class="v-mark-line" stroke-width="2.5"/>`
+      : `<path d="M${vx + 17} ${vy} A17 17 0 0 0 ${(vx + 17 * Math.cos(a)).toFixed(1)} ${(vy - 17 * Math.sin(a)).toFixed(1)}" fill="none" class="v-mark-line" stroke-width="2.5"/>`;
+    b += `<path d="M${vx + L} ${vy} L${vx} ${vy} L${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" class="v-line" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    b += tx(i * cw + cw / 2, 106, name, 'v-text v-small');
+  });
+  return mini(b, 240, 116);
+}
+
+// Lige vinkel: en lige linje er 180° (to rette vinkler)
+export function miniStraight() {
+  return mini(`<path d="M146 78 A26 26 0 0 0 94 78" fill="none" class="v-mark-line" stroke-width="2.5"/>
+    <line x1="120" y1="78" x2="120" y2="52" class="v-line-thin" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <line x1="34" y1="78" x2="206" y2="78" class="v-line" stroke-width="3" stroke-linecap="round"/><circle cx="120" cy="78" r="4" class="v-mark"/>
+    ${tx(120, 40, '180°', 'v-text v-strong')}${tx(120, 106, '90° + 90°', 'v-text v-small v-muted')}`, 240, 116);
+}
+
+// Ur med de fire hovedtal, lille og stor viser – og klokken skrevet ved siden af
+export function miniClock(h, m, text = '') {
+  const cx = 64, cy = 66, r = 54;
+  let b = `<circle cx="${cx}" cy="${cy}" r="${r}" class="v-empty v-line" stroke-width="3"/>`;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * 2 * Math.PI, x1 = cx + Math.sin(a) * (r - 4), y1 = cy - Math.cos(a) * (r - 4), x2 = cx + Math.sin(a) * (r - (i % 3 ? 9 : 12)), y2 = cy - Math.cos(a) * (r - (i % 3 ? 9 : 12));
+    b += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="v-line" stroke-width="${i % 3 ? 1.6 : 2.6}"/>`;
+  }
+  [[12, 0, -1], [3, 1, 0], [6, 0, 1], [9, -1, 0]].forEach(([n, dx, dy]) => { b += tx(cx + dx * (r - 24), cy + dy * (r - 24) + 6, n, 'v-text v-small'); });
+  const ma = (m / 60) * 2 * Math.PI, ha = ((h % 12) / 12 + m / 720) * 2 * Math.PI;
+  b += `<line x1="${cx}" y1="${cy}" x2="${(cx + Math.sin(ha) * 26).toFixed(1)}" y2="${(cy - Math.cos(ha) * 26).toFixed(1)}" class="v-hand" stroke-width="6" stroke-linecap="round"/>`;
+  b += `<line x1="${cx}" y1="${cy}" x2="${(cx + Math.sin(ma) * 42).toFixed(1)}" y2="${(cy - Math.cos(ma) * 42).toFixed(1)}" class="v-mark-line" stroke-width="3.5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="4.5" class="v-mark"/>`;
+  b += tx(182, 64, `${h}:${String(m).padStart(2, '0')}`, 'v-text v-big');
+  if (text) b += tx(182, 92, text, 'v-text v-small v-muted');
+  return mini(b, 240, 132);
+}
+
+// Tidslinje: fra et klokkeslæt til et andet, i to spring (fx op til hel time og videre)
+export function miniTimeline(times, minutes) {
+  const total = minutes.reduce((s, x) => s + x, 0), x0 = 30, W = 180;
+  const xs = [x0]; minutes.forEach((mn) => xs.push(xs[xs.length - 1] + (mn / total) * W));
+  let b = `<line x1="${x0 - 10}" y1="74" x2="${x0 + W + 10}" y2="74" class="v-line" stroke-width="2.5"/>`;
+  xs.forEach((x, i) => { b += `<circle cx="${x}" cy="74" r="5" class="${i === 0 || i === xs.length - 1 ? 'v-mark' : 'v-fill'}"/>` + tx(x, 102, times[i], 'v-text v-small'); });
+  minutes.forEach((mn, i) => { b += arc(xs[i] + 3, xs[i + 1] - 3, 66, 26, `${mn} min`); });
+  return mini(b, 240, 112);
+}
+
+// Lille søjlediagram med akse; hi = fremhævet søjle (aflæses ved den stiplede linje)
+export function miniBars(values, names, { step = 1, hi = -1, max = null } = {}) {
+  const top = max ?? Math.ceil(Math.max(...values) / step) * step, x0 = 46, y0 = 104, H = 86, bw = 30, gap = (190 - values.length * bw) / (values.length + 1);
+  const Y = (v) => y0 - (v / top) * H;
+  let b = '';
+  for (let v = 0; v <= top; v += step) b += `<line x1="${x0}" y1="${Y(v)}" x2="${x0 + 186}" y2="${Y(v)}" class="v-line-thin"/>` + tx(x0 - 8, Y(v) + 5, v, 'v-text v-tiny', 'end');
+  values.forEach((v, i) => {
+    const x = x0 + gap + i * (bw + gap);
+    b += `<rect x="${x}" y="${Y(v)}" width="${bw}" height="${y0 - Y(v)}" rx="3" class="${i === hi ? 'v-mark' : 'v-fill'}"/>` + tx(x + bw / 2, y0 + 18, names[i], 'v-text v-tiny');
+    if (i === hi) b += `<line x1="${x0}" y1="${Y(v)}" x2="${x}" y2="${Y(v)}" class="v-mark-line" stroke-width="2" stroke-dasharray="4 3"/>`;
+  });
+  b += `<line x1="${x0}" y1="${y0 - H - 4}" x2="${x0}" y2="${y0}" class="v-line" stroke-width="2"/><line x1="${x0}" y1="${y0}" x2="${x0 + 186}" y2="${y0}" class="v-line" stroke-width="2"/>`;
+  return mini(b, 240, 128);
+}
+
+// Tal på små brikker i rækkefølge; hi = fremhævede brikker, span = klamme fra mindste til største
+export function miniTiles(nums, { hi = [], mid = '', span = '' } = {}) {
+  const w = 34, gap = 8, W = nums.length * w + (nums.length - 1) * gap, x0 = (240 - W) / 2, y = mid ? 34 : 14;
+  let b = '';
+  nums.forEach((n, i) => { b += cell(x0 + i * (w + gap), y, w, 38, hi.includes(i) ? 'v-hi' : 'v-box') + tx(x0 + i * (w + gap) + w / 2, y + 27, n, 'v-text'); });
+  if (mid) { const mx = x0 + Math.floor(nums.length / 2) * (w + gap) + w / 2; b += tx(mx, 16, mid, 'v-text v-small v-strong') + head(mx, y - 3, mx, y - 14); }
+  if (span) {
+    const a = x0 + w / 2, c = x0 + W - w / 2, ly = y + 52;
+    b += `<path d="M${a} ${ly - 6} V${ly} H${c} V${ly - 6}" fill="none" class="v-mark-line" stroke-width="2.5"/>` + tx(120, ly + 24, span, 'v-text v-small v-strong');
+  }
+  return mini(b, 240, y + 38 + (span ? 64 : 12));
+}
+
+// Chancen på en skala fra umulig til sikker
+export function miniChance() {
+  const x0 = 26, W = 188, y = 62;
+  let b = `<line x1="${x0}" y1="${y}" x2="${x0 + W}" y2="${y}" class="v-line" stroke-width="3" stroke-linecap="round"/>`;
+  [[0, 'umulig'], [0.5, 'lige chance'], [1, 'sikker']].forEach(([p, s]) => { b += `<circle cx="${x0 + p * W}" cy="${y}" r="6" class="v-mark"/>` + tx(x0 + p * W, y + 26, s, 'v-text v-tiny', p === 0 ? 'start' : p === 1 ? 'end' : 'middle'); });
+  [[0.25, 'usandsynlig'], [0.75, 'sandsynlig']].forEach(([p, s]) => { b += `<circle cx="${x0 + p * W}" cy="${y}" r="4.5" class="v-fill"/><line x1="${x0 + p * W}" y1="${y + 8}" x2="${x0 + p * W}" y2="${y + 32}" class="v-line-thin"/>` + tx(x0 + p * W, y + 48, s, 'v-text v-tiny v-muted'); });
+  b += tx(x0, y - 14, 'aldrig', 'v-text v-tiny v-muted', 'start') + tx(x0 + W, y - 14, 'altid', 'v-text v-tiny v-muted', 'end');
+  return mini(b, 240, 118);
+}
+
+// Talfølge: brikker med spring imellem, fx 3, 7, 11, 15, ? (+4 hver gang)
+export function miniSeq(items, op) {
+  const n = items.length, gap = (240 - 40) / (n - 1), y = 70;
+  let b = '';
+  items.forEach((s, i) => {
+    const x = 20 + i * gap;
+    b += `<circle cx="${x}" cy="${y}" r="19" class="${s === '?' ? 'v-box v-dash' : i === n - 2 ? 'v-hi' : 'v-box'}"/>` + tx(x, y + 7, s, 'v-text');
+    if (i < n - 1) b += arc(x + 10, x + gap - 10, y - 20, 22, op);
+  });
+  return mini(b, 240, 100);
+}
+
+// Regn baglæns: ? → (+7) → 15, og tilbage med det modsatte regnestykke (−7)
+export function miniBack(fwd, back, result, answer) {
+  let b = cell(26, 46, 56, 40, 'v-box v-dash') + tx(54, 74, '?', 'v-text v-big') + cell(158, 46, 56, 40, 'v-box') + tx(186, 74, result, 'v-text');
+  b += arc(86, 154, 50, 28, fwd, { c: 'v-fill' }) + arc(154, 86, 84, 28, back, { down: true });
+  b += tx(120, 136, `${result} ${back} = ${answer}`, 'v-text v-small v-strong');
+  return mini(b, 240, 146);
+}
+
+// Del et tal i bidder, der er lette at dele: 72 → 40 + 32 → 10 + 8 = 18
+export function miniSplitTree(n, parts, d) {
+  const xs = [64, 176], q = parts.map((p) => p / d);
+  let b = cell(92, 4, 56, 32, 'v-box') + tx(120, 27, n, 'v-text');
+  parts.forEach((p, i) => {
+    b += `<line x1="${120 + (i ? 14 : -14)}" y1="37" x2="${xs[i]}" y2="50" class="v-line" stroke-width="2"/>`;
+    b += cell(xs[i] - 28, 50, 56, 32, 'v-box') + tx(xs[i], 73, p, 'v-text');
+    b += `<line x1="${xs[i]}" y1="84" x2="${xs[i]}" y2="96" class="v-mark-line" stroke-width="2.5"/>${head(xs[i], 102, xs[i], 86)}` + tx(xs[i] + 12, 97, `: ${d}`, 'v-text v-small v-strong', 'start');
+    b += cell(xs[i] - 28, 104, 56, 32, 'v-hi') + tx(xs[i], 127, q[i], 'v-text');
+  });
+  b += tx(120, 126, '+', 'v-text');
+  return mini(b, 240, 142);
 }
