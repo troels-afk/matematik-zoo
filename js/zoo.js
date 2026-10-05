@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005123513';
-import * as E from './engine.js?v=20261005123513';
-import { today } from './util.js?v=20261005123513';
+import { AREAS, FACTS } from './curriculum.js?v=20261005125809';
+import * as E from './engine.js?v=20261005125809';
+import { today } from './util.js?v=20261005125809';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -272,14 +272,6 @@ export function homeMessage(state) {
   return dayPick(pool, 'home');
 }
 
-export function goodnight(state) {
-  return dayPick([
-    { who: 'bodil', text: "Godt arbejde i dag. Jeg låser porten – zoo'en sover nu 🌙" },
-    { who: 'kaj', text: 'Farvel, farvel! Jeg passer på resterne i nat 🦜' },
-    { who: 'nora', text: 'Ungerne er puttet. Tak for hjælpen i dag! 💛' },
-  ], 'night' + state.sessions.length);
-}
-
 // Scenen for en bestemt opgave: dyret følger opgaven (fx elefantungen ved elefanternes foder),
 // med tre udtryk: happy (start), think (i gang) og cheer (klaret). full = helfigur, hvis den passer.
 export function sceneFor(areaId, title) {
@@ -349,11 +341,11 @@ export function nextGoal(state, area) {
   const up = (n) => `${LEVELS[n].icon} ${LEVELS[n].name}`;
   if (lv === 0) {
     const first = area.skills.find((s) => !['sikker', 'mestret'].includes(E.skillStatus(state, s.id))) || area.skills[0];
-    return `Klar "${activityName(first)}" – så åbner ${area.place}, og ${animal(0)} flytter ind.`;
+    return `Bliv sikker ⭐ i "${activityName(first)}" – så åbner ${area.place}, og ${animal(0)} flytter ind.`;
   }
-  if (lv === 1) return `Klar ${more(Math.ceil(p.total / 2) - p.done)} – så stiger ${area.place} til ${up(2)}, og ${animal(1)} flytter ind.`;
-  if (lv === 2) return `Klar ${more(p.total - p.done)} – så stiger ${area.place} til ${up(3)}, og ${animal(2)} flytter ind.`;
-  if (lv === 3) return `Klar alle aktiviteterne igen på en ny dag – så stiger ${area.place} til ${up(4)}.`;
+  if (lv === 1) return `Bliv sikker ⭐ i ${more(Math.ceil(p.total / 2) - p.done)} – så stiger ${area.place} til ${up(2)}, og ${animal(1)} flytter ind.`;
+  if (lv === 2) return `Bliv sikker ⭐ i ${more(p.total - p.done)} – så stiger ${area.place} til ${up(3)}, og ${animal(2)} flytter ind.`;
+  if (lv === 3) return `Bliv sikker i alle aktiviteterne igen på en ny dag – så stiger ${area.place} til ${up(4)}.`;
   return `${area.place} er et guld-område! Øv gerne videre, så det bliver ved med at sidde.`;
 }
 

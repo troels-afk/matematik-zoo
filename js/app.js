@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005123513';
-import * as E from './engine.js?v=20261005123513';
-import * as Z from './zoo.js?v=20261005123513';
-import { zooGate } from './scene.js?v=20261005123513';
-import { zooMap } from './map.js?v=20261005123513';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005123513';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005123513';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005123513';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005125809';
+import * as E from './engine.js?v=20261005125809';
+import * as Z from './zoo.js?v=20261005125809';
+import { zooGate } from './scene.js?v=20261005125809';
+import { zooMap } from './map.js?v=20261005125809';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005125809';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005125809';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005125809';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -123,11 +123,6 @@ function babyReact(el, kind) {
   setTimeout(() => { el.classList.remove(`react-${kind}`); el.classList.add('idle'); }, 1000);
 }
 
-function weekDots(st) {
-  const n = E.weekSessions(st);
-  return `<span class="week" title="${n} af ${E.WEEK_GOAL} dage denne uge">${Array.from({ length: E.WEEK_GOAL }, (_, i) => `<i class="d ${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
-}
-
 const levelsOf = (st) => AREAS.map((a) => Z.areaLevel(st, a.id));
 
 // ================= Profiler =================
@@ -236,14 +231,14 @@ function showAbout(back = showHome) {
 // ================= Intro: sådan spiller du =================
 
 function showIntroTour(done = showHome) {
-  const st = S.state;
+  const st = S.state, firstTime = !st.zoo.introSeen; // åbnes den igen via ?, går sidste knap bare tilbage
   const someBabies = FACTS.slice(0, 6).map((f, i) => {
     const b = Z.BABIES[f.key];
     return `<span class="baby has-img" style="--st:${i}"><img src="${b.img}" alt="" draggable="false"></span>`;
   }).join('');
   const pages = [
     // Første side er en scene som på missionerne og områdesiderne (se renderHero nedenfor)
-    { hero: true, title: 'Velkommen til Matematik-Zoo!', text: "Zoo'en har været lukket hele vinteren. Vil du hjælpe Bodil med at åbne den igen?", cta: 'Åbn porten' },
+    { hero: true, title: 'Velkommen til Matematik-Zoo!', text: "Zoo'en har været lukket hele vinteren. Vil du hjælpe Bodil med at åbne den igen?", cta: 'Kom indenfor' },
     {
       art: `<div class="tour-icons">${AREAS.map((a) => `<span style="--ac:${a.color}">${a.icon}</span>`).join('')}</div>`,
       title: 'Målet: den store åbningsdag',
@@ -308,7 +303,7 @@ function showIntroTour(done = showHome) {
         ${dots()}
         <div class="row" style="justify-content:center">
           ${i ? '<button class="btn ghost big" id="prev">←</button>' : ''}
-          <button class="btn big" id="next">${last ? 'Åbn porten!' : 'Næste'}</button>
+          <button class="btn big" id="next">${last ? (firstTime ? 'Start min første mission' : "Tilbage til zoo'en") : 'Næste'}</button>
         </div>
       </div>`, keys);
     on('#next', 'click', next);
@@ -632,7 +627,7 @@ function showPlace(areaId) {
     return `<li class="${open ? 'open' : i === lv ? 'next' : ''}" title="${open && b ? cap(b.kind) : 'Flytter ind senere'}">
       <span class="pa-img">${b?.img ? `<img src="${b.img}" alt="" draggable="false">` : e}</span><span class="pa-nm">${open && b ? cap(b.kind) : '?'}</span></li>`;
   }).join('');
-  const label = { ny: 'Ny', øver: 'I gang', sikker: 'Klaret ⭐', mestret: 'Mester 🌟' };
+  const label = { ny: 'Ny', øver: 'I gang', sikker: 'Sikker ⭐', mestret: 'Mester 🌟' };
   const acts = a.skills.map((sk, i) => {
     const status = E.skillStatus(st, sk.id), unlocked = E.isUnlocked(st, sk.id);
     const done = ['sikker', 'mestret'].includes(status);
@@ -646,7 +641,7 @@ function showPlace(areaId) {
       </div>
       ${unlocked
         ? `<div class="act-go"><button class="btn ghost sm" data-intro="${sk.id}">Se hvordan</button><button class="btn sm" data-practice="${sk.id}">Start</button></div>`
-        : `<span class="act-lock">Åbner, når "${Z.activityName(a.skills[i - 1])}" er klaret</span>`}
+        : `<span class="act-lock">Bliv sikker ⭐ i "${Z.activityName(a.skills[i - 1])}" for at åbne denne aktivitet</span>`}
     </li>`;
   }).join('');
   view(`
@@ -664,11 +659,11 @@ function showPlace(areaId) {
         </div>
       </div>
     </section>
-    <div class="section-title"><h2>Det kan du hjælpe med</h2><span class="muted small">Den næste aktivitet åbner, når den forrige er klaret</span></div>
+    <div class="section-title"><h2>Det kan du hjælpe med</h2><span class="muted small">Den næste aktivitet åbner, når du er sikker ⭐ i den forrige</span></div>
     <ol class="acts">${acts}</ol>`, (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
   on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice); });
-  on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), 'Tilbage'));
+  on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), { btn: `Tilbage til ${a.place}`, back: `Tilbage til ${a.place}` }));
 }
 
 // ================= Øvebanen: oversigt over lektiepakker =================
@@ -697,7 +692,7 @@ function showPracticeHub() {
 
 function showPracticeSet(setId) {
   const st = S.state, set = PRACTICE_SETS.find((x) => x.id === setId);
-  const label = { ny: 'Ny', øver: 'Øver', sikker: 'Sikker ⭐', mestret: 'Mestret 🌟' };
+  const label = { ny: 'Ny', øver: 'I gang', sikker: 'Sikker ⭐', mestret: 'Mester 🌟' };
   const rows = set.skills.map((sk, i) => {
     const status = E.skillStatus(st, sk.id);
     const acc = E.skillAccuracy(st, sk.id, 30);
@@ -720,12 +715,14 @@ function showPracticeSet(setId) {
     <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showPracticeHub(); });
   on('#back', 'click', showPracticeHub);
   on('[data-practice]', 'click', (e) => startPractice(e.currentTarget.dataset.practice));
-  on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPracticeSet(setId), 'Tilbage'));
+  on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPracticeSet(setId), { btn: `Tilbage til ${set.name}`, back: `Tilbage til ${set.name}` }));
 }
 
 // ================= Intro til en færdighed =================
 
-function showIntro(skillId, next, btnText = 'Jeg er klar') {
+// back = teksten på tilbage-knappen øverst (fx "Tilbage til Foderlageret"); den, Escape og knappen nederst
+// fører alle til next. Åbnes forklaringen af sig selv midt i en opgave, er det "Tilbage til opgaven".
+function showIntro(skillId, next, { btn = 'Jeg er klar', back = 'Tilbage til opgaven' } = {}) {
   const s = ALL_SKILLS[skillId], a = areaOf(s.area);
   const steps = s.intro.steps;
   let shown = 1;
@@ -737,15 +734,17 @@ function showIntro(skillId, next, btnText = 'Jeg er klar') {
   const render = () => {
     const more = steps && shown < steps.length;
     view(`
+      <button class="back-link" id="back"><span class="icon-btn" aria-hidden="true">←</span>${back}</button>
       <div class="card sheet intro-card stack">
         <div class="kicker">${a.icon} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
         <h1>${Z.ACTIVITIES[skillId]?.name || s.name}</h1>${Z.ACTIVITIES[skillId] ? `<div class="muted" style="font-weight:700;margin-top:-8px">${s.name}</div>` : ''}
         ${steps ? stepsBlock(steps, shown) : s.intro.cards ? explainCards(s.intro) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
         <div class="center">${more
           ? `<button class="btn big" id="more">Næste trin (${shown}/${steps.length})</button>`
-          : `<button class="btn big" id="go">${btnText}</button>`}</div>
-      </div>`, (e) => { if (e.key === 'Enter') (more ? step() : go()); });
+          : `<button class="btn big" id="go">${btn}</button>`}</div>
+      </div>`, (e) => { if (e.key === 'Enter') (more ? step() : go()); else if (e.key === 'Escape') go(); });
     on('#go', 'click', go);
+    on('#back', 'click', go);
     on('#more', 'click', step);
     if (shown > 1) $$('.walk li').pop()?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
@@ -1195,32 +1194,25 @@ function finish() {
   }
   save(true);
   S.run = null;
-  const night = Z.goodnight(st);
+  // Øvelse fra et område eller Øvebanen: en kort afslutning og tilbage, hvor hun kom fra (dagens mission har sin egen)
   const diff = after.guests - b.guests;
-
+  if (diff > 0) wins.push({ e: '🎟️', t: `+${fmt(diff)} gæster om dagen` });
+  const where = areaOf(run.sess.area)?.place || '', act = Z.ACTIVITIES[run.sess.main]?.name || ALL_SKILLS[run.sess.main]?.name || '';
+  const back = backSet ? { id: 'backset', text: `← Tilbage til ${backSet.name}`, go: () => showPracticeSet(backSet.id) }
+    : backArea ? { id: 'backarea', text: `← Tilbage til ${backArea.place}`, go: () => showPlace(backArea.id) } : null;
   view(`
-    <div class="card sheet center stack" style="margin-top:4vh">
-      <div class="kicker">Dagen i ${esc(Z.zooName(st))} er slut</div>
-      <h1>Godt arbejde, ${esc(st.name)}!</h1>
-      <div>
-        <div class="guest-count" id="gc">${fmt(b.guests)}</div>
-        <div class="muted" style="font-weight:700">gæster om dagen${diff > 0 ? ` <span style="color:var(--primary-ink)">(+${fmt(diff)})</span>` : ''}</div>
-      </div>
-      <p class="muted">Du regnede ${n} opgaver.</p>
+    <div class="card sheet center stack practice-done" style="margin-top:4vh">
+      <div class="kicker">${esc(where)}${act ? ` · ${esc(act)}` : ''}</div>
+      <h1>Øvelse klaret!</h1>
+      <p class="pd-count">Du øvede ${n} opgaver.</p>
       ${wins.length ? `<ul class="wins">${wins.map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>` : ''}
-      <div style="text-align:left">${say(night.who, night.text)}</div>
-      <div class="row" style="justify-content:center">${weekDots(st)}<span class="small muted">dage denne uge</span></div>
       <div class="row" style="justify-content:center">
-        ${backSet ? `<button class="btn big" id="backset">← ${backSet.name}</button><button class="btn ghost" id="home">Til zoo'en</button>`
-          : backArea ? `<button class="btn big" id="backarea">← Tilbage til ${backArea.place}</button><button class="btn ghost" id="home">Til zoo'en</button>`
-          : `<button class="btn big" id="home">Til zoo'en</button>${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}`}
+        ${back ? `<button class="btn big" id="${back.id}">${back.text}</button>` : ''}
+        <button class="btn ${back ? 'ghost' : 'big'}" id="home">Til zoo'en</button>
       </div>
-    </div>`, (e) => { if (e.key === 'Enter') (backSet ? showPracticeSet(backSet.id) : backArea ? showPlace(backArea.id) : showHome()); });
+    </div>`, (e) => { if (e.key === 'Enter') (back ? back.go() : showHome()); });
   on('#home', 'click', showHome);
-  on('#backset', 'click', () => showPracticeSet(backSet.id));
-  on('#backarea', 'click', () => showPlace(backArea.id));
-  on('#sprint', 'click', startSprint);
-  setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 350);
+  if (back) on(`#${back.id}`, 'click', back.go);
   if (bigWin) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
 }
 
@@ -1259,8 +1251,8 @@ function missionResults(st, run, b, after, born, grew, bonus = []) {
     mainChip = { e: '🎟️', t: `+${fmt(diff)} gæster om dagen` };
   } else {
     const a = areaOf(area), p = E.areaProgress(st, area), L = Z.LEVELS[Z.areaLevel(st, area)];
-    main = { kind: 'progress', icon: 'area', kicker: `${a.place} · ${L.icon} ${L.name}`, title: `${p.done} af ${p.total} aktiviteter er klaret`, sub: Z.nextGoal(st, a), pct: Math.round((100 * p.done) / p.total) };
-    mainChip = { e: L.icon, t: `${p.done} af ${p.total} aktiviteter klaret i ${a.place}` };
+    main = { kind: 'progress', icon: 'area', kicker: `${a.place} · ${L.icon} ${L.name}`, title: `Sikker ⭐ i ${p.done} af ${p.total} aktiviteter`, sub: Z.nextGoal(st, a), pct: Math.round((100 * p.done) / p.total) };
+    mainChip = { e: L.icon, t: `Sikker i ${p.done} af ${p.total} aktiviteter i ${a.place}` };
   }
 
   const extras = ups.filter((u) => u !== up).map(upChip);
@@ -1675,4 +1667,4 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || swOptIn))
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice, intro: (id) => showIntro(id, showHome, 'Tilbage') } };
+window.__mo = { S, E, Z, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

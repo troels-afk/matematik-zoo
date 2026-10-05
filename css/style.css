@@ -151,9 +151,6 @@ label.lbl { font: 600 1rem var(--font-head); display: block; margin-bottom: 6px;
 .me-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 99px; background: rgba(255, 255, 255, .88); backdrop-filter: blur(6px); box-shadow: var(--shadow-sm); font: 600 1rem var(--font-head); color: #1f3346; }
 .me-chip .avatar { width: 34px; height: 34px; font-size: 20px; box-shadow: none; }
 
-.week { display: flex; gap: 5px; margin-top: 3px; }
-.week .d { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--primary); }
-.week .d.on { background: var(--primary); }
 
 /* Baby-badge: størrelse og ring følger stadiet (0–5) */
 .baby { --st: 0; position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; flex: none;
@@ -189,7 +186,6 @@ label.lbl { font: 600 1rem var(--font-head); display: block; margin-bottom: 6px;
 .wins { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; text-align: left; }
 .wins li { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--card-2); border: 1px solid var(--line-2); font-weight: 700; }
 .wins li .e { font-size: 1.5rem; }
-.guest-count { font: 600 2.6rem/1 var(--font-head); color: var(--primary-ink); font-variant-numeric: tabular-nums; }
 
 /* ---------- Opgave ---------- */
 .session-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
@@ -915,3 +911,9 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (max-width: 560px) {
   .ex-tip .k { min-width: 0; width: 100%; }
 }
+
+/* ---------- Tilbage-knap på forklaringer og afslutning på en øvelse ---------- */
+.back-link { display: inline-flex; align-items: center; gap: 12px; margin: 0 0 4px; padding: 0; font: 700 1.02rem var(--font-body); color: var(--ink-2); }
+.back-link .icon-btn { pointer-events: none; }
+.back-link:hover { color: var(--ink); }
+.pd-count { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--ink-2); }
