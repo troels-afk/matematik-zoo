@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005125809';
-import * as E from './engine.js?v=20261005125809';
-import * as Z from './zoo.js?v=20261005125809';
-import { zooGate } from './scene.js?v=20261005125809';
-import { zooMap } from './map.js?v=20261005125809';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005125809';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005125809';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005125809';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005130338';
+import * as E from './engine.js?v=20261005130338';
+import * as Z from './zoo.js?v=20261005130338';
+import { zooGate } from './scene.js?v=20261005130338';
+import { zooMap } from './map.js?v=20261005130338';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005130338';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005130338';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005130338';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -628,20 +628,44 @@ function showPlace(areaId) {
       <span class="pa-img">${b?.img ? `<img src="${b.img}" alt="" draggable="false">` : e}</span><span class="pa-nm">${open && b ? cap(b.kind) : '?'}</span></li>`;
   }).join('');
   const label = { ny: 'Ny', øver: 'I gang', sikker: 'Sikker ⭐', mestret: 'Mester 🌟' };
+  const actOf = (sk) => Z.ACTIVITIES[sk.id] || { name: sk.name, desc: sk.desc };
+  // Næste opgave for dig: den første åbne aktivitet, der ikke er sikker endnu – eller, når alt er sikkert,
+  // den der er længst tid siden (samme valg som dagens træning bruger)
+  const recId = E.currentSkill(st, areaId) || [...a.skills].sort((x, y) => (st.skills[x.id]?.last || 0) - (st.skills[y.id]?.last || 0))[0].id;
+  const recIdx = a.skills.findIndex((sk) => sk.id === recId), rec = a.skills[recIdx], recStatus = E.skillStatus(st, rec.id);
+  const recBlock = `
+    <section class="card rec-act">
+      <div class="rec-body">
+        <span class="kicker">Næste opgave for dig · aktivitet ${recIdx + 1} af ${a.skills.length}</span>
+        <h2>${actOf(rec).name} <span class="st ${recStatus}">${label[recStatus]}</span></h2>
+        <p class="rec-desc">${actOf(rec).desc}</p>
+        <span class="act-skill">${rec.name}</span>
+      </div>
+      <div class="rec-go">
+        <button class="btn big" data-practice="${rec.id}">Start aktivitet</button>
+        <button class="link" data-intro="${rec.id}">Se hvordan</button>
+      </div>
+    </section>`;
+  // De andre aktiviteter: åbne kan startes, låste viser kun, hvad der skal til
   const acts = a.skills.map((sk, i) => {
+    if (sk.id === recId) return '';
     const status = E.skillStatus(st, sk.id), unlocked = E.isUnlocked(st, sk.id);
-    const done = ['sikker', 'mestret'].includes(status);
-    const act = Z.ACTIVITIES[sk.id] || { name: sk.name, desc: sk.desc };
-    return `<li class="act ${done ? 'done' : unlocked ? 'open' : 'locked'}">
-      <span class="act-n" aria-hidden="true">${done ? '✓' : unlocked ? i + 1 : '🔒'}</span>
+    const done = ['sikker', 'mestret'].includes(status), act = actOf(sk);
+    if (!unlocked) {
+      return `<li class="act locked">
+      <span class="act-n" aria-hidden="true">🔒</span>
+      <div class="act-body"><span class="act-name">${act.name}</span>
+        <span class="act-lock">Bliv sikker ⭐ i "${Z.activityName(a.skills[i - 1])}" først.</span></div>
+    </li>`;
+    }
+    return `<li class="act ${done ? 'done' : 'open'}">
+      <span class="act-n" aria-hidden="true">${done ? '✓' : i + 1}</span>
       <div class="act-body">
-        <span class="act-name">${act.name}${unlocked ? ` <span class="st ${status}">${label[status]}</span>` : ''}</span>
+        <span class="act-name">${act.name} <span class="st ${status}">${label[status]}</span></span>
         <span class="act-desc">${act.desc}</span>
         <span class="act-skill">${sk.name}</span>
       </div>
-      ${unlocked
-        ? `<div class="act-go"><button class="btn ghost sm" data-intro="${sk.id}">Se hvordan</button><button class="btn sm" data-practice="${sk.id}">Start</button></div>`
-        : `<span class="act-lock">Bliv sikker ⭐ i "${Z.activityName(a.skills[i - 1])}" for at åbne denne aktivitet</span>`}
+      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button><button class="btn sm" data-practice="${sk.id}">Start</button></div>
     </li>`;
   }).join('');
   view(`
@@ -649,7 +673,7 @@ function showPlace(areaId) {
     <section class="mission card place-hero ${hasScene(t) ? 'has-scene' : ''}">
       ${missionScene(t, 'intro', 'hero', { say: lv ? `Velkommen til ${a.place}!` : `Hjælp med at åbne ${a.place}!`, locked: !lv })}
       <div class="mission-body">
-        <span class="kicker">${a.name}</span>
+        <span class="kicker">Fri træning · ${a.name}</span>
         <h1>${a.place}</h1>
         <p class="mission-need">${story}</p>
         <div class="place-prog">
@@ -659,8 +683,9 @@ function showPlace(areaId) {
         </div>
       </div>
     </section>
-    <div class="section-title"><h2>Det kan du hjælpe med</h2><span class="muted small">Den næste aktivitet åbner, når du er sikker ⭐ i den forrige</span></div>
-    <ol class="acts">${acts}</ol>`, (e) => { if (e.key === 'Escape') showHome(); });
+    ${recBlock}
+    ${acts ? `<div class="section-title"><h2>Andre ting du kan hjælpe med</h2><span class="muted small">Den næste aktivitet åbner, når du er sikker ⭐ i den forrige</span></div>
+    <ol class="acts">${acts}</ol>` : ''}`, (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
   on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice); });
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), { btn: `Tilbage til ${a.place}`, back: `Tilbage til ${a.place}` }));

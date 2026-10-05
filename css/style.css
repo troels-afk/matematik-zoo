@@ -830,12 +830,11 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .act.locked .act-name { color: var(--ink-2); }
 .act-desc { font-size: .92rem; font-weight: 700; color: var(--ink-2); }
 .act-skill { justify-self: start; margin-top: 4px; padding: 1px 9px; border-radius: 99px; background: var(--card-2); border: 1px solid var(--line); color: var(--ink-3); font: 600 .72rem var(--font-head); }
-.act-go { display: flex; gap: 8px; flex: none; }
-.act-lock { flex: none; max-width: 230px; text-align: right; color: var(--ink-3); font-size: .82rem; font-weight: 700; }
+.act-go { display: flex; align-items: center; gap: 12px; flex: none; }
+.act-lock { color: var(--ink-3); font-size: .92rem; font-weight: 700; }
 @media (max-width: 640px) {
   .act { flex-wrap: wrap; }
   .act-go { width: 100%; justify-content: flex-end; }
-  .act-lock { width: 100%; max-width: none; padding-left: 54px; text-align: left; }
   .pp-animals { gap: 10px; }
 }
 
@@ -917,3 +916,18 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .back-link .icon-btn { pointer-events: none; }
 .back-link:hover { color: var(--ink); }
 .pd-count { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--ink-2); }
+
+/* ---------- Områdesiden: næste opgave for dig (én tydelig start) ---------- */
+.rec-act { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px 24px; margin-top: 18px; padding: 20px 24px;
+  background: linear-gradient(135deg, var(--primary-soft), var(--card) 70%); border: 2px solid color-mix(in srgb, var(--primary) 35%, transparent); }
+.rec-body { display: grid; gap: 6px; min-width: 0; }
+.rec-act h2 { margin: 0; font-size: clamp(1.4rem, 2.8vw, 1.8rem); }
+.rec-act h2 .st { vertical-align: 4px; }
+.rec-desc { margin: 0; font-size: 1.08rem; font-weight: 700; color: var(--ink-2); }
+.rec-go { display: grid; justify-items: center; gap: 10px; }
+.rec-go .btn.big { min-width: 220px; }
+.act-go .link { font-size: .95rem; }
+@media (max-width: 640px) {
+  .rec-act { grid-template-columns: 1fr; padding: 18px; }
+  .rec-go .btn.big { width: 100%; min-width: 0; }
+}
