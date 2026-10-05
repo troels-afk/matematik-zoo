@@ -4,8 +4,8 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005182638';
-import * as V from './visuals.js?v=20261005182638';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005184426';
+import * as V from './visuals.js?v=20261005184426';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
@@ -406,6 +406,7 @@ const divtabel = {
   name: 'Division med tabellerne',
   desc: '56 : 7 – gange baglæns',
   intro: {
+    pic: 'bananer',
     text: 'Division er gange baglæns. For at regne 24 : 6 spørger du: <b>6 gange hvad giver 24?</b> 6 × 4 = 24, så 24 : 6 = <b>4</b>.',
     lead: 'Bananerne skal deles helt lige mellem aberne. Division er gange baglæns.',
     cards: [
@@ -430,6 +431,7 @@ const divrest = {
   name: 'Division med rest',
   desc: '23 : 4 = 5 rest 3',
   intro: {
+    pic: 'fisk',
     text: 'Nogle gange går det ikke op. 23 : 4: Hvor mange hele 4-taller er der i 23? 4 × 5 = 20, og så er der <b>3 tilbage</b>. Svaret er <b>5 rest 3</b>.<br>Resten skal altid være mindre end det, man deler med.',
     lead: 'Nogle gange går delingen ikke op. Det, der bliver til overs, er resten – og den får Kaj!',
     cards: [
@@ -457,6 +459,7 @@ const divflercifret = {
   name: 'Division med store tal',
   desc: '84 : 4, 456 : 3',
   intro: {
+    pic: 'vaegt',
     text: 'Del tallet op i bidder, der er lette at dele:<br>72 : 4 → 72 = 40 + 32. 40 : 4 = 10 og 32 : 4 = 8. I alt <b>18</b>.',
     lead: 'Store tal deles lettest i bidder, som er nemme at dele.',
     cards: [
@@ -493,6 +496,7 @@ const divtekst = {
   name: 'Tekstopgaver med division',
   desc: 'Del ligeligt og lav grupper',
   intro: {
+    pic: 'bananer',
     text: 'Division bruges når noget skal <b>deles ligeligt</b> eller <b>deles i grupper</b>. Pas på med resten: Skal 25 personer køre i biler med 4 pladser, skal der bruges <b>7</b> biler – ellers er der én, der ikke kommer med!',
     lead: 'Division bruges, når noget skal deles ligeligt – eller deles i grupper.',
     cards: [
@@ -607,6 +611,7 @@ const broksammenlign = {
   name: 'Sammenlign brøker',
   desc: 'Hvilken brøk er størst?',
   intro: {
+    pic: 'fisk',
     text: `<b>Samme nævner:</b> flest dele vinder – ${frac(3, 5)} &gt; ${frac(2, 5)}.<br><b>Samme tæller:</b> jo flere stykker kagen deles i, jo <i>mindre</i> er hvert stykke – ${frac(1, 3)} &gt; ${frac(1, 6)}.`,
     lead: 'Hvem fik mest fisk? Sådan sammenligner du to brøker.',
     cards: [
@@ -652,6 +657,7 @@ const brokafantal = {
   name: 'Brøkdel af et antal',
   desc: '¾ af 20',
   intro: {
+    pic: 'fisk',
     text: `${frac(3, 4)} af 20: Del 20 i <b>4</b> lige store grupper (5 i hver). Tag <b>3</b> af grupperne: 3 × 5 = <b>15</b>.`,
     lead: `Hvor mange fisk er ${frac(3, 4)} af spanden? Del først – og gang så.`,
     cards: [
@@ -733,6 +739,7 @@ const decfigur = {
   name: 'Tiendedele og hundrededele',
   desc: 'Decimaltal i figurer',
   intro: {
+    pic: 'rumfang',
     text: 'Deler vi 1 hel i 10 dele, er hver del en <b>tiendedel</b> = 0,1. Deler vi i 100 dele, er hver del en <b>hundrededel</b> = 0,01. Her er 3 af 10 farvet: <b>0,3</b>.',
     lead: 'Medicinen skal måles helt præcist – i tiendedele og hundrededele.',
     cards: [
@@ -779,6 +786,7 @@ const dectallinje = {
   name: 'Decimaltal på tallinjen',
   desc: 'Find tallet, pilen peger på',
   intro: {
+    pic: 'vaegt',
     text: 'Mellem 0 og 1 er der 10 små stykker på 0,1. Pilen står på det 7. stykke: <b>0,7</b>.',
     lead: 'Vægten er en tallinje. Mellem to hele tal er der 10 små stykker.',
     cards: [
@@ -824,6 +832,7 @@ const decsammenlign = {
   name: 'Sammenlign decimaltal',
   desc: 'Er 0,5 eller 0,45 størst?',
   intro: {
+    pic: 'klinik',
     text: 'Pas på: <b>flere cifre betyder ikke større!</b> 0,5 er større end 0,45. Tip: skriv dem med lige mange decimaler – 0,<b>50</b> og 0,<b>45</b> – så kan du sammenligne som hele tal.',
     lead: 'Hvilken unge vejer mest? Pas på – flere cifre betyder ikke større.',
     cards: [
@@ -867,6 +876,7 @@ const decplusminus = {
   name: 'Regn med decimaltal',
   desc: 'Plus og minus – også med penge',
   intro: {
+    pic: 'klinik',
     text: 'Stil kommaerne under hinanden, og regn som normalt. 0,7 + 0,6 = 13 tiendedele = <b>1,3</b>.<br>Med penge: 12,50 kr. + 7,25 kr. = 19 kr. + 0,75 kr. = <b>19,75 kr.</b>',
     lead: 'Klinikkens tal har komma: kilo, liter og kroner.',
     cards: [
@@ -929,6 +939,7 @@ const omkreds = {
   name: 'Omkreds',
   desc: 'Hele vejen rundt om en figur',
   intro: {
+    pic: 'laengde',
     text: 'Omkredsen er længden <b>hele vejen rundt</b>. Et rektangel på 5 cm × 3 cm har omkreds 5 + 3 + 5 + 3 = <b>16 cm</b>.',
     lead: 'Hegnet skal hele vejen rundt om anlægget. Den længde kaldes omkredsen.',
     cards: [
@@ -1011,6 +1022,10 @@ const areal = {
   },
 };
 
+// Det konkrete zoo-billede og reglen til hver enhed (bruges i hintet og forklaringen efter et forkert svar)
+const UNIT_PIC = { m: 'laengde', km: 'laengde', cm: 'laengde', kg: 'vaegt', l: 'rumfang' };
+const UNIT_RULE = { m: '1 m = 100 cm', km: '1 km = 1.000 m', cm: '1 cm = 10 mm', kg: '1 kg = 1.000 g', l: '1 l = 10 dl = 100 cl' };
+
 const enheder = {
   id: 'enheder',
   name: 'Måleenheder',
@@ -1019,9 +1034,9 @@ const enheder = {
     text: '<b>1 m = 100 cm</b> · <b>1 km = 1.000 m</b> · <b>1 cm = 10 mm</b><br><b>1 kg = 1.000 g</b><br><b>1 l = 10 dl = 100 cl</b>',
     lead: 'Foderet til rovdyrene skal måles, vejes og hældes op. Til det bruger man tre slags enheder:',
     cards: [
-      { title: 'Længde', visual: () => V.lengthUnits(), rules: ['1 m = 100 cm', '1 km = 1.000 m', '1 cm = 10 mm'], note: 'Girafungen er 2 m høj – det er 200 cm.' },
-      { title: 'Vægt', visual: () => V.weightUnits(), rules: ['1 kg = 1.000 g'], note: 'Pingvinungen vejer 3 kg – det er 3.000 g.' },
-      { title: 'Rumfang', visual: () => V.volumeUnits(), rules: ['1 l = 10 dl = 100 cl'], note: 'Sælungen drikker 2 l mælk – det er 20 dl.' },
+      { title: 'Længde', pic: 'laengde', rules: ['1 m = 100 cm', '1 km = 1.000 m', '1 cm = 10 mm'], note: 'Girafungen er 2 m høj – det er 200 cm.' },
+      { title: 'Vægt', pic: 'vaegt', rules: ['1 kg = 1.000 g'], note: 'Pingvinungen vejer 3 kg – det er 3.000 g.' },
+      { title: 'Rumfang', pic: 'rumfang', rules: ['1 l = 10 dl = 100 cl'], note: 'Sælungen drikker 2 l mælk – det er 20 dl.' },
     ],
     tip: {
       title: 'Sådan regner du om',
@@ -1051,13 +1066,13 @@ const enheder = {
       if (chance(0.5)) {
         return {
           prompt: withZoo(fwdLine, `${n} ${big} = ${box()} ${small}`),
-          input: 'number', answer: n * f, unit: small,
+          input: 'number', pic: UNIT_PIC[big], hint: `<b>${UNIT_RULE[big]}</b>`, answer: n * f, unit: small,
           explain: `1 ${big} = ${fmt(f)} ${small}, så ${n} ${big} = ${n} × ${fmt(f)} = <b>${fmt(n * f)} ${small}</b>.`,
         };
       }
       return {
         prompt: withZoo(chance(ZOO_P) && `Yasmin har målt ${fmt(n * f)} ${small} i klinikken. Hvor mange ${big} er det?`, `${fmt(n * f)} ${small} = ${box()} ${big}`),
-        input: 'number', answer: n, unit: big,
+        input: 'number', pic: UNIT_PIC[big], hint: `<b>${UNIT_RULE[big]}</b>`, answer: n, unit: big,
         explain: `${fmt(f)} ${small} = 1 ${big}, så ${fmt(n * f)} ${small} = ${fmt(n * f)} : ${fmt(f)} = <b>${n} ${big}</b>.`,
       };
     }
@@ -1066,7 +1081,7 @@ const enheder = {
       const n = ri(1, 5), r = ri(1, f - 1);
       return {
         prompt: `<span class="big-expr">${n} ${big} og ${r} ${small} = ${box()} ${small}</span>`,
-        input: 'number', answer: n * f + r, unit: small,
+        input: 'number', pic: UNIT_PIC[big], hint: `<b>${UNIT_RULE[big]}</b>`, answer: n * f + r, unit: small,
         explain: `${n} ${big} = ${fmt(n * f)} ${small}. Læg ${r} til: <b>${fmt(n * f + r)} ${small}</b>.`,
       };
     }
@@ -1074,14 +1089,14 @@ const enheder = {
       const n = ri(1, 5);
       return {
         prompt: `<span class="big-expr">${n},5 ${big} = ${box()} ${small}</span>`,
-        input: 'number', answer: n * f + f / 2, unit: small,
+        input: 'number', pic: UNIT_PIC[big], hint: `<b>${UNIT_RULE[big]}</b>`, answer: n * f + f / 2, unit: small,
         explain: `${n} ${big} = ${fmt(n * f)} ${small}, og en halv ${big} = ${fmt(f / 2)} ${small}. I alt <b>${fmt(n * f + f / 2)} ${small}</b>.`,
       };
     }
     const n = ri(1, 9);
     return {
       prompt: `<span class="big-expr">${fmt(n * f + f / 2)} ${small} = ${box()} ${big}</span>`,
-      input: 'number', answer: n + 0.5, unit: big,
+      input: 'number', pic: UNIT_PIC[big], hint: `<b>${UNIT_RULE[big]}</b>`, answer: n + 0.5, unit: big,
       explain: `${fmt(n * f)} ${small} = ${n} ${big}, og ${fmt(f / 2)} ${small} er en halv ${big}. Altså <b>${fmtDec(n + 0.5, 1)} ${big}</b>.`,
     };
   },
@@ -1103,6 +1118,7 @@ const klokken = {
   name: 'Klokken',
   desc: 'Aflæs et analogt ur',
   intro: {
+    pic: 'ur',
     text: 'Den <b>lille viser</b> viser timerne. Den <b>store viser</b> viser minutterne – hvert tal på uret er 5 minutter. Her er klokken <b>3:15</b> (kvart over 3). Husk: ved "halv 4" er klokken 3:30!',
     lead: 'Zoo-uret har to visere. Den lille viser timerne, den store minutterne.',
     cards: [
@@ -1146,6 +1162,7 @@ const tidsforskel = {
   name: 'Hvor lang tid?',
   desc: 'Tiden mellem to klokkeslæt',
   intro: {
+    pic: 'ur',
     text: 'Tæl op til en hel time først. Fra 13:45 til 14:20:<br>13:45 → 14:00 er <b>15 min</b>. 14:00 → 14:20 er <b>20 min</b>. I alt <b>35 minutter</b>.',
     lead: 'Hvor lang tid er der til næste fodring? Tæl op i to spring.',
     cards: [
@@ -1228,6 +1245,7 @@ const soejle = {
   name: 'Søjlediagrammer',
   desc: 'Aflæs og regn med diagrammer',
   intro: {
+    pic: 'soejle',
     text: 'Et søjlediagram viser tal som søjler. Aflæs højden på tallene ude til venstre. Kig godt efter, <b>hvor meget hver streg er værd</b> – det er ikke altid 1!',
     lead: 'Gæsterne har stemt på deres yndlingsdyr. Søjlediagrammet viser stemmerne.',
     cards: [
@@ -1454,6 +1472,7 @@ const ukendt = {
   name: 'Find det ukendte tal',
   desc: 'Små ligninger: ? + 7 = 15',
   intro: {
+    pic: 'kodelaas',
     text: `Regn <b>baglæns</b> med det modsatte regnestykke.<br>${box()} + 7 = 15 → 15 − 7 = <b>8</b>.<br>4 × ${box()} = 28 → 28 : 4 = <b>7</b>.`,
     lead: 'Koden mangler et tal. Regn baglæns med det modsatte regnestykke.',
     cards: [
@@ -1631,6 +1650,7 @@ const findX = {
   name: 'Find x',
   desc: 'Fx 7 · 8 = x + x − 10',
   intro: {
+    pic: 'kodelaas',
     text: `${X} er et tal, vi ikke kender endnu.`,
     steps: [
       { text: `${X} er et tal, vi ikke kender endnu. Vi skal finde det tal, der gør, at <b>begge sider af = er lige store</b>.` },

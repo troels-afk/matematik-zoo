@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005182638';
-import * as E from './engine.js?v=20261005182638';
-import * as Z from './zoo.js?v=20261005182638';
-import { zooGate } from './scene.js?v=20261005182638';
-import { zooMap } from './map.js?v=20261005182638';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005182638';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005182638';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005182638';
+import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005184426';
+import * as E from './engine.js?v=20261005184426';
+import * as Z from './zoo.js?v=20261005184426';
+import { zooGate } from './scene.js?v=20261005184426';
+import { zooMap } from './map.js?v=20261005184426';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005184426';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005184426';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005184426';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -783,7 +783,7 @@ function showIntro(skillId, next, { btn = 'Jeg er klar', back = 'Tilbage til opg
       <div class="card sheet intro-card stack">
         <div class="kicker">${a.icon} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
         <h1>${Z.ACTIVITIES[skillId]?.name || s.name}</h1>${Z.ACTIVITIES[skillId] ? `<div class="muted" style="font-weight:700;margin-top:-8px">${s.name}</div>` : ''}
-        ${steps ? stepsBlock(steps, shown) : s.intro.cards ? explainCards(s.intro) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
+        ${steps ? `${explainTop(s.intro, false)}${stepsBlock(steps, shown)}` : s.intro.cards ? explainCards(s.intro) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
         <div class="center">${more
           ? `<button class="btn big" id="more">Næste trin (${shown}/${steps.length})</button>`
           : `<button class="btn big" id="go">${btn}</button>`}</div>
@@ -797,13 +797,25 @@ function showIntro(skillId, next, { btn = 'Jeg er klar', back = 'Tilbage til opg
   render();
 }
 
-// Forklaring som små kort (intro.cards): tegning, overskrift, reglerne og et konkret zoo-eksempel.
-// intro.tip er et lille "Sådan gør du"-kort nederst. Bruges på "Se hvordan" og under Hjælp i opgaverne.
+// Forklaringernes zoo-billede (Z.EXPLAIN_PICS): det konkrete billede mellem symbolet og reglen
+const explainPic = (key, cls) => {
+  const pic = key && Z.EXPLAIN_PICS[key];
+  return pic ? `<img class="${cls}" src="${pic.src}" alt="${pic.alt}" draggable="false">` : '';
+};
+// Indledningen med sidens zoo-billede ved siden af (intro.pic); under Hjælp kun billedet
+const explainTop = (intro, lead) => {
+  const pic = explainPic(intro.pic, 'ex-lead-pic');
+  const text = lead && intro.lead ? `<p class="ex-lead">${intro.lead}</p>` : '';
+  return pic ? `<div class="ex-lead-row${text ? '' : ' solo'}">${text}${pic}</div>` : text;
+};
+
+// Forklaring som små kort (intro.cards): tegning eller zoo-billede (pic), overskrift, reglerne og et konkret
+// zoo-eksempel. intro.tip er et lille "Sådan gør du"-kort nederst. Bruges på "Se hvordan" og under Hjælp.
 const explainCards = (intro, { lead = true } = {}) => `
-  ${lead && intro.lead ? `<p class="ex-lead">${intro.lead}</p>` : ''}
+  ${explainTop(intro, lead)}
   <div class="ex-cards">${intro.cards.map((c) => `
     <section class="ex-card">
-      ${c.visual ? `<div class="ex-vis">${c.visual()}</div>` : ''}
+      ${c.pic ? `<div class="ex-pic">${explainPic(c.pic, 'ex-pic-img')}</div>` : c.visual ? `<div class="ex-vis">${c.visual()}</div>` : ''}
       <h3>${c.title}</h3>
       ${c.rules?.length ? `<ul class="ex-rules">${c.rules.map((r) => `<li>${r}</li>`).join('')}</ul>` : ''}
       ${c.note ? `<p class="ex-note">${c.note}</p>` : ''}
@@ -954,7 +966,7 @@ function renderTask(block, task) {
   on('#help', 'click', () => {
     const s = ALL_SKILLS[task.skill];
     $('#helpbox').innerHTML = s.intro.steps
-      ? `<div class="feedback retry" style="margin-top:14px">${stepsBlock(s.intro.steps)}</div>`
+      ? `<div class="feedback retry" style="margin-top:14px">${explainTop(s.intro, false)}${stepsBlock(s.intro.steps)}</div>`
       : s.intro.cards
         ? `<div class="ex-help">${explainCards(s.intro, { lead: false })}</div>`
         : `<div class="feedback retry" style="margin-top:14px"><div>${s.intro.text}</div>${s.intro.visual ? `<div class="explain-visual">${s.intro.visual()}</div>` : ''}</div>`;
@@ -1132,14 +1144,21 @@ function answer(given, choiceIdx) {
     task.second = true;
     sfx('wrong');
     if (b) react('think', b.expr?.think);
-    const hint = task.kind === 'warm' ? factHint(task.fact) : ALL_SKILLS[task.skill]?.intro?.text || '';
+    const hint = task.kind === 'warm' ? factHint(task.fact) : p.hint || ALL_SKILLS[task.skill]?.intro?.text || '';
+    // Hintet: opgavens egen regel og zoo-billede, hvis den har dem (fx måleenhederne), ellers emnets
+    const hintPic = task.kind === 'warm' ? '' : explainPic(p.pic || ALL_SKILLS[task.skill]?.intro?.pic, 'hint-pic');
     mountInput(p, answer);
     run.answered = false;
     run.shownAt = Date.now();
     const aa = $('#aa');
     aa.insertAdjacentHTML('afterbegin', `<div class="feedback nudge"><div class="fh">${pick(NUDGE)}</div>
       ${hint ? `<button class="link small" id="hint">💡 Vis et hint</button><div id="hinttext" hidden></div>` : ''}</div>`);
-    on('#hint', 'click', () => { const h = $('#hinttext'); h.innerHTML = hint; h.hidden = false; $('#hint').remove(); });
+    on('#hint', 'click', () => {
+      const h = $('#hinttext');
+      h.innerHTML = hintPic ? `<div class="hint-row">${hintPic}<div>${hint}</div></div>` : hint;
+      h.hidden = false;
+      $('#hint').remove();
+    });
     return;
   }
 
@@ -1165,7 +1184,7 @@ function answer(given, choiceIdx) {
     : `<div class="feedback retry">
         <div class="fh">Svaret er ${answerText(p)}</div>
         <div>${p.explain}</div>
-        ${p.explainVisual ? `<div class="explain-visual">${p.explainVisual}</div>` : ''}
+        ${p.explainVisual ? `<div class="explain-visual">${p.explainVisual}</div>` : p.pic ? `<div class="explain-visual">${explainPic(p.pic, 'explain-pic')}</div>` : ''}
         ${again ? `<div class="small muted" style="margin-top:8px">${again}</div>` : ''}
         <div class="kaj">${avatar('kaj', 'sm')} ${pick(KAJ_OOPS)}</div>
       </div>`;
@@ -1765,4 +1784,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

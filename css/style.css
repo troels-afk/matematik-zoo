@@ -893,6 +893,22 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .ex-tip .op { padding: 0 9px; border-radius: 99px; background: var(--card); font: 600 .9rem/1.6 var(--font-head); color: var(--primary-ink); }
 .ex-help { display: grid; gap: 10px; margin-top: 14px; }
 .ex-help .ex-cards { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+/* Forklaringernes zoo-billeder (Batch 2): det konkrete billede mellem symbolet (indledningen) og reglen (kortene) */
+.ex-lead-row { display: flex; align-items: center; gap: 16px; }
+.ex-lead-row .ex-lead { flex: 1; min-width: 0; }
+.ex-lead-pic { display: block; flex: none; width: min(250px, 42%); height: auto; }
+.ex-lead-row.solo { justify-content: center; margin-bottom: 6px; }
+.ex-lead-row.solo .ex-lead-pic { width: min(220px, 70%); }
+.ex-pic { display: grid; place-items: end center; height: 136px; } /* fast højde: overskrifterne står på linje */
+.ex-pic-img { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; }
+.hint-row { display: flex; align-items: center; gap: 12px; }
+.hint-pic { display: block; flex: none; width: 112px; height: auto; }
+.explain-pic { display: block; width: min(220px, 100%); height: auto; }
+@media (max-width: 560px) {
+  .ex-lead-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .ex-lead-pic, .ex-lead-row.solo .ex-lead-pic { width: min(280px, 86%); align-self: center; }
+  .hint-pic { width: 92px; }
+}
 /* Minitegningerne: felter, fremhævet felt (orange), stiplet tom plads, dæmpet og lille tekst */
 .v-box { fill: var(--card); stroke: var(--ink); stroke-width: 2; }
 .v-hi { fill: var(--coral-soft); stroke: var(--coral); stroke-width: 2.5; }
@@ -905,8 +921,6 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .v-text.v-tiny { font-size: 14px; }
 .v-text.v-muted { fill: var(--ink-2); }
 .v-text.v-added { fill: var(--coral); }
-/* Tegningernes faste farver (ting fra zoo'en: træ, målebånd, sæk, stål, vand) */
-.v-wood { fill: #d9a066; } .v-tape { fill: #ffd76a; } .v-sack { fill: #ecd6a8; } .v-steel { fill: #d5dde3; } .v-water { fill: #a8dcf3; }
 @media (max-width: 560px) {
   .ex-tip .k { min-width: 0; width: 100%; }
 }

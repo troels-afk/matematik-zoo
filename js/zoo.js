@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005182638';
-import * as E from './engine.js?v=20261005182638';
-import { today } from './util.js?v=20261005182638';
+import { AREAS, FACTS } from './curriculum.js?v=20261005184426';
+import * as E from './engine.js?v=20261005184426';
+import { today } from './util.js?v=20261005184426';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -49,6 +49,21 @@ export const TASK_SCENES = {
   maaling: [scene('maaling', 1, 'r'), scene('maaling', 2)],
   data: [scene('data', 1), scene('data', 2)],
   algebra: [scene('algebra', 1), scene('algebra', 2)],
+};
+
+// Forklaringernes zoo-billeder (Batch 2, img/explain/): det konkrete billede mellem symbolet og reglen,
+// fx 1 kg = 1.000 g → fodersække på en vægt. Bruges via `pic` i intro (siden), intro.cards (kortet) og opgaver.
+// (Uret havde kun én viser; minutviseren er tegnet ind, så det viser klokken 4 – som rødpandaen peger på.)
+export const EXPLAIN_PICS = {
+  vaegt: { src: 'img/explain/vaegt.webp', alt: 'To sække foder på en vægt' },
+  rumfang: { src: 'img/explain/rumfang.webp', alt: 'En stor målekande og et lille målebæger med vand og en pingvinunge' },
+  laengde: { src: 'img/explain/laengde.webp', alt: 'En giraf kigger over et hegn med et målebånd' },
+  ur: { src: 'img/explain/ur.webp', alt: 'En rød panda peger på zoo-uret, der viser klokken 4' },
+  soejle: { src: 'img/explain/soejle.webp', alt: 'En elefantunge viser et søjlediagram' },
+  bananer: { src: 'img/explain/bananer.webp', alt: 'En abeunge ved en kasse fuld af bananer' },
+  fisk: { src: 'img/explain/fisk.webp', alt: 'En sælunge ved en spand fisk' },
+  kodelaas: { src: 'img/explain/kodelaas.webp', alt: 'En tigerunge ved en kiste med kodelås' },
+  klinik: { src: 'img/explain/klinik.webp', alt: 'En skildpadde bliver vejet på dyreklinikken' },
 };
 
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)

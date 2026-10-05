@@ -1,8 +1,8 @@
 // Matematik-Zoo som webapp: appens filer gemmes på enheden, så den starter med det samme
 // og virker uden internet. VERSION og FILES (sti → indholdshash) skrives af tools/deploy.sh.
-const VERSION = '20261005182638';
+const VERSION = '20261005184426';
 const FILES = {
-"css/style.css": "67b5c844b2",
+"css/style.css": "907036405e",
 "icon-192.png": "8f205bffb7",
 "icon-512.png": "3f4e2cf3bb",
 "icon.png": "cd7043bac8",
@@ -141,6 +141,15 @@ const FILES = {
 "img/cast/nora.webp": "ea20ab4097",
 "img/cast/yasmin-face.webp": "00a589d18d",
 "img/cast/yasmin.webp": "38f8e980a2",
+"img/explain/bananer.webp": "29c48c608b",
+"img/explain/fisk.webp": "5c22f8e480",
+"img/explain/klinik.webp": "d86936f588",
+"img/explain/kodelaas.webp": "fc83adcc9a",
+"img/explain/laengde.webp": "dd4e9999b0",
+"img/explain/rumfang.webp": "ddfd72a79f",
+"img/explain/soejle.webp": "1b6fe43745",
+"img/explain/ur.webp": "0ee135d5a3",
+"img/explain/vaegt.webp": "fd28bbff64",
 "img/map/01-indgang-flamingosoe.webp": "3e5c02f861",
 "img/map/02-foderlager.webp": "c1bbc58efe",
 "img/map/03-abehuset.webp": "4e286d666c",
@@ -193,17 +202,17 @@ const FILES = {
 "img/ui/opgave.webp": "a3fc40a92c",
 "img/ui/zoo-omraade.webp": "95cfcabe7c",
 "img/ui/zoo-runden.webp": "e717e3975d",
-"index.html": "13f32863dc",
-"js/app.js": "ea118b1a5e",
-"js/curriculum.js": "0ef2fd4af7",
-"js/engine.js": "8dbac08ccd",
+"index.html": "752fa2ea58",
+"js/app.js": "cdadd99083",
+"js/curriculum.js": "6408987863",
+"js/engine.js": "c4eaa972b7",
 "js/fx.js": "d4374ab279",
-"js/map.js": "f73516b725",
-"js/scene.js": "34d761f3de",
+"js/map.js": "6112bfab96",
+"js/scene.js": "34ce73e482",
 "js/store.js": "e60eddfa18",
 "js/util.js": "183e6761c8",
-"js/visuals.js": "17d49c825e",
-"js/zoo.js": "2a9b9e7bfa",
+"js/visuals.js": "d5edf51d28",
+"js/zoo.js": "f0a3d9ea0f",
 "manifest.webmanifest": "58cc6e90f1"
 };
 
