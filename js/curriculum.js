@@ -4,8 +4,8 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005204631';
-import * as V from './visuals.js?v=20261005204631';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261005213456';
+import * as V from './visuals.js?v=20261005213456';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
@@ -242,11 +242,11 @@ const plusminus = {
       rows: [['Minus → plus', '', '347 + 285 = 632 ✓']],
     },
   },
-  gen(level) {
+  gen(level, { mode } = {}) {
     const ranges = [[15, 89], [120, 899], [1200, 8999]];
     const [lo, hi] = ranges[level - 1];
     let a = ri(lo, hi), b = ri(lo, hi);
-    const add = chance(0.5);
+    const add = mode ? mode === 'plus' : chance(0.5); // Øvebanen: kun plus eller kun minus
     if (!add && a < b) [a, b] = [b, a];
     if (!add && a === b) a += ri(1, 9);
     const ans = add ? a + b : a - b;
@@ -521,7 +521,29 @@ const divtekst = {
       ],
     },
   },
-  gen(level) {
+  gen(level, { mode } = {}) {
+    // Øvebanen: én slags division i tre sværhedsgrader – del ligeligt (delingsdivision) eller del i grupper (målingsdivision)
+    if (mode) {
+      const [dl, dh, ql, qh] = [[2, 5, 2, 10], [3, 9, 3, 10], [3, 9, 11, 20]][level - 1];
+      const d = ri(dl, dh), q = ri(ql, qh), a = d * q;
+      const [prompt, unit] = mode === 'del'
+        ? pick([
+          [`${a} bananer skal deles ligeligt mellem ${d} aber. Hvor mange bananer får hver abe?`, 'bananer'],
+          [`${a} fisk skal deles ligeligt mellem ${d} sæler. Hvor mange fisk får hver sæl?`, 'fisk'],
+          [`Bodil deler ${a} billetter ligeligt mellem ${d} skoleklasser. Hvor mange billetter får hver klasse?`, 'billetter'],
+        ])
+        : pick([
+          [`${a} børn på skoletur i zoo'en skal deles i grupper med ${d} i hver. Hvor mange grupper bliver der?`, 'grupper'],
+          [`${a} gulerødder pakkes i poser med ${d} i hver. Hvor mange poser bliver der?`, 'poser'],
+          [`${a} gæster skal sidde ved borde med ${d} pladser ved hvert. Hvor mange borde bliver fyldt?`, 'borde'],
+        ]);
+      return {
+        prompt, input: 'number', answer: q, unit,
+        explain: mode === 'del'
+          ? `${a} delt ligeligt i ${d}: ${a} : ${d} = <b>${q}</b> til hver, fordi ${d} × ${q} = ${a}.`
+          : `Hvor mange gange går ${d} op i ${a}? ${a} : ${d} = <b>${q}</b>, fordi ${q} × ${d} = ${a}.`,
+      };
+    }
     if (level === 1) {
       const d = ri(2, 6), q = ri(2, 10), a = d * q;
       return {
@@ -1058,12 +1080,13 @@ const enheder = {
       ],
     },
   },
-  gen(level) {
+  gen(level, { mode } = {}) {
     const conv = [
       // [fra, til, faktor] – faktor: 1 fra = faktor til
       ['m', 'cm', 100], ['kg', 'g', 1000], ['l', 'dl', 10], ['km', 'm', 1000], ['cm', 'mm', 10], ['l', 'cl', 100],
     ];
-    const pool = level === 1 ? conv.slice(0, 3) : conv;
+    const units = conv.filter(([b]) => !mode || UNIT_PIC[b] === mode); // Øvebanen: kun længde, vægt eller rumfang
+    const pool = level === 1 ? units.slice(0, mode ? 1 : 3) : units;
     const [big, small, f] = pick(pool);
     if (level < 3) {
       const n = ri(2, 9);
@@ -1323,8 +1346,37 @@ const typetal = {
       { title: 'Variationsbredde', visual: () => V.miniTiles([2, 4, 5, 9, 9], { hi: [0, 4], span: '9 − 2 = 7' }), rules: ['variationsbredde = 7'], note: 'Største tal minus mindste tal.' },
     ],
   },
-  gen(level) {
+  gen(level, { mode } = {}) {
     const ctx = pick(['Antal fisk hver pingvin spiste', 'Antal bananer hver abe fik', 'Antal timer løverne sov hver dag', 'Antal æg i hver af svanernes reder']);
+    // Øvebanen: ét mål ad gangen – flere og større tal for hvert niveau
+    if (mode) {
+      const len = [5, 7, 9][level - 1], top = [10, 20, 30][level - 1];
+      if (mode === 'typetal') {
+        const m = ri(1, top), c = level + 2; // typetallet optræder 3, 4 eller 5 gange – alle andre kun én gang
+        const others = shuffle(Array.from({ length: top }, (_, i) => i + 1).filter((x) => x !== m)).slice(0, len + level - c);
+        const nums = shuffle([...Array(c).fill(m), ...others]);
+        return {
+          prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>typetallet</b>?`,
+          input: 'number', answer: m,
+          explain: `Typetallet er det tal, der optræder flest gange. ${m} optræder ${c} gange: <b>${m}</b>.`,
+        };
+      }
+      const nums = Array.from({ length: len }, () => ri(1, top));
+      if (mode === 'variationsbredde') {
+        const mx = Math.max(...nums), mn = Math.min(...nums);
+        return {
+          prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>variationsbredden</b>?`,
+          input: 'number', answer: mx - mn,
+          explain: `Største tal er ${mx}, mindste er ${mn}. Variationsbredden er ${mx} − ${mn} = <b>${mx - mn}</b>.`,
+        };
+      }
+      const sorted = [...nums].sort((a, b) => a - b), mid = sorted[(len - 1) / 2];
+      return {
+        prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>medianen</b>?`,
+        input: 'number', answer: mid,
+        explain: `Sæt i rækkefølge: ${sorted.map((x, i) => (i === (len - 1) / 2 ? `<b><u>${x}</u></b>` : x)).join(', ')}. Det midterste tal er <b>${mid}</b>.`,
+      };
+    }
     if (level === 1) {
       const mode = ri(1, 9);
       const list = [mode, mode, mode];
@@ -1591,7 +1643,7 @@ export const AREAS = [
 export const SKILLS = {};
 for (const area of AREAS) for (const s of area.skills) SKILLS[s.id] = { ...s, area: area.id };
 
-// ---------- Øvebanen: lektiepakker uden for zoo-forløbet ----------
+// ---------- Øvebanens egne øvelser uden for zoo-forløbet (står i disciplinerne nederst) ----------
 // Hver færdighed har intro.steps: et gennemregnet eksempel, der vises ét trin ad gangen.
 
 const sn = (n) => (n < 0 ? `−${fmt(-n)}` : fmt(n)); // rigtigt minustegn
@@ -1601,7 +1653,7 @@ const stepsHTML = (arr) => `<ol class="steps">${arr.map((s) => `<li>${s}</li>`).
 // VII) Omskriv tal: tiendedele og hundrededele
 const decimalDele = {
   id: 'decimaldele',
-  name: 'Tiendedele og hundrededele',
+  name: 'Byg et decimaltal',
   desc: 'Fx 6/100 + 5 + 2/10 = 5,26',
   intro: {
     text: 'Et decimaltal er bygget af hele, tiendedele og hundrededele.',
@@ -1829,17 +1881,126 @@ const parenteser = {
   },
 };
 
-export const PRACTICE_SETS = [
-  {
-    id: 'uge40', name: 'Lektier uge 40', place: 'Lektier uge 40', icon: '📝', color: 'var(--c-tal)',
-    desc: 'Decimaltal, find x og parenteser – som på lektiearket',
-    skills: [decimalDele, findX, parenteser],
+// ================= Øvebanen: matematikken delt op i discipliner =================
+// Øvebanen er altid åben, og alt er frit. Disciplinerne følger klassens bog (KonteXt+ 4) inden for Fælles Måls
+// tre faglige områder. Zoo'ens færdigheder står med deres egen fremgang (fælles med zoo'en); Øvebanens egne
+// øvelser – de udskilte og gangetabellen – får disciplinen som område.
+
+// En målrettet udgave af en zoo-færdighed: samme opgaver, men kun én type (generatoren får en tilstand) og kun
+// det forklaringskort, der passer
+const variant = (base, { id, name, desc, mode, card, lead, text, tip }) => ({
+  id, name, desc, base: base.id,
+  intro: { ...base.intro, lead, text, cards: base.intro.cards.filter((c) => c.title === card), tip },
+  gen: (level) => base.gen(level, { mode }),
+});
+const pmPlus = variant(plusminus, {
+  id: 'pm-plus', name: 'Plus', desc: 'Læg store tal sammen – hver plads for sig', mode: 'plus', card: 'Plus: hver plads for sig',
+  lead: 'Dagens billetsalg skal lægges sammen. Læg hundreder, tiere og enere sammen hver for sig.',
+  text: 'Læg <b>hundreder, tiere og enere</b> sammen hver for sig:<br>347 + 285 = (300+200) + (40+80) + (7+5) = 500 + 120 + 12 = <b>632</b>.',
+  tip: { title: 'Tjek dit svar', rows: [['Plus → minus', '', '632 − 285 = 347 ✓']] },
+});
+const pmMinus = variant(plusminus, {
+  id: 'pm-minus', name: 'Minus', desc: 'Træk fra i bidder', mode: 'minus', card: 'Minus: træk fra i bidder',
+  lead: 'Hvor mange er der tilbage? Træk tallet fra i bidder – hundreder, tiere og enere.',
+  text: 'Træk fra i bidder: 632 − 285 = 632 − 200 − 80 − 5 = <b>347</b>.',
+  tip: plusminus.intro.tip,
+});
+const enhLaengde = variant(enheder, {
+  id: 'enh-laengde', name: 'Længde', desc: 'km, m, cm og mm', mode: 'laengde', card: 'Længde',
+  lead: 'Hvor langt, højt eller bredt? Længder måles i km, m, cm og mm.',
+  text: '<b>1 km = 1.000 m</b> · <b>1 m = 100 cm</b> · <b>1 cm = 10 mm</b>',
+  tip: { title: 'Sådan regner du om', rows: [['Stor → lille', 'gang', '4 m = 4 × 100 = 400 cm'], ['Lille → stor', 'del', '3.000 m = 3.000 : 1.000 = 3 km'], ['En halv', '', '½ m = 50 cm · ½ km = 500 m']] },
+});
+const enhVaegt = variant(enheder, {
+  id: 'enh-vaegt', name: 'Vægt', desc: 'kg og g', mode: 'vaegt', card: 'Vægt',
+  lead: 'Hvor tungt? Vægt måles i kilogram (kg) og gram (g).',
+  text: '<b>1 kg = 1.000 g</b>',
+  tip: { title: 'Sådan regner du om', rows: [['Stor → lille', 'gang', '4 kg = 4 × 1.000 = 4.000 g'], ['Lille → stor', 'del', '3.000 g = 3.000 : 1.000 = 3 kg'], ['En halv', '', '½ kg = 500 g']] },
+});
+const enhRumfang = variant(enheder, {
+  id: 'enh-rumfang', name: 'Rumfang', desc: 'l, dl og cl', mode: 'rumfang', card: 'Rumfang',
+  lead: 'Hvor meget kan der være i? Rumfang måles i liter (l), deciliter (dl) og centiliter (cl).',
+  text: '<b>1 l = 10 dl = 100 cl</b>',
+  tip: { title: 'Sådan regner du om', rows: [['Stor → lille', 'gang', '4 l = 4 × 10 = 40 dl'], ['Lille → stor', 'del', '300 cl = 300 : 100 = 3 l'], ['En halv', '', '½ l = 5 dl = 50 cl']] },
+});
+const divLigeligt = variant(divtekst, {
+  id: 'div-ligeligt', name: 'Del ligeligt', desc: 'Hvor mange får hver? (delingsdivision)', mode: 'del', card: 'Del ligeligt',
+  lead: 'Noget skal deles helt lige mellem nogle stykker. Hvor mange får hver?',
+  text: 'Del ligeligt: 15 bananer mellem 3 aber er 15 : 3 = <b>5</b> til hver, fordi 3 × 5 = 15.',
+  tip: { title: 'Hvad spørger de om?', rows: [['Hvor mange til hver?', '', 'del ligeligt'], ['Tjek', '', '3 × 5 = 15 ✓']] },
+});
+const divGrupper = variant(divtekst, {
+  id: 'div-grupper', name: 'Del i grupper', desc: 'Hvor mange grupper bliver der? (målingsdivision)', mode: 'grupper', card: 'Del i grupper',
+  lead: 'Der skal være lige mange i hver gruppe. Hvor mange grupper bliver der?',
+  text: 'Del i grupper: 24 børn med 4 i hver gruppe er 24 : 4 = <b>6</b> grupper – 4 går 6 gange op i 24.',
+  tip: { title: 'Hvad spørger de om?', rows: [['Hvor mange grupper?', '', 'del i grupper'], ['Tjek', '', '6 × 4 = 24 ✓']] },
+});
+const bdTypetal = variant(typetal, {
+  id: 'bd-typetal', name: 'Typetal', desc: 'Det tal, der er flest af', mode: 'typetal', card: 'Typetal',
+  lead: 'Hvilket svar kom flest gange? Det tal kaldes typetallet.', text: '<b>Typetal:</b> det tal, der er flest af.',
+});
+const bdMedian = variant(typetal, {
+  id: 'bd-median', name: 'Median', desc: 'Det midterste tal', mode: 'median', card: 'Median',
+  lead: 'Sæt tallene i rækkefølge. Det tal, der står i midten, er medianen.', text: '<b>Median:</b> sæt tallene i rækkefølge – medianen er det midterste.',
+});
+const bdVariation = variant(typetal, {
+  id: 'bd-variationsbredde', name: 'Variationsbredde', desc: 'Største tal minus mindste tal', mode: 'variationsbredde', card: 'Variationsbredde',
+  lead: 'Hvor langt er der fra det mindste til det største tal? Det er variationsbredden.', text: '<b>Variationsbredde:</b> største tal − mindste tal.',
+});
+
+// Gangetabellen – én tabel ad gangen. Øvelsen har sin egen fremgang og flytter ikke ungerne i Babyhuset
+// (deres spredte gentagelse er uændret)
+const tabelIntro = {
+  text: 'Regn dig frem fra et gangestykke, du kender: 6 × 7 er én 7\'er mere end 5 × 7 = 35 – altså <b>42</b>.',
+  lead: 'Øv én tabel ad gangen. Du kan altid regne dig frem fra et gangestykke, du kender.',
+  cards: [
+    { title: 'Spring i tabellen', visual: () => V.miniSeq([7, 14, 21, 28, '?'], '+7'), rules: ['7, 14, 21, 28, 35 …'], note: 'Hvert spring lægger 7 til.' },
+    { title: 'Fra et tal, du kender', visual: () => V.miniGroups({ groups: 6, per: 7, label: '6 × 7 = 42' }), rules: ['5 × 7 = 35', '6 × 7 = 35 + 7 = 42'], note: 'Én gruppe mere: læg 7 til.' },
+  ],
+  tip: { title: 'Gode genveje', rows: [['Byt om', '', '3 × 7 = 7 × 3'], ['× 10', '', 'sæt et 0 på: 10 × 7 = 70'], ['× 5', '', 'halvdelen af × 10: 5 × 7 = 35']] },
+};
+const tabeller = [2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({
+  id: `tabel${n}`, name: `${n}-tabellen`, desc: `${n} × 1 til ${n} × 10`, table: n, intro: tabelIntro,
+  gen(level) {
+    const k = level === 1 ? ri(1, 5) : ri(1, 10), p = n * k;
+    const why = k === 1 ? `Gange med 1 giver tallet selv: ${n} × 1 = ${n}.` : factStrategy(n, k);
+    if (level === 3 && chance(0.5)) {
+      return { prompt: `<span class="big-expr">${n} × ${box()} = ${p}</span>`, input: 'number', answer: k, explain: `${n} × <b>${k}</b> = ${p}. ${why}` };
+    }
+    const [a, b] = chance(0.5) ? [n, k] : [k, n];
+    return { prompt: `<span class="big-expr">${a} × ${b}</span>`, input: 'number', answer: p, explain: why };
   },
+}));
+
+// Fælles Måls faglige områder og disciplinerne (kapitel = KonteXt+ 4; null = ikke et eget kapitel i 4. klasse)
+export const PRACTICE_GROUPS = [
+  { id: 'tal', name: 'Tal og algebra' },
+  { id: 'geo', name: 'Geometri og måling' },
+  { id: 'data', name: 'Statistik og sandsynlighed' },
+];
+const disc = (id, group, name, icon, color, chapter, desc, skills) => ({ id, group, name, place: name, icon, color, chapter, desc, skills });
+export const DISCIPLINES = [
+  disc('d-tal', 'tal', 'Tal og titalssystemet', '🔢', 'var(--c-tal)', 1, 'Store tal, cifrenes værdi, afrunding og sammenligning', [positionssystem, afrunding, sammenlign]),
+  disc('d-plusminus', 'tal', 'Plus og minus', '➕', 'var(--c-tal)', null, 'Læg sammen og træk fra med store tal', [pmPlus, pmMinus]),
+  disc('d-gange', 'tal', 'Gange', '✖️', 'var(--c-gange)', 1, 'Gangetabellen, gange med 10 og 100 og flercifrede tal', [...tabeller, gange10, gangeflercifret, gangetekst]),
+  disc('d-regneregler', 'tal', 'Regneregler og regnehierarki', '🧮', 'var(--c-gange)', 1, 'Gange før plus og minus – og parenteser', [parenteser]),
+  disc('d-division', 'tal', 'Division', '➗', 'var(--c-div)', 2, 'Del ligeligt, del i grupper og division med rest', [divtabel, divLigeligt, divGrupper, divrest, divflercifret]),
+  disc('d-brok', 'tal', 'Brøker', '🥧', 'var(--c-brok)', 4, 'Brøker som dele af en helhed og som tal på en tallinje', [brokfigur, brokafantal, broktallinje, broksammenlign, ligevaerdig]),
+  disc('d-decimal', 'tal', 'Decimaltal', '🔟', 'var(--c-dec)', 6, 'Tiendedele, hundrededele, tallinjen og regning med komma', [decfigur, decimalDele, dectallinje, decsammenlign, decplusminus]),
+  disc('d-ligninger', 'tal', 'Ligninger og balance', '⚖️', 'var(--c-alg)', 9, 'Find det ukendte tal – begge sider af = er lige store', [ukendt, findX]),
+  disc('d-moenstre', 'tal', 'Mønstre', '🐾', 'var(--c-alg)', 9, 'Find reglen i en talfølge, og fortsæt', [talfolger]),
+  disc('d-linjer', 'geo', 'Linjer og vinkler', '📐', 'var(--c-geo)', 3, 'Spidse, rette, stumpe og lige vinkler', [vinkler]),
+  disc('d-areal', 'geo', 'Areal og omkreds', '🟩', 'var(--c-geo)', 8, 'Hele vejen rundt – og hvor stor en flade er', [omkreds, areal]),
+  disc('d-maal', 'geo', 'Længde, vægt og rumfang', '📏', 'var(--c-maal)', 7, 'Omregn mellem enhederne', [enhLaengde, enhVaegt, enhRumfang]),
+  disc('d-tid', 'geo', 'Tid', '🕐', 'var(--c-maal)', 7, 'Aflæs uret, og regn med tid', [klokken, tidsforskel]),
+  disc('d-diagrammer', 'data', 'Tabeller og diagrammer', '📊', 'var(--c-data)', 5, 'Aflæs og regn med diagrammer', [soejle]),
+  disc('d-beskriv', 'data', 'Beskriv data', '🔍', 'var(--c-data)', null, 'Typetal, median og variationsbredde', [bdTypetal, bdMedian, bdVariation]),
+  disc('d-chance', 'data', 'Chance og sandsynlighed', '🎲', 'var(--c-data)', 5, 'Hvor stor er chancen – i ord og som brøk?', [sandsynlighed]),
 ];
 
-// Alle færdigheder (zoo + øvebane) – til opslag ved øvning
+// Alle færdigheder (zoo + Øvebanens egne) – til opslag ved øvning. Zoo-færdighederne beholder deres område.
 export const ALL_SKILLS = { ...SKILLS };
-for (const set of PRACTICE_SETS) for (const s of set.skills) ALL_SKILLS[s.id] = { ...s, area: set.id, practice: true };
+for (const d of DISCIPLINES) for (const s of d.skills) if (!SKILLS[s.id]) ALL_SKILLS[s.id] = { ...s, area: d.id, practice: true };
 
 // ---------- Gangetabellen (spaced repetition pr. fakta) ----------
 

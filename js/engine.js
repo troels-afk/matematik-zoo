@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261005204631';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261005204631';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261005213456';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261005213456';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -83,6 +83,7 @@ export function recordSkill(state, id, correct, level, ms) {
 }
 
 export function isUnlocked(state, skillId) {
+  if (!SKILLS[skillId]) return true; // Øvebanens egne øvelser er altid åbne
   const area = AREAS.find((a) => a.id === SKILLS[skillId].area);
   const idx = area.skills.findIndex((s) => s.id === skillId);
   if (idx === 0) return true;

@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, PRACTICE_SETS, FACTS, factProblem } from './curriculum.js?v=20261005204631';
-import * as E from './engine.js?v=20261005204631';
-import * as Z from './zoo.js?v=20261005204631';
-import { zooGate } from './scene.js?v=20261005204631';
-import { zooMap } from './map.js?v=20261005204631';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005204631';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005204631';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005204631';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261005213456';
+import * as E from './engine.js?v=20261005213456';
+import * as Z from './zoo.js?v=20261005213456';
+import { zooGate } from './scene.js?v=20261005213456';
+import { zooMap } from './map.js?v=20261005213456';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005213456';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005213456';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261005213456';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -31,7 +31,7 @@ const $ = (sel) => app.querySelector(sel);
 const $$ = (sel) => [...app.querySelectorAll(sel)];
 const on = (sel, ev, fn) => $$(sel).forEach((el) => el.addEventListener(ev, fn));
 const save = (now = false) => saveState(S.id, S.state, { now });
-const areaOf = (id) => AREAS.find((a) => a.id === id) || PRACTICE_SETS.find((a) => a.id === id);
+const areaOf = (id) => AREAS.find((a) => a.id === id) || DISCIPLINES.find((a) => a.id === id);
 const ME = ['🦊', '🐼', '🦒', '🐧', '🦁', '🐨', '🦓', '🐢'];
 const meAvatar = (name) => ME[[...name].reduce((h, c) => h + c.charCodeAt(0), 0) % ME.length];
 
@@ -210,7 +210,7 @@ function showAbout(back = showHome) {
         <p>Indholdet følger de fire kompetenceområder i Fælles Mål for matematik (tal og algebra, geometri og måling, statistik og sandsynlighed samt matematiske kompetencer) og er struktureret som i lærebogssystemet KonteXt+ 4. Det giver ${skillCount} færdigheder fordelt på ${AREAS.length} områder i zoo'en – plus gangetabellen i Babyhuset.</p>
         <div class="table-wrap"><table><thead><tr><th>Sted i zoo'en</th><th>Emne</th><th>Færdigheder</th></tr></thead><tbody>${rows}
           <tr><td>🍼 Babyhuset</td><td>Gangetabellen</td><td>De 36 gangestykker fra 2 til 9</td></tr></tbody></table></div>
-        <p class="small muted">Hver færdighed har tre niveauer. Øvebanen rummer desuden lektiepakker lavet ud fra konkrete lektieark.</p>
+        <p class="small muted">Hver færdighed har tre niveauer. På Øvebanen kan alt øves frit – delt op i discipliner som i matematikbogen, med flere målrettede øvelser end i zoo'en (fx gangetabellen én tabel ad gangen).</p>
       </div>
 
       <h2 class="section-title" style="margin-bottom:0">Det bygger appen på</h2>
@@ -345,7 +345,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheetEl?
 // Dagens missioner: { date, area (den seneste), done: [områder klaret i dag], mission, chips }
 const todayLog = (st) => (st.zoo.today?.date === today() ? st.zoo.today : null);
 // Fri træning i områderne åbner, når dagens mission er klaret – dag for dag. Kortet, områdesiderne,
-// "Se hvordan", Babyhuset og Dyrebogen kan altid ses, og Øvebanen (lektier) er altid åben.
+// "Se hvordan", Babyhuset og Dyrebogen kan altid ses, og Øvebanen er altid åben (alt frit).
 const freePlayOpen = (st) => !!todayLog(st)?.mission;
 
 function isoWeek(d = new Date()) {
@@ -712,56 +712,78 @@ function showPlace(areaId) {
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), { btn: `Tilbage til ${a.place}`, back: `Tilbage til ${a.place}` }));
 }
 
-// ================= Øvebanen: oversigt over lektiepakker =================
+// ================= Øvebanen: matematikken delt op i discipliner =================
 
 function showPracticeHub() {
   const st = S.state;
+  const solid = (sk) => ['sikker', 'mestret'].includes(E.skillStatus(st, sk.id));
+  const tile = (d) => {
+    const done = d.skills.filter(solid).length, n = d.skills.length;
+    return `<button class="practice-set disc-tile" data-disc="${d.id}" style="--ac:${d.color}">
+      <span class="ps-ic" aria-hidden="true">${d.icon}</span>
+      <span class="ps-body"><span class="head ps-nm">${d.name}</span>
+        <span class="ps-d">${d.chapter ? `Kapitel ${d.chapter} i matematikbogen` : d.desc}</span>
+        <span class="disc-prog"><span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * done) / n)}%"></i></span>${done} af ${n} sikre ⭐</span></span>
+      <span class="go" aria-hidden="true">→</span>
+    </button>`;
+  };
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Zoo'en</span></div>
     <section class="area-hero" style="--ac:var(--c-tal)">
       <span class="big">${ui('oeve')}</span>
       <div style="flex:1;min-width:200px"><h1 style="margin:0">Øvebanen</h1>
-        <div class="muted" style="font-weight:700">Øv et bestemt emne – fx ugens lektier. Hvert emne starter med et eksempel, der viser trin for trin, hvordan man gør.</div></div>
+        <div class="muted" style="font-weight:700">Øv lige det, du vil – alt er åbent. Matematikken er delt op som i din matematikbog, og hver øvelse starter med et eksempel.</div></div>
     </section>
-    <div class="practice-sets" style="margin-top:16px">${PRACTICE_SETS.map((set) => `
-      <button class="practice-set" data-set="${set.id}" style="--ac:${set.color}">
-        <span class="ps-ic">${set.icon}</span>
-        <span class="ps-body"><span class="head ps-nm">${set.name}</span><span class="ps-d">${set.desc}</span>
-          <span class="ps-chips">${set.skills.map((sk) => `<span class="st ${E.skillStatus(st, sk.id)}">${sk.name}</span>`).join('')}</span></span>
-        <span class="go" aria-hidden="true">→</span>
-      </button>`).join('')}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
+    ${PRACTICE_GROUPS.map((g) => `
+      <div class="section-title"><h2>${g.name}</h2></div>
+      <div class="disc-grid">${DISCIPLINES.filter((d) => d.group === g.id && d.skills.length).map(tile).join('')}</div>`).join('')}`,
+  (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
-  on('.practice-set', 'click', (e) => { sfx('tap'); showPracticeSet(e.currentTarget.dataset.set); });
+  on('.disc-tile', 'click', (e) => { sfx('tap'); showDiscipline(e.currentTarget.dataset.disc); });
 }
 
-// ================= Øvebanen: en lektiepakke =================
+// ================= Øvebanen: en disciplin =================
 
-function showPracticeSet(setId) {
-  const st = S.state, set = PRACTICE_SETS.find((x) => x.id === setId);
+function showDiscipline(discId) {
+  const st = S.state, d = DISCIPLINES.find((x) => x.id === discId);
   const label = { ny: 'Ny', øver: 'I gang', sikker: 'Sikker ⭐', mestret: 'Mester 🌟' };
-  const rows = set.skills.map((sk, i) => {
-    const status = E.skillStatus(st, sk.id);
-    const acc = E.skillAccuracy(st, sk.id, 30);
-    return `<div class="card skill-row" style="--ac:${set.color}">
-      <span class="wn big-n">${i + 1}</span>
+  const tables = d.skills.filter((sk) => sk.table);
+  let n = 0;
+  const row = (sk) => {
+    const status = E.skillStatus(st, sk.id), acc = E.skillAccuracy(st, sk.id, 30);
+    const zoo = SKILLS[sk.id] && areaOf(SKILLS[sk.id].area)?.place; // samme færdighed (og fremgang) som i zoo'en
+    return `<div class="card skill-row" style="--ac:${d.color}">
+      <span class="wn big-n">${++n}</span>
       <div style="flex:1;min-width:220px">
         <h3 style="margin:0 0 2px">${sk.name} <span class="st ${status}">${label[status]}</span></h3>
-        <span class="muted small">${sk.desc}${acc ? ` · ${acc.pct} % rigtige` : ''}</span>
+        <span class="muted small">${sk.desc}${zoo ? ` · også i ${zoo}` : ''}${acc ? ` · ${acc.pct} % rigtige` : ''}</span>
       </div>
-      <div class="row"><button class="btn ghost" data-intro="${sk.id}">💡 Se eksemplet</button><button class="btn" data-practice="${sk.id}">Øv 10 opgaver</button></div>
+      <div class="row"><button class="btn ghost" data-intro="${sk.id}">💡 ${sk.intro.steps ? 'Se eksemplet' : 'Se hvordan'}</button><button class="btn" data-practice="${sk.id}">Øv 10 opgaver</button></div>
     </div>`;
-  }).join('');
+  };
+  // Gangetabellen: én række med en knap pr. tabel (farvet efter, hvor sikker tabellen sidder)
+  const tablesRow = tables.length ? `<div class="card skill-row" style="--ac:${d.color}">
+      <span class="wn big-n">${++n}</span>
+      <div style="flex:1;min-width:220px">
+        <h3 style="margin:0 0 2px">Gangetabellen</h3>
+        <span class="muted small">Vælg en tabel, og øv 10 gangestykker</span>
+        <div class="tbl-picks">${tables.map((sk) => `<button class="tbl-pick ${E.skillStatus(st, sk.id)}" data-practice="${sk.id}" aria-label="Øv ${sk.name}" title="${sk.name}: ${label[E.skillStatus(st, sk.id)]}">${sk.table}</button>`).join('')}</div>
+      </div>
+      <div class="row"><button class="btn ghost" data-intro="${tables[0].id}">💡 Se eksemplet</button></div>
+    </div>` : '';
+  const rows = tablesRow + d.skills.filter((sk) => !sk.table).map(row).join('');
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Øvebanen</span></div>
-    <section class="area-hero" style="--ac:${set.color}">
-      <span class="big">${set.icon}</span>
-      <div style="flex:1;min-width:200px"><h1 style="margin:0">${set.name}</h1><div class="muted" style="font-weight:700">${set.desc}</div></div>
+    <section class="area-hero" style="--ac:${d.color}">
+      <span class="big" aria-hidden="true">${d.icon}</span>
+      <div style="flex:1;min-width:200px"><h1 style="margin:0">${d.name}</h1>
+        <div class="muted" style="font-weight:700">${d.desc}${d.chapter ? ` · kapitel ${d.chapter} i matematikbogen` : ''}</div></div>
     </section>
-    <div style="margin-top:14px">${say('kaj', 'Start med eksemplet – det viser trin for trin, hvordan man gør. Opgaverne bliver sværere, efterhånden som du kan dem 🦜')}</div>
+    <div style="margin-top:14px">${say('kaj', 'Kig på eksemplet først, hvis du er i tvivl. Opgaverne bliver sværere, efterhånden som du kan dem 🦜')}</div>
     <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showPracticeHub(); });
   on('#back', 'click', showPracticeHub);
-  on('[data-practice]', 'click', (e) => startPractice(e.currentTarget.dataset.practice));
-  on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPracticeSet(setId), { btn: `Tilbage til ${set.name}`, back: `Tilbage til ${set.name}` }));
+  on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice, discId); });
+  on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showDiscipline(discId), { btn: `Tilbage til ${d.name}`, back: `Tilbage til ${d.name}` }));
 }
 
 // ================= Intro til en færdighed =================
@@ -879,11 +901,13 @@ function missionTrack(run, block) {
     <div class="mt-main"><div class="mt-title">${ui('opgave')}Mission: <b>${esc(title)}</b></div><ol class="mt-steps">${steps}</ol></div></div>`;
 }
 
-function startPractice(skillId) {
-  const s = ALL_SKILLS[skillId], a = areaOf(s.area);
-  const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub: Z.ACTIVITIES[skillId]?.name || s.name, count: s.practice ? 10 : 8, skill: skillId }] };
+// discId: startet fra en disciplin på Øvebanen – så er det 10 opgaver, og "Øvelse klaret!" fører tilbage dertil
+function startPractice(skillId, discId) {
+  const s = ALL_SKILLS[skillId], a = areaOf(discId || s.area);
+  const sub = discId ? s.name : Z.ACTIVITIES[skillId]?.name || s.name;
+  const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub, count: discId || s.practice ? 10 : 8, skill: skillId }] };
   S.run = { mode: 'practice', sess, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
-  preloadScene(a.id);
+  preloadScene(s.area);
   goBlock();
 }
 
@@ -1259,7 +1283,7 @@ function finish() {
     const s = ALL_SKILLS[id];
     if (after.status[id] === 'mestret' && b.status[id] !== 'mestret') wins.push({ e: '🌟', t: `Du har mestret ${s.name.toLowerCase()}` });
     else if (after.status[id] === 'sikker' && !['sikker', 'mestret'].includes(b.status[id])) wins.push({ e: '⭐', t: `Du er nu sikker i ${s.name.toLowerCase()}` });
-    if (!s.practice && after.unlocked[id] && !b.unlocked[id]) wins.push({ e: '🔓', t: `Nyt i ${areaOf(s.area).place}: ${s.name}` });
+    if (!s.practice && id !== run.sess.main && after.unlocked[id] && !b.unlocked[id]) wins.push({ e: '🔓', t: `Nyt i ${areaOf(s.area).place}: ${s.name}` });
   }
   const born = FACTS.filter((f) => b.boxes[f.key] < 0 && after.boxes[f.key] >= 0);
   const grew = FACTS.filter((f) => b.boxes[f.key] >= 0 && after.boxes[f.key] > b.boxes[f.key]);
@@ -1273,8 +1297,8 @@ function finish() {
   if (grew.length) wins.push({ e: '🍼', t: `${names(grew)} voksede` });
   bonus.forEach((x) => wins.unshift({ e: '🍼', t: `Ugens unge: ${x.name} (${x.kind}) er flyttet ind i Babyhuset` }));
   const n = run.results.length;
-  const backSet = PRACTICE_SETS.find((x) => x.id === run.sess.area);
-  const backArea = !backSet && run.mode === 'practice' ? AREAS.find((x) => x.id === run.sess.area) : null;
+  const backDisc = DISCIPLINES.find((x) => x.id === run.sess.area);
+  const backArea = !backDisc && run.mode === 'practice' ? AREAS.find((x) => x.id === run.sess.area) : null;
   if (run.mode === 'daily') {
     const res = missionResults(st, run, b, after, born, grew, bonus);
     // Til forsidens "Mission klaret" (lægges oven i tidligere vagter i dag)
@@ -1292,8 +1316,8 @@ function finish() {
   // Øvelse fra et område eller Øvebanen: en kort afslutning og tilbage, hvor hun kom fra (dagens mission har sin egen)
   const diff = after.guests - b.guests;
   if (diff > 0) wins.push({ e: '🎟️', t: `+${fmt(diff)} gæster om dagen` });
-  const where = areaOf(run.sess.area)?.place || '', act = Z.ACTIVITIES[run.sess.main]?.name || ALL_SKILLS[run.sess.main]?.name || '';
-  const back = backSet ? { id: 'backset', text: `← Tilbage til ${backSet.name}`, go: () => showPracticeSet(backSet.id) }
+  const where = areaOf(run.sess.area)?.place || '', act = run.sess.blocks[0]?.sub || ALL_SKILLS[run.sess.main]?.name || '';
+  const back = backDisc ? { id: 'backdisc', text: `← Tilbage til ${backDisc.name}`, go: () => showDiscipline(backDisc.id) }
     : backArea ? { id: 'backarea', text: `← Tilbage til ${backArea.place}`, go: () => showPlace(backArea.id) } : null;
   // Et kort glimt af stedet, man har øvet i (aktivitetens eget miljø, ellers områdets)
   const env = envPic(ALL_SKILLS[run.sess.main]?.intro?.scene || Z.AREA_ENV[run.sess.area]);
@@ -1617,7 +1641,7 @@ function showParent() {
     <div class="stack">${areaBlocks}</div>
 
     <div class="section-title"><h2>Øvebanen</h2></div>
-    <div class="stack">${PRACTICE_SETS.map((set) => `<div class="card">
+    <div class="stack">${DISCIPLINES.map((d) => ({ ...d, skills: d.skills.filter((sk) => !SKILLS[sk.id]) })).filter((d) => d.skills.length).map((set) => `<div class="card">
       <h3 style="margin:0 0 8px">${set.icon} ${set.name}</h3>
       <div class="table-wrap"><table><thead><tr><th>Emne</th><th>Status</th><th>Niv.</th><th>Rigtige 14 d.</th><th>Sidst</th></tr></thead><tbody>
       ${set.skills.map((sk) => { const ss = st.skills[sk.id], acc = E.skillAccuracy(st, sk.id), status = E.skillStatus(st, sk.id);
@@ -1628,7 +1652,7 @@ function showParent() {
     <div class="section-title"><h2>Seneste 14 dage</h2></div>
     <div class="card table-wrap">
       ${recent.length ? `<table><thead><tr><th>Dato</th><th>Hvad</th><th>Opgaver</th><th>Rigtige</th><th>Tid</th></tr></thead><tbody>
-        ${recent.map((s) => `<tr><td>${fmtDate(s.t)}</td><td>${s.mode === 'practice' ? 'Øvede: ' : ''}${areaOf(s.area)?.place || ''}${s.main ? ` · ${ALL_SKILLS[s.main]?.name || ''}` : ''}</td>
+        ${recent.map((s) => `<tr><td>${fmtDate(s.t)}</td><td>${s.mode === 'practice' ? 'Øvede: ' : ''}${areaOf(s.area)?.place || (s.mode === 'practice' ? 'Øvebanen' : '')}${s.main ? ` · ${ALL_SKILLS[s.main]?.name || ''}` : ''}</td>
           <td>${s.n}</td><td>${s.correct}</td><td>${Math.round(s.ms / 60000)} min</td></tr>`).join('')}
       </tbody></table>` : '<p class="muted">Ingen sessioner endnu.</p>'}
     </div>
@@ -1799,4 +1823,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, set: showPracticeSet, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

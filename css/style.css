@@ -357,14 +357,21 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .goal-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #ffc94d); }
 
 /* ---------- Øvebanen og trin-for-trin ---------- */
-.practice-sets { display: grid; gap: 12px; }
 .practice-set { display: flex; align-items: center; gap: 16px; text-align: left; padding: 16px 18px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line-2); box-shadow: var(--shadow); border-left: 6px solid var(--ac); transition: transform .12s; }
 .practice-set:active { transform: scale(.99); }
 .practice-set .ps-ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; font-size: 1.8rem; background: color-mix(in srgb, var(--ac) 16%, var(--card)); flex: none; }
 .practice-set .ps-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .practice-set .ps-nm { font-size: 1.15rem; margin: 0; }
 .practice-set .ps-d { color: var(--ink-2); font-size: .88rem; font-weight: 700; }
-.practice-set .ps-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+/* Øvebanen: fliser for disciplinerne (min() holder dem inden for skærmen på en telefon) */
+.disc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.disc-prog { display: flex; align-items: center; gap: 8px; margin-top: 2px; font-size: .85rem; font-weight: 700; color: var(--ink-2); }
+.disc-prog .bar-mini { flex: 1; max-width: 120px; }
+/* Gangetabellen: én knap pr. tabel – grøn, når tabellen sidder sikkert */
+.tbl-picks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.tbl-pick { min-width: 46px; height: 46px; padding: 0 10px; border-radius: 14px; background: var(--card); border: 2px solid var(--line); font: 600 1.15rem var(--font-head); color: var(--ink); }
+.tbl-pick.øver { border-color: color-mix(in srgb, var(--sun) 70%, var(--line)); }
+.tbl-pick.sikker, .tbl-pick.mestret { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-ink); }
 .practice-set .go { margin-left: auto; flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--ac); color: #fff; font: 600 1.1rem var(--font-head); }
 .wn { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary-ink); font: 600 .95rem var(--font-head); flex: none; }
 .wn.big-n { width: 40px; height: 40px; font-size: 1.15rem; background: color-mix(in srgb, var(--ac) 16%, var(--card)); color: var(--ink); }
