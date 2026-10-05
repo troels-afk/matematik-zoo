@@ -928,17 +928,17 @@ function showTask() {
   renderTask(block, task);
 }
 
-// Opgavens scene: dyr og ting fra det område, opgaven hører til, kigger ind fra båndets kanter
-// (zoo-runden skifter område for hver opgave; opgaverne skifter mellem områdets varianter)
-function taskScene(task, i) {
+// Opgavens scene: miljøet fra det område, opgaven hører til, som ét bredt bånd over opgaven (zoo-runden
+// skifter område for hver opgave). Områdets udsnit (--y normalt, --yk kompakt) sættes på båndet; uden et
+// kompakt udsnit beholder båndet altid sin normale form (.fixed)
+function taskScene(task) {
   const sc = task.kind !== 'warm' && Z.TASK_SCENES[ALL_SKILLS[task.skill]?.area];
   if (!sc) return '';
-  const [l, r] = sc[i % sc.length];
-  const img = (src, cls) => (src ? `<img class="${cls}" src="${src}" alt="" draggable="false">` : '');
-  return `<div class="task-scene" aria-hidden="true">${img(l, 'ts-l')}${img(r, 'ts-r')}</div>`;
+  const img = `<img src="${sc.src}" alt="" draggable="false" decoding="async">`;
+  return `<div class="task-scene${sc.yk ? '' : ' fixed'}" style="--y:${sc.y};--yk:${sc.yk || sc.y}" aria-hidden="true">${img}</div>`;
 }
-// Hent kun det aktuelle områdes scener på forhånd
-const preloadScene = (areaId) => (Z.TASK_SCENES[areaId] || []).flat().filter(Boolean).forEach((src) => { new Image().src = src; });
+// Hent kun det aktuelle områdes scene på forhånd
+const preloadScene = (areaId) => { if (Z.TASK_SCENES[areaId]) new Image().src = Z.TASK_SCENES[areaId].src; };
 
 function renderTask(block, task) {
   const run = S.run;
@@ -963,7 +963,7 @@ function renderTask(block, task) {
       ${banner}
       <div class="task ${p.input !== 'choice' && p.input !== 'parts' ? 'has-input' : ''} ${p.visual ? 'has-visual' : ''}">
         <div>
-          ${taskScene(task, run.ti)}
+          ${taskScene(task)}
           <div class="prompt">${p.prompt}</div>
           ${p.visual ? `<div class="visual">${p.visual}</div>` : ''}
           <div id="helpbox"></div>
@@ -984,10 +984,16 @@ function renderTask(block, task) {
     $('#help').remove();
   });
   mountInput(p, answer);
-  // Opgaven er vigtigere end scenen: er der ikke plads til begge uden at scrolle (fx en lang tekstopgave
-  // på telefon), fjernes scenen, før skærmen tegnes – så tastaturet og "Tjek" altid kan ses
-  const scene = $('.task-scene');
-  if (scene && document.documentElement.scrollHeight > innerHeight + 1) scene.remove();
+  // Opgaven er vigtigere end scenen: kan kortet med opgaven (tekst, tegning, tastatur og "Tjek") ikke ses helt
+  // uden at scrolle (fx en lang tekstopgave på telefon), bliver scenen først kompakt og forsvinder så – før
+  // skærmen tegnes. Kortet glider ind nedefra (de 10 px trækkes fra)
+  const scene = $('.task-scene'), card = scene?.closest('.card');
+  if (scene) {
+    const lift = new DOMMatrixReadOnly(getComputedStyle(card).transform).m42;
+    const over = () => card.getBoundingClientRect().bottom - lift > innerHeight;
+    if (over() && !scene.classList.contains('fixed')) scene.classList.add('compact');
+    if (over()) scene.remove();
+  }
 }
 
 // ---------- Svar-input ----------
