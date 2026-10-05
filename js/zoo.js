@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261005151324';
-import * as E from './engine.js?v=20261005151324';
-import { today } from './util.js?v=20261005151324';
+import { AREAS, FACTS } from './curriculum.js?v=20261005154736';
+import * as E from './engine.js?v=20261005154736';
+import { today } from './util.js?v=20261005154736';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -32,20 +32,13 @@ export const SCENES = {
   algebra: { bg: 'img/map/09-skattejagt.webp', cub: 'ræveunge', alt: 'Skattejagten i skoven' },
 };
 
-// Opgaveskærmenes scene pr. område (udsnit af Batch 1, img/task/): kun miljø – opgaven står altid under.
-// pos = to placeringer af udsnittet (object-position), så opgaverne i en træning ikke ser ens ud.
-// Billederne viser Liv; i områder med en anden figur er udsnittet kun dyr og ting.
-export const TASK_SCENES = {
-  tal: { src: 'img/task/tal.webp', pos: ['28% 45%', '78% 45%'] },
-  gange: { src: 'img/task/gange.webp', pos: ['55% 18%', '75% 92%'] },
-  division: { src: 'img/task/division.webp', pos: ['65% 35%', '40% 45%'] },
-  brok: { src: 'img/task/brok.webp', pos: ['40% 40%', '75% 45%'] },
-  decimal: { src: 'img/task/decimal.webp', pos: ['8% 30%', '78% 75%'] },
-  geometri: { src: 'img/task/geometri.webp', pos: ['60% 12%', '45% 92%'] },
-  maaling: { src: 'img/task/maaling.webp', pos: ['25% 40%', '70% 40%'] },
-  data: { src: 'img/task/data.webp', pos: ['30% 30%', '80% 60%'] },
-  algebra: { src: 'img/task/algebra.webp', pos: ['40% 25%', '45% 60%'] },
-};
+// Opgaveskærmenes scene pr. område (Batch 1, img/task/): kun miljø – opgaven står altid under.
+// Hver variant er [venstre, højre]: dyr og ting, der kigger ind fra hver sin kant af båndet i båndets højde,
+// så de aldrig zoomes ind, uanset hvor bredt båndet er. Opgaverne skifter mellem områdets to varianter.
+// Billederne viser Liv; i områder med en anden figur er udsnittene kun dyr og ting.
+// (Udsnittene laves af tools/opgavescener/ ud fra billeder-raa/batch1-opgavescener/.)
+export const TASK_SCENES = Object.fromEntries(['tal', 'gange', 'division', 'brok', 'decimal', 'geometri', 'maaling', 'data', 'algebra']
+  .map((a) => [a, [1, 2].map((n) => [`img/task/${a}-${n}l.webp`, `img/task/${a}-${n}r.webp`])]));
 
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)
 // intro[i] og done[i] er starten og slutningen på tasks[i] ({who} = missionens figur)

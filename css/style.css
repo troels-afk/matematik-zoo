@@ -938,11 +938,15 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .free-open { margin: 0; font-weight: 700; color: var(--primary-ink); }
 
 /* ---------- Opgavens scene: områdets miljø over opgaven (aldrig tekst oven på billedet) ---------- */
-/* Fast højde (intet layout-hop, mens billedet hentes). Udsnittet fylder båndet og toner ud nederst. */
-.task-scene { height: 150px; margin: -4px 0 12px; border-radius: 18px; overflow: hidden;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--sky-soft) 85%, var(--card)), var(--card)); }
-.task-scene img { display: block; width: 100%; height: 100%; object-fit: cover;
-  -webkit-mask-image: linear-gradient(180deg, #000 68%, transparent); mask-image: linear-gradient(180deg, #000 68%, transparent); }
+/* Fast højde (intet layout-hop, mens billederne hentes). Dyr og ting kigger ind fra hver sin kant i båndets
+   højde – de zoomes aldrig ind, uanset hvor bredt båndet er – midten er himmel, og det hele toner ud nederst. */
+.task-scene { position: relative; height: 150px; margin: -4px 0 12px; border-radius: 18px; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sky-soft) 85%, var(--card)), var(--card));
+  -webkit-mask-image: linear-gradient(180deg, #000 74%, transparent); mask-image: linear-gradient(180deg, #000 74%, transparent); }
+/* max-width er kun et sikkerhedsnet i meget smalle bånd: så beskæres yderkanten, og dyret, der vender ind, bliver */
+.task-scene img { position: absolute; bottom: 0; height: 100%; width: auto; max-width: 48%; object-fit: cover; }
+.task-scene .ts-l { left: 0; object-position: right bottom; }
+.task-scene .ts-r { right: 0; object-position: left bottom; }
 /* Én kolonne (telefon og iPad stående): lavere bånd – og ingen scene, når opgaven har sin egen tegning,
    så tastaturet ikke skubbes ned. Valgopgaver med tegning står altid i én kolonne. */
 @media (max-width: 899px), (max-aspect-ratio: 1/1) {
