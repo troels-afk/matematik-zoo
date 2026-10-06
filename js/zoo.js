@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261006200944';
-import * as E from './engine.js?v=20261006200944';
-import { today } from './util.js?v=20261006200944';
+import { AREAS, FACTS } from './curriculum.js?v=20261006215831';
+import * as E from './engine.js?v=20261006215831';
+import { today } from './util.js?v=20261006215831';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -86,6 +86,19 @@ export const AREA_ENV = {
   geometri: 'elefanter', maaling: 'giraffer', data: 'observation', algebra: 'observation',
 };
 export const ROUND_ENV = ['flamingoer', 'elefanter', 'giraffer', 'aber', 'polar', 'indgang'];
+
+// Øvebanen som en sti (Batch 4, img/bg/): én baggrund pr. område + Øvebanens egen øvebane – liggende (l, 3:2) til
+// computer og iPad på langs, stående (s, 2:3) til telefon og iPad på højkant. Figurerne står i venstre side
+// (øverst i den stående), så sedlen med opgaven kan ligge i den rolige del.
+export const PRACTICE_BG = Object.fromEntries(['tal', 'gange', 'division', 'brok', 'decimal', 'geometri', 'maaling', 'data', 'algebra', 'oevebane']
+  .map((k) => [k, { l: `img/bg/${k}-l.webp`, s: `img/bg/${k}-s.webp` }]));
+// Hvilken scene hver disciplin på Øvebanen står i
+export const DISC_BG = {
+  'd-tal': 'tal', 'd-plusminus': 'tal', 'd-gange': 'gange', 'd-regneregler': 'oevebane', 'd-division': 'division',
+  'd-brok': 'brok', 'd-decimal': 'decimal', 'd-ligninger': 'algebra', 'd-moenstre': 'algebra', 'd-linjer': 'geometri',
+  'd-figurer': 'geometri', 'd-koordinater': 'oevebane', 'd-areal': 'geometri', 'd-maal': 'maaling', 'd-tid': 'maaling',
+  'd-diagrammer': 'data', 'd-beskriv': 'data', 'd-chance': 'data',
+};
 
 // Ekstra zoo-indhold pr. pensumområde (id'erne matcher AREAS i curriculum.js)
 // intro[i] og done[i] er starten og slutningen på tasks[i] ({who} = missionens figur)

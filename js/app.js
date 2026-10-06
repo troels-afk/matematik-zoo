@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261006200944';
-import * as E from './engine.js?v=20261006200944';
-import * as Z from './zoo.js?v=20261006200944';
-import { zooGate } from './scene.js?v=20261006200944';
-import { zooMap } from './map.js?v=20261006200944';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261006200944';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261006200944';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261006200944';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261006215831';
+import * as E from './engine.js?v=20261006215831';
+import * as Z from './zoo.js?v=20261006215831';
+import { zooGate } from './scene.js?v=20261006215831';
+import { zooMap } from './map.js?v=20261006215831';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261006215831';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261006215831';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261006215831';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1052,11 +1052,22 @@ function taskScene(task) {
 // Hent kun det aktuelle områdes scene på forhånd
 const preloadScene = (areaId) => { if (Z.TASK_SCENES[areaId]) new Image().src = Z.TASK_SCENES[areaId].src; };
 
+// Øvebanen som en sti: en øvelse fra en disciplin på Øvebanen står på en seddel over disciplinens scene, og de
+// 10 opgaver er trædesten (grøn = rigtigt i første forsøg, orange = ikke, gul = den, hun er ved)
+function trailOf(run) {
+  if (run.mode !== 'practice') return null;
+  const d = DISCIPLINES.find((x) => x.id === run.sess.area);
+  return d ? { d, bg: Z.PRACTICE_BG[Z.DISC_BG[d.id] || 'oevebane'] } : null;
+}
+const trailStones = (run, block) => `<ol class="trail-stones" aria-label="Opgave ${Math.min(run.ti + 1, block.count)} af ${block.count}">${Array.from({ length: block.count }, (_, i) =>
+  `<li class="${i < run.ti ? (run.results[i]?.correct ? 'ok' : 'miss') : i === run.ti ? 'now' : ''}"><span>${i + 1}</span></li>`).join('')}</ol>`;
+
 function renderTask(block, task) {
   const run = S.run;
   run.task = task;
   run.shownAt = Date.now();
   const p = task.p;
+  const trail = trailOf(run);
   let banner = '';
   if (task.kind === 'warm') {
     const b = Z.BABIES[task.fact];
@@ -1067,15 +1078,19 @@ function renderTask(block, task) {
   const help = (task.kind === 'main' || task.kind === 'practice') ? `<button class="link small" id="help">💡 Hjælp</button>` : '';
 
   view(`
-    <div class="session-top">
+    ${trail ? `<div class="trail-bg" aria-hidden="true"><picture><source media="(orientation: portrait)" srcset="${trail.bg.s}"><img src="${trail.bg.l}" alt="" decoding="async"></picture></div>
+    <div class="trail-top">
+      <div class="trail-sign"><button class="icon-btn" id="quit" aria-label="Stop">✕</button><span><span aria-hidden="true">${trail.d.icon}</span> <b>${trail.d.name}</b> · ${esc(block.sub)}</span></div>
+    </div>
+    ${trailStones(run, block)}` : `<div class="session-top">
       <button class="icon-btn" id="quit" aria-label="Stop">✕</button>
       ${missionTrack(run, block)}
-    </div>
-    <div class="card">
+    </div>`}
+    <div class="card${trail ? ' trail-note' : ''}">
       ${banner}
       <div class="task ${p.input !== 'choice' && p.input !== 'parts' ? 'has-input' : ''} ${p.visual ? 'has-visual' : ''}">
         <div>
-          ${taskScene(task)}
+          ${trail ? '' : taskScene(task)}
           <div class="prompt">${p.prompt}</div>
           ${p.visual ? `<div class="visual">${p.visual}</div>` : ''}
           <div id="helpbox"></div>
