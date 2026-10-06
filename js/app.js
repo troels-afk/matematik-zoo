@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261006220850';
-import * as E from './engine.js?v=20261006220850';
-import * as Z from './zoo.js?v=20261006220850';
-import { zooGate } from './scene.js?v=20261006220850';
-import { zooMap } from './map.js?v=20261006220850';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261006220850';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261006220850';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261006220850';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261006230806';
+import * as E from './engine.js?v=20261006230806';
+import * as Z from './zoo.js?v=20261006230806';
+import { zooGate } from './scene.js?v=20261006230806';
+import { zooMap } from './map.js?v=20261006230806';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261006230806';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261006230806';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261006230806';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -783,20 +783,18 @@ function showPracticeHub() {
   const solid = (sk) => ['sikker', 'mestret'].includes(E.skillStatus(st, sk.id));
   const tile = (d) => {
     const done = d.skills.filter(solid).length, n = d.skills.length;
-    return `<button class="practice-set disc-tile" data-disc="${d.id}" style="--ac:${d.color}">
-      <span class="ps-ic" aria-hidden="true">${d.icon}</span>
-      <span class="ps-body"><span class="head ps-nm">${d.name}</span>
-        <span class="ps-d">${d.chapter ? `Kapitel ${d.chapter} i matematikbogen` : d.desc}</span>
+    return `<button class="disc-tile" data-disc="${d.id}" style="--ac:${d.color}">
+      <span class="dt-art" aria-hidden="true"><img src="${Z.DISC_ART[d.id]}" alt="" width="150" height="112" decoding="async"></span>
+      <span class="dt-body"><span class="head dt-nm">${d.name.replace(/(\S{4,})(systemet)/, '$1&shy;$2')}</span>
+        <span class="dt-d">${d.chapter ? `Kapitel ${d.chapter} i bogen` : d.desc}</span>
         <span class="disc-prog"><span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * done) / n)}%"></i></span>${done} af ${n} sikre ⭐</span></span>
-      <span class="go" aria-hidden="true">→</span>
     </button>`;
   };
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Zoo'en</span></div>
-    <section class="area-hero" style="--ac:var(--c-tal)">
-      <span class="big">${ui('oeve')}</span>
-      <div style="flex:1;min-width:200px"><h1 style="margin:0">Øvebanen</h1>
-        <div class="muted" style="font-weight:700">Øv lige det, du vil – alt er åbent. Matematikken er delt op som i din matematikbog, og hver øvelse starter med et eksempel.</div></div>
+    <section class="oeve-hero">
+      <div class="oeve-glass"><h1>Øvebanen</h1>
+        <p>Øv lige det, du vil – alt er åbent. Matematikken er delt op som i din matematikbog, og hver øvelse starter med et eksempel.</p></div>
     </section>
     ${PRACTICE_GROUPS.map((g) => `
       <div class="section-title"><h2>${g.name}</h2></div>
@@ -839,7 +837,7 @@ function showDiscipline(discId) {
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Øvebanen</span></div>
     <section class="area-hero" style="--ac:${d.color}">
-      <span class="big" aria-hidden="true">${d.icon}</span>
+      <img class="disc-art" src="${Z.DISC_ART[d.id]}" alt="" width="150" height="112">
       <div style="flex:1;min-width:200px"><h1 style="margin:0">${d.name}</h1>
         <div class="muted" style="font-weight:700">${d.desc}${d.chapter ? ` · kapitel ${d.chapter} i matematikbogen` : ''}</div></div>
     </section>

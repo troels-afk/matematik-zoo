@@ -361,22 +361,39 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .goal-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #ffc94d); }
 
 /* ---------- Øvebanen og trin-for-trin ---------- */
-.practice-set { display: flex; align-items: center; gap: 16px; text-align: left; padding: 16px 18px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line-2); box-shadow: var(--shadow); border-left: 6px solid var(--ac); transition: transform .12s; }
-.practice-set:active { transform: scale(.99); }
-.practice-set .ps-ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; font-size: 1.8rem; background: color-mix(in srgb, var(--ac) 16%, var(--ic-base)); flex: none; }
-.practice-set .ps-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-.practice-set .ps-nm { font-size: 1.15rem; margin: 0; }
-.practice-set .ps-d { color: var(--ink-2); font-size: .88rem; font-weight: 700; }
-/* Øvebanen: fliser for disciplinerne (min() holder dem inden for skærmen på en telefon) */
-.disc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
-.disc-prog { display: flex; align-items: center; gap: 8px; margin-top: 2px; font-size: .85rem; font-weight: 700; color: var(--ink-2); }
-.disc-prog .bar-mini { flex: 1; max-width: 120px; }
+/* Øvebanens forside: et banner med stien (samme scene som i øvelserne) og titlen på en glasplade */
+.oeve-hero { min-height: 250px; border-radius: var(--r-lg); overflow: hidden; display: flex; align-items: center; justify-content: flex-end; padding: 20px;
+  background: #cfe9f5 url(../img/bg/oevebane-l.webp) 30% 22% / cover no-repeat; box-shadow: var(--shadow); }
+.oeve-glass { width: min(100%, 450px); padding: 16px 20px; border-radius: 18px; background: color-mix(in srgb, var(--card) 88%, transparent); box-shadow: 0 10px 30px rgba(31, 51, 70, .2); }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .oeve-glass { background: color-mix(in srgb, var(--card) 72%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); }
+}
+.oeve-glass h1 { margin: 0 0 4px; }
+.oeve-glass p { margin: 0; color: var(--ink-2); font-weight: 700; line-height: 1.45; }
+@media (max-width: 640px) { .oeve-hero { min-height: 0; padding: 140px 10px 10px; background-position: 16% 36%; } }
+/* Én flise pr. disciplin: tegningen på en lille scene i disciplinens farve, så navnet og fremgangen.
+   Grupperne har 9, 6 og 3 discipliner – derfor 2, 3 eller 6 kolonner, så rækkerne går op */
+.disc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (min-width: 600px) { .disc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .disc-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.disc-tile { display: flex; flex-direction: column; padding: 0; overflow: hidden; text-align: left; border-radius: var(--r); background: var(--card); border: 1px solid var(--line-2);
+  box-shadow: var(--shadow); transition: transform .15s, box-shadow .15s; }
+.disc-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.disc-tile:active { transform: scale(.98); }
+.dt-art { display: grid; place-items: center; height: 132px;
+  background: radial-gradient(ellipse 72% 64% at 50% 60%, color-mix(in srgb, var(--ac) 34%, var(--card)), color-mix(in srgb, var(--ac) 10%, var(--card))); }
+.dt-art img { width: 150px; height: 112px; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(31, 51, 70, .14)); transition: transform .2s; }
+.disc-tile:hover .dt-art img { transform: scale(1.06) rotate(-2deg); }
+.dt-body { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 14px; }
+.dt-nm { font-size: 1.08rem; line-height: 1.2; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; } /* "Koordinatsystemet" er bredere end flisen */
+.dt-d { color: var(--ink-2); font-size: .84rem; font-weight: 700; line-height: 1.3; }
+.disc-prog { display: flex; flex-direction: column; gap: 5px; margin-top: auto; padding-top: 6px; font-size: .84rem; font-weight: 700; color: var(--ink-2); }
+.area-hero .disc-art { width: 150px; height: 112px; object-fit: contain; margin: -12px 0; flex: none; filter: drop-shadow(0 6px 8px rgba(31, 51, 70, .14)); }
 /* Gangetabellen: én knap pr. tabel – grøn, når tabellen sidder sikkert */
 .tbl-picks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .tbl-pick { min-width: 46px; height: 46px; padding: 0 10px; border-radius: 14px; background: var(--card); border: 2px solid var(--line); font: 600 1.15rem var(--font-head); color: var(--ink); }
 .tbl-pick.øver { border-color: color-mix(in srgb, var(--sun) 70%, var(--line)); }
 .tbl-pick.sikker, .tbl-pick.mestret { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-ink); }
-.practice-set .go { margin-left: auto; flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--ac); color: #fff; font: 600 1.1rem var(--font-head); }
 .wn { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary-ink); font: 600 .95rem var(--font-head); flex: none; }
 .wn.big-n { width: 40px; height: 40px; font-size: 1.15rem; background: color-mix(in srgb, var(--ac) 16%, var(--card)); color: var(--ink); }
 
