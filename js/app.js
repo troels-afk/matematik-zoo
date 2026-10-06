@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261005221226';
-import * as E from './engine.js?v=20261005221226';
-import * as Z from './zoo.js?v=20261005221226';
-import { zooGate } from './scene.js?v=20261005221226';
-import { zooMap } from './map.js?v=20261005221226';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261005221226';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261005221226';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261005221226';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261006081127';
+import * as E from './engine.js?v=20261006081127';
+import * as Z from './zoo.js?v=20261006081127';
+import { zooGate } from './scene.js?v=20261006081127';
+import { zooMap } from './map.js?v=20261006081127';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261006081127';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261006081127';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261006081127';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1648,13 +1648,7 @@ function showParent() {
     <div class="stack">${areaBlocks}</div>
 
     <div class="section-title"><h2>Øvebanen</h2></div>
-    <div class="stack">${DISCIPLINES.map((d) => ({ ...d, skills: d.skills.filter((sk) => !SKILLS[sk.id]) })).filter((d) => d.skills.length).map((set) => `<div class="card">
-      <h3 style="margin:0 0 8px">${set.icon} ${set.name}</h3>
-      <div class="table-wrap"><table><thead><tr><th>Emne</th><th>Status</th><th>Niv.</th><th>Rigtige 14 d.</th><th>Sidst</th></tr></thead><tbody>
-      ${set.skills.map((sk) => { const ss = st.skills[sk.id], acc = E.skillAccuracy(st, sk.id), status = E.skillStatus(st, sk.id);
-        return `<tr><td>${sk.name}</td><td><span class="st ${status}">${status}</span></td><td>${ss && ss.hist.length ? ss.level : '–'}</td>
-        <td>${acc ? `${acc.pct} % <span class="muted">(${acc.n})</span>` : '–'}</td><td>${ss?.last ? fmtDate(ss.last) : '–'}</td></tr>`; }).join('')}
-      </tbody></table></div></div>`).join('')}</div>
+    ${reportTeaser(st)}
 
     <div class="section-title"><h2>Seneste 14 dage</h2></div>
     <div class="card table-wrap">
@@ -1702,6 +1696,7 @@ function showParent() {
   });
   on('#back', 'click', showHome);
   on('#about-p', 'click', () => showAbout(showParent));
+  on('#rp-open', 'click', () => showPracticeReport());
   on('#bk-save', 'click', exportBackup);
   on('#bk-load', 'click', pickBackup);
   on('#check-update', 'click', async () => {
@@ -1720,6 +1715,139 @@ function showParent() {
     showProfiles();
   });
   paintSeg();
+}
+
+// ================= Forældredelen: Øvebanen i tal =================
+// Hvor godt det går i hver disciplin og øvelse: rigtige i første forsøg og typisk tid pr. opgave (median). Tæller alle
+// svar – fra både Øvebanen og zoo'ens missioner – og peger på det, der skal øves mere (E.practiceVerdict).
+
+const REPORT_PERIODS = [['14', '14 dage'], ['30', '30 dage'], ['alt', 'Alt']];
+let reportPeriod = '30';
+const fluent = (id) => !!ALL_SKILLS[id]?.table || id === 'divtabel'; // gangestykker: tiden siger, om de sidder
+const fmtSec = (ms) => (ms == null ? '–' : ms < 59500 ? `${Math.max(1, Math.round(ms / 1000))} sek.` : `${Math.floor(ms / 60000)} min ${Math.round((ms % 60000) / 1000)} sek.`);
+const VERDICTS = {
+  oev: { icon: '!', label: 'Øv mere' },
+  naesten: { icon: '≈', label: 'Næsten' },
+  langsom: { icon: '⏱', label: 'Tager lang tid' },
+  godt: { icon: '✓', label: 'Sidder godt' },
+  faa: { icon: '·', label: 'For få svar' },
+};
+const verdictChip = (v) => `<span class="rp-v ${v}"><b aria-hidden="true">${VERDICTS[v].icon}</b>${VERDICTS[v].label}</span>`;
+// De seneste svar som prikker (fyldt = rigtigt, ring = forkert), ældste først
+const answerDots = (last) => (last.length ? `<span class="rp-dots" role="img" aria-label="De seneste ${last.length} svar: ${last.filter(Boolean).length} rigtige">${last.map((c) => `<i class="${c ? 'ok' : 'no'}"></i>`).join('')}</span>` : '');
+
+// Tallene for perioden: hver disciplin med dens øvelser (og zoo-aktiviteten bag de udskilte øvelser, fx "Plus og
+// minus" fra zoo'en bag "Plus" og "Minus"), samlet for disciplinen og for det hele
+function practiceReport(st, period) {
+  const since = period === 'alt' ? 0 : Date.now() - Number(period) * 86400000;
+  const discs = DISCIPLINES.map((d) => {
+    const ids = [...d.skills.map((sk) => sk.id), ...new Set(d.skills.map((sk) => sk.base).filter(Boolean))];
+    const rows = ids.map((id) => ({ id, s: ALL_SKILLS[id], base: !d.skills.some((sk) => sk.id === id), stats: E.skillStats(st, id, since) }));
+    return { d, rows, stats: E.answerStats(ids.map((id) => st.skills[id]?.hist || []), since) };
+  });
+  // Hendes typiske tid pr. opgave (uden gangestykkerne, som går hurtigt) – det, en langsom øvelse måles op imod
+  const seen = new Set(), pool = [];
+  for (const { rows } of discs) for (const r of rows) if (!seen.has(r.id) && !fluent(r.id)) { seen.add(r.id); pool.push(...r.stats.times); }
+  const typical = E.median(pool);
+  for (const x of discs) {
+    for (const r of x.rows) {
+      r.slow = fluent(r.id) ? E.FLUENT_MS : typical != null ? Math.max(30000, 2 * typical) : null;
+      r.verdict = E.practiceVerdict(r.stats, r.slow);
+    }
+    x.verdict = E.practiceVerdict(x.stats);
+  }
+  const all = [...new Map(discs.flatMap((x) => x.rows).map((r) => [r.id, r])).values()];
+  const total = E.answerStats(all.map((r) => st.skills[r.id]?.hist || []), since);
+  const rank = { oev: 0, naesten: 1, langsom: 2 };
+  const flagged = all.filter((r) => r.verdict in rank)
+    .sort((a, b) => rank[a.verdict] - rank[b.verdict] || (a.verdict === 'langsom' ? b.stats.med - a.stats.med : a.stats.pct - b.stats.pct));
+  const strong = all.filter((r) => r.verdict === 'godt').sort((a, b) => b.stats.n - a.stats.n);
+  return { discs, total, typical, flagged, strong, discOf: (id) => discs.find((x) => x.rows.some((r) => r.id === id && !r.base))?.d || discs.find((x) => x.rows.some((r) => r.id === id))?.d };
+}
+
+// Ejefald: "Ellies", men "Lars'"
+const genitive = (name) => (/[sxz]$/i.test(name) ? `${name}'` : `${name}s`);
+const rowName = (r) => (r.base ? `${r.s.name} <span class="muted small">· blandet, fra zoo'en</span>` : r.s.name);
+function flagText(r, rep, name) {
+  const { pct, correct, n, med } = r.stats;
+  if (r.verdict === 'oev') return `${pct} % rigtige i første forsøg (${correct} af ${n}). Øv den, og kig på eksemplet sammen.`;
+  if (r.verdict === 'naesten') return `${pct} % rigtige (${correct} af ${n}). Lidt mere øvelse, så sidder den.`;
+  return fluent(r.id)
+    ? `Rigtigt, men ${fmtSec(med)} pr. gangestykke – ${esc(name)} tæller sig frem. Øv tabellen, så den sidder.`
+    : `Rigtigt, men ${fmtSec(med)} pr. opgave – ${esc(genitive(name))} typiske opgave tager ${fmtSec(rep.typical)}`;
+}
+
+// Resuméet på forældresiden
+function reportTeaser(st) {
+  const rep = practiceReport(st, '30');
+  return `<div class="card stack rp-teaser">
+    ${rep.total.n ? `<div>📊 Seneste 30 dage: <b>${rep.total.n}</b> opgaver · <b>${rep.total.pct} %</b> rigtige i første forsøg · typisk <b>${fmtSec(rep.total.med)}</b> pr. opgave</div>
+      <div>${rep.flagged.length ? `🎯 Kan øves mere: ${rep.flagged.slice(0, 3).map((r) => r.s.name).join(', ')}` : '👍 Intet skal øves ekstra lige nu'}</div>`
+      : '<div class="muted">Ingen svar de seneste 30 dage.</div>'}
+    <div><button class="btn" id="rp-open">Se Øvebanen i tal →</button></div>
+  </div>`;
+}
+
+function showPracticeReport(period = reportPeriod) {
+  reportPeriod = period;
+  const st = S.state, rep = practiceReport(st, period), name = st.name;
+  const acc = rep.flagged.filter((r) => r.verdict !== 'langsom'), slow = rep.flagged.filter((r) => r.verdict === 'langsom');
+  const tile = (label, value, note = '') => `<div class="rp-tile"><span class="rp-tl">${label}</span><span class="rp-tv">${value}</span>${note ? `<span class="rp-tn">${note}</span>` : ''}</div>`;
+  const flagItem = (r) => {
+    const d = rep.discOf(r.id);
+    return `<li class="rp-flag"><span class="rp-ic" aria-hidden="true">${d.icon}</span><div><div class="rp-fname">${r.s.name} <span class="muted small">· ${d.name}</span></div>
+      <div class="small">${flagText(r, rep, name)}</div></div>${verdictChip(r.verdict)}</li>`;
+  };
+  const row = (r) => `<div class="rp-row">
+      <div class="rp-r1"><span class="rp-name">${rowName(r)}</span>${verdictChip(r.verdict)}</div>
+      <div class="rp-r2">${answerDots(r.stats.last)}<span><b>${r.stats.pct} %</b> rigtige <span class="muted">(${r.stats.correct} af ${r.stats.n})</span></span><span><b>${fmtSec(r.stats.med)}</b> pr. opgave</span></div>
+    </div>`;
+  const card = ({ d, rows, stats, verdict }) => {
+    const done = rows.filter((r) => r.stats.n), idle = rows.filter((r) => !r.stats.n && !r.base);
+    const open = verdict === 'oev' || verdict === 'naesten' || done.some((r) => r.verdict in { oev: 1, naesten: 1, langsom: 1 });
+    return `<section class="card rp-disc${stats.n ? '' : ' idle'}" style="--ac:${d.color}">
+      <div class="rp-head"><span class="rp-ic" aria-hidden="true">${d.icon}</span>
+        <div class="rp-title"><h3>${d.name}</h3><span class="muted small">${d.chapter ? `Kapitel ${d.chapter} i matematikbogen` : 'Fælles Mål'}${stats.n ? ` · ${stats.n} svar` : ''}</span></div>
+        ${stats.n ? verdictChip(verdict) : ''}</div>
+      ${stats.n ? `<div class="rp-sum"><span class="rp-meter ${verdict}" aria-hidden="true"><i style="width:${stats.pct}%"></i></span>
+        <span><b>${stats.pct} %</b> rigtige</span><span><b>${fmtSec(stats.med)}</b> pr. opgave</span></div>` : '<p class="muted small rp-none">Ikke øvet i perioden.</p>'}
+      ${done.length ? `<details${open ? ' open' : ''}><summary>${done.length === 1 ? '1 øvelse' : `${done.length} øvelser`}</summary>
+        <div class="rp-rows">${done.map(row).join('')}</div></details>` : ''}
+      ${idle.length && stats.n ? `<p class="muted small rp-none">Ikke øvet i perioden: ${idle.map((r) => r.s.name).join(', ')}</p>` : ''}
+    </section>`;
+  };
+  view(`
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til forældreoverblikket">←</button>
+      <div style="flex:1"><h1 style="margin:0">Øvebanen i tal</h1><span class="muted">${esc(name)} · rigtige og tid pr. opgave</span></div></div>
+    <div class="rp-filter"><span class="muted small">Periode</span>
+      <div class="seg" id="rp-period">${REPORT_PERIODS.map(([v, l]) => `<button data-v="${v}" class="${v === period ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+    ${rep.total.n ? `
+    <div class="rp-tiles">
+      ${tile('Opgaver', rep.total.n, period === 'alt' ? 'alle gemte svar' : `de seneste ${period} dage`)}
+      ${tile('Rigtige i første forsøg', `${rep.total.pct} %`, `${rep.total.correct} af ${rep.total.n}`)}
+      ${tile('Typisk tid pr. opgave', fmtSec(rep.total.med), 'median – pauser over 5 min tæller ikke')}
+    </div>
+    <div class="grid2">
+      <div class="card stack"><h3>Det kan der øves mere i</h3>
+        ${acc.length ? `<ul class="rp-flags">${acc.slice(0, 5).map(flagItem).join('')}</ul>${acc.length > 5 ? `<p class="small muted" style="margin:0">+ ${acc.length - 5} til – se disciplinerne nedenfor.</p>` : ''}`
+          : '<p class="muted" style="margin:0">Ingen øvelser under 85 % rigtige 👍</p>'}
+        ${slow.length ? `<h4 class="rp-sub">Rigtigt – men tager lang tid</h4><ul class="rp-flags">${slow.slice(0, 4).map(flagItem).join('')}</ul>` : ''}</div>
+      <div class="card stack"><h3>Det går godt med</h3>
+        ${rep.strong.length ? `<ul class="rp-flags">${rep.strong.slice(0, 4).map((r) => `<li class="rp-flag"><span class="rp-ic" aria-hidden="true">${rep.discOf(r.id).icon}</span><div><div class="rp-fname">${r.s.name}</div>
+          <div class="small">${r.stats.pct} % rigtige · ${fmtSec(r.stats.med)} pr. opgave</div></div>${verdictChip('godt')}</li>`).join('')}</ul>
+          <p class="small muted" style="margin:0">Ros måden, ${esc(name)} regner på – ikke at ${esc(name)} er klog.</p>` : `<p class="muted" style="margin:0">Når en øvelse har mindst ${E.REPORT_MIN} svar og mindst 85 % rigtige, står den her.</p>`}</div>
+    </div>
+    ${PRACTICE_GROUPS.map((g) => `<div class="section-title"><h2>${g.name}</h2></div>
+      <div class="rp-discs">${rep.discs.filter((x) => x.d.group === g.id).sort((a, b) => (b.stats.n > 0) - (a.stats.n > 0)).map(card).join('')}</div>`).join('')}`
+    : `<div class="card"><p class="muted" style="margin:0">Ingen svar i perioden endnu. Tallene kommer, når ${esc(name)} har øvet.</p></div>`}
+    <div class="card small muted rp-how">
+      <b>Sådan måles det.</b> <b>Rigtige</b> = rigtige svar i første forsøg. <b>Tid</b> = typisk tid pr. opgave (medianen), fra opgaven vises, til ${esc(name)} svarer; pauser over 5 min tæller ikke med.
+      Alle svar tæller – både fra Øvebanen og fra zoo'ens missioner (appen gemmer de seneste 40 svar pr. øvelse).
+      Vurderingen kræver mindst ${E.REPORT_MIN} svar: under 70 % rigtige = <b>øv mere</b>, under 85 % = <b>næsten</b>.
+      <b>Tager lang tid</b>: et gangestykke tager over ${fmtSec(E.FLUENT_MS)}, eller en anden øvelse tager over dobbelt så lang tid som ${esc(genitive(name))} typiske opgave (og over et halvt minut).
+    </div>`, (e) => { if (e.key === 'Escape') showParent(); });
+  on('#back', 'click', showParent);
+  on('#rp-period button', 'click', (e) => showPracticeReport(e.currentTarget.dataset.v));
 }
 
 // ================= Backup: gem og indlæs fremskridt som fil =================
@@ -1830,4 +1958,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

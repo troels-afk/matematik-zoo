@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261005221226';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261005221226';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261006081127';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261006081127';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -336,6 +336,39 @@ export function troubleSpots(state) {
   });
   return { skills, facts };
 }
+
+// ---------- Øvebanen i tal (forældredelen) ----------
+// Alle tal bygger på første forsøg (det, motoren gemmer i hist): rigtige og tiden fra opgaven blev vist, til hun svarede.
+
+const IDLE_MS = 5 * 60000; // svar efter mere end 5 min tæller ikke med i tiden – så har hun holdt pause
+export const REPORT_MIN = 5; // så mange svar skal der til, før en øvelse får en vurdering
+export const median = (xs) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b), m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+// Svar fra en eller flere historikker siden tidspunktet since: antal, rigtige, typisk tid (median), de seneste 10 svar
+export function answerStats(hists, since = 0) {
+  const h = hists.flat().filter((x) => x && x.t >= since).sort((a, b) => a.t - b.t);
+  const times = h.map((x) => x.ms).filter((ms) => Number.isFinite(ms) && ms > 0 && ms <= IDLE_MS);
+  const correct = h.filter((x) => x.c).length;
+  return {
+    n: h.length, correct, pct: h.length ? Math.round((100 * correct) / h.length) : null,
+    med: median(times), times, last: h.slice(-10).map((x) => !!x.c), at: h.length ? h[h.length - 1].t : null,
+  };
+}
+export const skillStats = (state, id, since = 0) => answerStats([state.skills[id]?.hist || []], since);
+
+// Vurdering: rigtige først (under 70 % = øv mere, som "Driller lige nu"; under 85 % = næsten), dernæst tiden.
+// slowMs = grænsen for "tager lang tid" for netop den øvelse (null = ingen tidsvurdering)
+export function practiceVerdict(stats, slowMs = null) {
+  if (!stats || stats.n < REPORT_MIN) return 'faa';
+  if (stats.pct < 70) return 'oev';
+  if (stats.pct < 85) return 'naesten';
+  if (slowMs != null && stats.med != null && stats.med > slowMs) return 'langsom';
+  return 'godt';
+}
+export const FLUENT_MS = SLOW_MS; // gangestykker: over 8 sek. = hun tæller sig frem (samme grænse som Babyhuset)
 
 export function daysSinceLast(state) {
   const last = state.sessions[state.sessions.length - 1];

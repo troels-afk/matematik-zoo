@@ -27,6 +27,8 @@
   --good-soft: #e3f5ec;
   --warm: #d97a3a;
   --warm-soft: #fff2e7;
+  --rp-good: #2e9e78; --rp-warn: #d99a00; --rp-bad: #c8503a; /* Øvebanen i tal: sidder godt / næsten / øv mere */
+  --ic-base: var(--card); /* bunden i ikonfelterne – lys i mørkt tema, så sorte tegn (➕ ✖️ ➗) kan ses */
 
   --c-tal: #6b8cf2;
   --c-gange: #eea23c;
@@ -59,6 +61,7 @@
     --primary: #45c296; --primary-ink: #7fdcb9; --primary-soft: #1d3d34;
     --coral-soft: #3b2a25; --sun-soft: #3a3322; --sky-soft: #1d3444; --lav-soft: #2a2842;
     --good-soft: #1b3a2f; --warm: #f0a45a; --warm-soft: #3a2b1d;
+    --rp-good: #45c296; --rp-warn: #ffc94d; --rp-bad: #f2885c; --ic-base: #dfe8ee;
     --shadow: 0 1px 2px rgba(0,0,0,.2), 0 6px 20px rgba(0,0,0,.25);
     --shadow-lg: 0 2px 4px rgba(0,0,0,.2), 0 18px 40px rgba(0,0,0,.35);
     color-scheme: dark;
@@ -70,6 +73,7 @@
   --primary: #45c296; --primary-ink: #7fdcb9; --primary-soft: #1d3d34;
   --coral-soft: #3b2a25; --sun-soft: #3a3322; --sky-soft: #1d3444; --lav-soft: #2a2842;
   --good-soft: #1b3a2f; --warm: #f0a45a; --warm-soft: #3a2b1d;
+  --rp-good: #45c296; --rp-warn: #ffc94d; --rp-bad: #f2885c; --ic-base: #dfe8ee;
   color-scheme: dark;
 }
 
@@ -359,7 +363,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 /* ---------- Øvebanen og trin-for-trin ---------- */
 .practice-set { display: flex; align-items: center; gap: 16px; text-align: left; padding: 16px 18px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line-2); box-shadow: var(--shadow); border-left: 6px solid var(--ac); transition: transform .12s; }
 .practice-set:active { transform: scale(.99); }
-.practice-set .ps-ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; font-size: 1.8rem; background: color-mix(in srgb, var(--ac) 16%, var(--card)); flex: none; }
+.practice-set .ps-ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; font-size: 1.8rem; background: color-mix(in srgb, var(--ac) 16%, var(--ic-base)); flex: none; }
 .practice-set .ps-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .practice-set .ps-nm { font-size: 1.15rem; margin: 0; }
 .practice-set .ps-d { color: var(--ink-2); font-size: .88rem; font-weight: 700; }
@@ -1021,3 +1025,47 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (max-width: 899px), (max-aspect-ratio: 1/1) { .task.has-visual .task-scene { display: none; } }
 .task:not(.has-input).has-visual .task-scene { display: none; }
 @media (max-width: 560px) { .task-scene { margin-bottom: 8px; border-radius: 14px; } }
+
+/* ---------- Forældredelen: Øvebanen i tal ---------- */
+.rp-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 4px 2px 16px; }
+.rp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; margin-bottom: 16px; }
+.rp-tile { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 2px; }
+.rp-tl { font: 700 .85rem var(--font-body); color: var(--ink-2); }
+.rp-tv { font: 600 2rem/1.15 var(--font-head); color: var(--ink); }
+.rp-tn { font-size: .8rem; color: var(--ink-3); }
+.rp-flags { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.rp-flag { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; }
+.rp-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 1.1rem; background: color-mix(in srgb, var(--ac, var(--primary)) 14%, var(--ic-base)); flex: none; }
+.rp-fname { font-weight: 800; }
+.rp-sub { margin: 6px 0 0; font: 700 .95rem var(--font-head); color: var(--ink-2); }
+.rp-v { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font: 700 .78rem var(--font-body); color: var(--ink); padding: 3px 10px 3px 4px; border-radius: 99px; background: var(--card-2); border: 1px solid var(--line); }
+.rp-v b { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: .72rem; color: #fff; background: var(--ink-3); }
+.rp-v.godt b { background: var(--rp-good); }
+.rp-v.naesten b { background: var(--rp-warn); color: #3a2a00; }
+.rp-v.oev b { background: var(--rp-bad); }
+.rp-v.langsom b { background: var(--card-2); color: var(--ink); font-size: .8rem; }
+.rp-v.faa { color: var(--ink-3); }
+.rp-discs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: 14px; align-items: start; }
+.rp-disc { display: grid; gap: 10px; border-left: 5px solid var(--ac); }
+.rp-disc.idle { opacity: .75; padding-block: 12px; }
+.rp-head { display: flex; align-items: center; gap: 10px; }
+.rp-title { flex: 1; min-width: 0; }
+.rp-title h3 { margin: 0; }
+.rp-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.rp-meter { flex: 1 1 140px; height: 10px; border-radius: 99px; background: var(--line-2); overflow: hidden; }
+.rp-meter i { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--ink-3); }
+.rp-meter.godt i { background: var(--rp-good); }
+.rp-meter.naesten i { background: var(--rp-warn); }
+.rp-meter.oev i { background: var(--rp-bad); }
+.rp-disc details summary { cursor: pointer; font: 700 .9rem var(--font-body); color: var(--primary-ink); padding: 4px 0; }
+.rp-rows { display: grid; gap: 2px; margin-top: 6px; }
+.rp-row { display: grid; gap: 4px; padding: 9px 0; border-top: 1px solid var(--line-2); }
+.rp-r1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rp-r2 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: .92rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.rp-r2 b { color: var(--ink); }
+.rp-name { font-weight: 700; min-width: 0; }
+.rp-dots { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+.rp-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--rp-good); }
+.rp-dots i.no { background: transparent; box-shadow: inset 0 0 0 2px var(--rp-bad); }
+.rp-none { margin: 0; }
+.rp-how { line-height: 1.55; }
