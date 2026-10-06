@@ -1069,3 +1069,26 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .rp-dots i.no { background: transparent; box-shadow: inset 0 0 0 2px var(--rp-bad); }
 .rp-none { margin: 0; }
 .rp-how { line-height: 1.55; }
+
+/* ---------- Reglerne ("? Regler" øverst på forsiden) og reglerne undervejs ---------- */
+.icon-btn.pill .q { font: 700 1.15rem var(--font-head); }
+.rules-head h1 { margin: 6px 0 2px; }
+.rules-head p { margin: 0 0 14px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 14px; align-items: start; }
+.rule { display: grid; gap: 8px; }
+.rule h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 1.25rem; }
+.rule-ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.35rem; background: color-mix(in srgb, var(--primary) 14%, var(--ic-base)); flex: none; }
+.rule-ic .ui-ic { width: 32px; height: 32px; object-fit: contain; }
+.rule p, .rule ul, .rule ol { margin: 0; }
+.rule ul, .rule ol { padding-left: 1.2em; display: grid; gap: 4px; }
+.rule .rule-levels { list-style: none; padding-left: 0; }
+.rule-levels li { display: flex; gap: 8px; align-items: baseline; }
+.rule-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rule-status { margin-top: 2px; padding: 9px 12px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--line-2); font-weight: 700; font-size: .92rem; display: grid; gap: 8px; }
+.rules-go { justify-content: center; margin-top: 18px; gap: 10px; flex-wrap: wrap; }
+.mission-goal { margin: 10px 0 0; font-weight: 700; color: var(--primary-ink); }
+.block-rule { margin: 0; text-align: left; padding: 10px 14px; border-radius: 14px; background: var(--sun-soft); font-size: .98rem; display: flex; gap: 10px; align-items: center; }
+.lv-dots { display: inline-flex; gap: 3px; flex: none; }
+.lv-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.lv-dots i.on { background: var(--primary); }
+.lvl-note { margin-top: 8px; font-weight: 800; }

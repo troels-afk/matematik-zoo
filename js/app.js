@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261006081127';
-import * as E from './engine.js?v=20261006081127';
-import * as Z from './zoo.js?v=20261006081127';
-import { zooGate } from './scene.js?v=20261006081127';
-import { zooMap } from './map.js?v=20261006081127';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261006081127';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261006081127';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261006081127';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261006200944';
+import * as E from './engine.js?v=20261006200944';
+import * as Z from './zoo.js?v=20261006200944';
+import { zooGate } from './scene.js?v=20261006200944';
+import { zooMap } from './map.js?v=20261006200944';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261006200944';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261006200944';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261006200944';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -183,6 +183,65 @@ const startScreen = () => (S.state.zoo.introSeen ? showHome() : showIntroTour())
 
 // ================= Om appen: baggrund, pensum og forskning =================
 
+// Reglerne samlet ét sted ("? Regler" øverst på forsiden) – med Ellies egen status ved hver regel, så de bliver konkrete
+function showRules(back = showHome) {
+  const st = S.state, levels = levelsOf(st), fs = E.factSummary(st), size = sessionSize(st);
+  const stars = levels.filter((l) => l >= 3).length, open = levels.filter((l) => l >= 1).length, gold = levels.filter((l) => l >= 4).length;
+  const ids = Object.keys(SKILLS), sikre = ids.filter((id) => ['sikker', 'mestret'].includes(E.skillStatus(st, id))).length;
+  const doneToday = !!todayLog(st)?.mission, week = E.weekSessions(st), bonus = Z.bonusOf(st).length;
+  const goalPct = (100 * levels.reduce((n, l) => n + Math.min(l, 3), 0)) / (3 * AREAS.length);
+  const rule = (icon, title, body, status = '') => `<section class="card rule">
+      <h2><span class="rule-ic" aria-hidden="true">${icon}</span>${title}</h2>
+      ${body}
+      ${status ? `<div class="rule-status">${status}</div>` : ''}
+    </section>`;
+  const levelWhy = ['ingen sikre aktiviteter endnu', 'sikker i én aktivitet', 'sikker i halvdelen', 'sikker i dem alle', 'mester i dem alle'];
+  view(`
+    <button class="back-link" id="back"><span class="icon-btn" aria-hidden="true">←</span>Tilbage til zoo'en</button>
+    <div class="rules-head"><h1>Sådan spiller du</h1><p class="muted">Alle reglerne i ${esc(Z.zooName(st))} – kort og præcist.</p></div>
+    <div class="rules">
+      ${rule('🎉', 'Målet: åbningsfesten', `<p>Zoo'en har været lukket hele vinteren. Når alle ${AREAS.length} områder har fået en stjerne ⭐, holder Bodil åbningsfest.</p>
+        <p>Et område får sin stjerne, når du er <b>sikker ⭐</b> i alle områdets aktiviteter.</p>`,
+      `<div class="goal-bar" style="margin:0"><i style="width:${goalPct}%"></i></div><span><b>${stars} af ${AREAS.length}</b> områder har fået en stjerne</span>`)}
+      ${rule(ui('opgave'), 'Dagens mission', `<p>Hver dag er der <b>én</b> mission. Den har tre dele:</p>
+        <ol><li><b>Babyhuset</b> – giv ${size.warm} unger flaske (gangetabellen)</li>
+          <li><b>Et område</b> – ${size.main} opgaver, hvor du hjælper Nora, Liv, Yasmin eller Kaj</li>
+          <li><b>Zoo-runden</b> – ${size.review} blandede opgaver fra hele zoo'en</li></ol>
+        <p>Når alle tre dele er klaret, er missionen klaret. Det tager cirka ${size.minutes} minutter. Stopper du midtvejs, tæller den ikke som klaret.</p>`,
+      doneToday ? '✓ Dagens mission er klaret' : 'Dagens mission venter på forsiden')}
+      ${rule(ui('baby'), 'Ungerne i Babyhuset', `<p>Hvert gangestykke er en dyreunge – der er ${FACTS.length}.</p>
+        <p>Svarer du <b>rigtigt og hurtigt</b> (under ${E.FLUENT_MS / 1000} sekunder), vokser ungen: ${Z.STAGES.join(' → ')}.</p>
+        <p>En unge, der har fået flaske, skal først have igen om nogle dage – jo større den er, jo længere tid går der. Svarer du forkert, starter ungen forfra, men den kommer igen lidt senere.</p>`,
+      `${fs.solid} af ${fs.total} unger er store · ${fs.gold} er voksne`)}
+      ${rule('⭐', 'Stjerner i aktiviteterne', `<p>Hvert område har nogle aktiviteter, fx "${Z.ACTIVITIES.klokken.name}" i Zoo-uret. Hver aktivitet har 3 niveauer:</p>
+        <ul><li>3 rigtige i træk → lidt sværere opgaver</li><li>2 forkerte i træk → lidt lettere igen</li></ul>
+        <p class="rule-chain"><span class="st ny">Ny</span>→<span class="st øver">I gang</span>→<span class="st sikker">Sikker ⭐</span>→<span class="st mestret">Mester 🌟</span></p>
+        <p><b>Sikker ⭐</b>: 8 af dine sidste 10 svar på niveau 3 er rigtige. <b>Mester 🌟</b>: du er sikker på to forskellige dage.</p>`,
+      `Du er sikker i ${sikre} af ${ids.length} aktiviteter`)}
+      ${rule(ui('area'), 'Områderne vokser', `<p>Jo flere aktiviteter du er sikker i, jo flottere bliver området:</p>
+        <ul class="rule-levels">${Z.LEVELS.map((L, i) => `<li><span aria-hidden="true">${L.icon}</span><span><b>${L.name}</b> – ${levelWhy[i]}${i >= 1 && i <= 3 ? ' · et nyt dyr flytter ind' : ''}</span></li>`).join('')}</ul>`,
+      `${open} åbne · ${stars} stjerne-områder · ${gold} guld-områder`)}
+      ${rule('🎟️', 'Gæster', `<p>Gæster pr. dag er zoo'ens point. Tallet vokser, når områderne bliver flottere, og når ungerne i Babyhuset bliver store.</p>`,
+      `${fmt(Z.guestsPerDay(st))} gæster om dagen`)}
+      ${rule('🤔', 'Når du svarer forkert', `<p>Det gør ikke noget – sådan lærer man!</p>
+        <ul><li>Skriver du et tal, får du et forsøg mere – og du kan trykke på "Vis et hint".</li>
+          <li>Vælger du mellem knapper, får du ét forsøg.</li>
+          <li>Bagefter viser Kaj, hvordan man regner det, og der kommer en lignende opgave senere.</li>
+          <li>Det er dit første svar, der tæller for stjernerne. 💡 Hjælp viser altid, hvordan man gør.</li></ul>`)}
+      ${rule(ui('oeve'), 'Når missionen er klaret', `<ul><li><b>Fri træning:</b> tryk på et område på kortet, og øv dér. Den åbner, når dagens mission er klaret.</li>
+          <li><b>Øvebanen:</b> altid åben – øv lige det, du vil.</li>
+          <li><b>⚡ Slå din rekord:</b> regn så mange gangestykker, du kan, på 60 sekunder. ${st.settings.sprint ? 'Den kommer, når du kender mindst 6 gangestykker.' : 'Den er slået fra lige nu – en voksen kan slå den til.'}</li></ul>`,
+      doneToday ? '🔓 Fri træning er åben i dag' : '🔒 Fri træning åbner, når dagens mission er klaret')}
+      ${rule('🎁', 'Ugens bonus-unge', `<p>Øver du ${E.WEEK_GOAL} dage i én uge, flytter en bonus-unge ind i Babyhuset. Der er ${Z.BONUS.length} at samle.</p>`,
+      `Denne uge: ${Math.min(week, E.WEEK_GOAL)} af ${E.WEEK_GOAL} dage · ${bonus} af ${Z.BONUS.length} samlet`)}
+    </div>
+    <div class="row rules-go"><button class="btn ghost big" id="tour">Se introen igen</button><button class="btn big" id="home">Tilbage til zoo'en</button></div>
+  `, (e) => { if (e.key === 'Escape') back(); });
+  on('#back', 'click', back);
+  on('#home', 'click', back);
+  on('#tour', 'click', () => showIntroTour(() => showRules(back), 'Tilbage til reglerne'));
+}
+
 function showAbout(back = showHome) {
   const skillCount = AREAS.reduce((n, a) => n + a.skills.length, 0);
   const rows = AREAS.map((a) => `<tr><td>${a.icon} ${a.place}</td><td>${a.name}</td><td>${a.skills.map((sk) => sk.name).join(', ')}</td></tr>`).join('');
@@ -230,7 +289,7 @@ function showAbout(back = showHome) {
 
 // ================= Intro: sådan spiller du =================
 
-function showIntroTour(done = showHome) {
+function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
   const st = S.state, firstTime = !st.zoo.introSeen; // åbnes den igen via ?, går sidste knap bare tilbage
   const someBabies = FACTS.slice(0, 6).map((f, i) => {
     const b = Z.BABIES[f.key];
@@ -246,9 +305,9 @@ function showIntroTour(done = showHome) {
     },
     {
       art: `<ol class="plan">
-        <li><span class="n">1</span><div><div class="t">Morgenrunde i Babyhuset</div><div class="d">Giv ungerne flaske – gangetabellen</div></div><span class="ico">${ui('baby')}</span></li>
+        <li><span class="n">1</span><div><div class="t">Babyhuset</div><div class="d">Giv ungerne flaske – gangetabellen</div></div><span class="ico">${ui('baby')}</span></li>
         <li><span class="n">2</span><div><div class="t">Dagens opgave</div><div class="d">Hjælp Nora, Liv, Yasmin eller Kaj med en opgave i zoo'en</div></div><span class="ico">${ui('area')}</span></li>
-        <li><span class="n">3</span><div><div class="t">Runde i zoo'en</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div><span class="ico">${ui('round')}</span></li>
+        <li><span class="n">3</span><div><div class="t">Zoo-runden</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div><span class="ico">${ui('round')}</span></li>
       </ol>`,
       title: 'Sådan går en dag',
       body: say('nora', 'Én mission om dagen – det tager cirka 15 minutter. Bagefter kan du øve frit i områderne på kortet. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
@@ -261,7 +320,8 @@ function showIntroTour(done = showHome) {
     {
       art: `<img class="tour-portrait" src="${Z.CAST.kaj.full}" alt="Kaj">`,
       title: 'Bare rolig!',
-      body: say('kaj', 'Regner du forkert, sker der ikke noget. Du får en forklaring, og opgaven kommer igen senere. Og går en division ikke op, så er resten MIN!'),
+      body: say('kaj', 'Regner du forkert, sker der ikke noget. Du får en forklaring, og opgaven kommer igen senere. Og går en division ikke op, så er resten MIN!')
+        + '<p class="small muted center" style="margin:0">Alle reglerne står under <b>? Regler</b> øverst på forsiden.</p>',
     },
   ];
   let i = 0;
@@ -310,7 +370,7 @@ function showIntroTour(done = showHome) {
         ${dots()}
         <div class="row" style="justify-content:center">
           ${i ? '<button class="btn ghost big" id="prev">←</button>' : ''}
-          <button class="btn big" id="next">${last ? (firstTime ? 'Start min første mission' : "Tilbage til zoo'en") : 'Næste'}</button>
+          <button class="btn big" id="next">${last ? (firstTime ? 'Start min første mission' : backLabel) : 'Næste'}</button>
         </div>
       </div>`, keys);
     on('#next', 'click', next);
@@ -409,7 +469,7 @@ function showHome() {
       <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="row" style="gap:8px">
         <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">${ui('oeve')}<span>Øvebanen</span></button>
-        <button class="icon-btn" id="help" title="Sådan spiller du" aria-label="Sådan spiller du">?</button>
+        <button class="icon-btn pill" id="help" title="Reglerne – sådan spiller du" aria-label="Regler – sådan spiller du"><b class="q" aria-hidden="true">?</b><span>Regler</span></button>
         <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.5" fill="currentColor"/></svg></button>
         <button class="icon-btn" id="parent" title="Forælder" aria-label="Forælder (kræver kode)"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.6" r="1.4" fill="currentColor"/></svg></button>
         <button class="icon-btn snd ${st.settings.sound ? '' : 'off'}" id="snd" aria-label="Lyd" aria-pressed="${st.settings.sound}">${ui('lyd')}</button>
@@ -453,7 +513,7 @@ function showHome() {
   on('#to-map', 'click', () => { sfx('tap'); $('.map-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
   on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
-  on('#help', 'click', () => showIntroTour());
+  on('#help', 'click', () => showRules());
   on('#about', 'click', () => showAbout());
   on('#snd', 'click', () => {
     st.settings.sound = !st.settings.sound;
@@ -507,9 +567,12 @@ function missionDoneHtml(t) {
 }
 
 // Dagens mission: hvem har brug for hjælp, hvad skal der ske, og én knap
+// Dagens mission: antal opgaver i hver af de tre dele (forældrene vælger kort eller normal)
+const sessionSize = (st) => ({ ...(E.SESSION_SIZES[st.settings.length] || E.SESSION_SIZES.normal), minutes: st.settings.length === 'kort' ? 10 : 15 });
+
 function missionCard(st, t) {
   const a = areaOf(t.area), z = Z.ZONES[t.area], c = Z.CAST[t.who];
-  const cur = E.currentSkill(st, t.area);
+  const cur = E.currentSkill(st, t.area), size = sessionSize(st);
   return `
     <section class="mission card ${hasScene(t) ? 'has-scene' : ''}">
       ${missionScene(t, 'intro')}
@@ -518,13 +581,14 @@ function missionCard(st, t) {
         <h1>${t.title}</h1>
         <p class="mission-need">${missionIntroHtml(t)}</p>
         <ol class="mission-steps">
-          <li><span class="si">${ui('baby')}<i>1</i></span><span><b>Morgenrunde</b> · giv ungerne i Babyhuset flaske</span></li>
-          <li><span class="si">${ui('area')}<i>2</i></span><span><b>${a.place}</b> · ${z.step} <span class="topic">${cur ? SKILLS[cur].name : 'repetition'}</span></span></li>
-          <li><span class="si">${ui('round')}<i>3</i></span><span><b>Runde i zoo'en</b> · et par blandede opgaver</span></li>
+          <li><span class="si">${ui('baby')}<i>1</i></span><span><b>Babyhuset</b> · giv ${size.warm} unger flaske <span class="topic">gangetabellen</span></span></li>
+          <li><span class="si">${ui('area')}<i>2</i></span><span><b>${a.place}</b> · ${z.step} – ${size.main} opgaver <span class="topic">${cur ? SKILLS[cur].name : 'repetition'}</span></span></li>
+          <li><span class="si">${ui('round')}<i>3</i></span><span><b>Zoo-runden</b> · ${size.review} blandede opgaver fra hele zoo'en</span></li>
         </ol>
+        <p class="mission-goal">🎯 ${Z.nextGoal(st, a)}</p>
         <div class="mission-go">
           <button class="btn big" id="start">Start missionen</button>
-          <span class="muted small">ca. 15 minutter</span>
+          <span class="muted small">ca. ${size.minutes} minutter · klar alle tre dele</span>
         </div>
 
       </div>
@@ -555,8 +619,8 @@ function missionDone(log) {
 function taskSheet(t) {
   const a = areaOf(t.area), cur = E.currentSkill(S.state, t.area);
   openSheet(`
-    ${say(t.who, `<b>${t.title}</b> – kan du hjælpe mig? Vi starter med morgenrunden i Babyhuset.`)}
-    <div class="sheet-plan"><span>${ui('baby')}Morgenrunde</span><span>→</span><span>${ui('area')}${a.place} · ${Z.ZONES[t.area].step}</span><span>→</span><span>${ui('round')}Runde i zoo'en</span></div>
+    ${say(t.who, `<b>${t.title}</b> – kan du hjælpe mig? Vi starter i Babyhuset.`)}
+    <div class="sheet-plan"><span>${ui('baby')}Babyhuset</span><span>→</span><span>${ui('area')}${a.place} · ${Z.ZONES[t.area].step}</span><span>→</span><span>${ui('round')}Zoo-runden</span></div>
     <div class="row" style="justify-content:flex-end">
       <button class="btn ghost" data-close>Senere</button>
       <button class="btn" id="go-task">Start dagens vagt</button>
@@ -920,8 +984,9 @@ function goBlock() {
   const z = Z.ZONES[run.sess.area];
   const who = run.mission?.who || z.who;
   const line = block.kind === 'review'
-    ? say('kaj', "Sidste runde! Lad os tjekke resten af zoo'en 🦜", 'lg')
+    ? say('kaj', `Sidste del: Zoo-runden! ${block.count} blandede opgaver fra hele zoo'en – så er dagens mission klaret 🦜`, 'lg')
     : say(who, `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${z.step}.`, 'lg');
+  const rule = block.kind === 'main' ? starRule(block.skill) : '';
   // Områdets del af missionen: samme scene som på forsiden, nu i gang. Runden i zoo'en: et glimt af et
   // andet sted i zoo'en (skifter fra dag til dag)
   const art = run.mode === 'daily' && block.kind === 'main' && hasScene({ area: run.sess.area, who })
@@ -932,14 +997,37 @@ function goBlock() {
   view(`
     ${run.mode === 'daily' ? `<div class="session-top"><button class="icon-btn" id="quit" aria-label="Stop">✕</button>${missionTrack(run, block)}</div>` : ''}
     <div class="card sheet center stack" style="margin-top:4vh">
-      ${prev?.kind === 'warm' ? '<div class="kicker">✓ Opvarmning klaret</div>' : ''}
+      ${prev?.kind === 'warm' ? '<div class="kicker">✓ Babyhuset klaret</div>' : ''}
       ${art}
       <h1>${block.title}</h1>
       <div style="text-align:left">${line}</div>
+      ${rule}
       <div><button class="btn big" id="go">Videre</button></div>
     </div>`, (e) => { if (e.key === 'Enter') showTask(); });
   on('#go', 'click', showTask);
   on('#quit', 'click', quitSession);
+}
+
+// Reglen for stjernen i den aktivitet, man skal i gang med (vises mellem missionens dele)
+function starRule(skillId) {
+  const s = ALL_SKILLS[skillId], lv = E.skillState(S.state, skillId).level, status = E.skillStatus(S.state, skillId);
+  const dots = [1, 2, 3].map((n) => `<i class="${n <= lv ? 'on' : ''}"></i>`).join('');
+  if (status === 'sikker' || status === 'mestret') {
+    return `<p class="block-rule"><span class="lv-dots" aria-hidden="true">${dots}</span><span>Du er ${status === 'mestret' ? 'mester 🌟' : 'sikker ⭐'} i <b>${s.name}</b>. ${status === 'mestret' ? 'Øv videre, så den bliver ved med at sidde.' : 'Bliv sikker igen på en anden dag – så bliver du mester 🌟.'}</span></p>`;
+  }
+  return `<p class="block-rule"><span class="lv-dots" aria-hidden="true">${dots}</span><span><b>${s.name}</b> · niveau ${lv} af 3. ${lv < 3
+    ? 'Får du 3 rigtige i træk, kommer du et niveau op. På niveau 3 skal 8 af 10 være rigtige – så er du sikker ⭐.'
+    : 'Får du 8 af 10 rigtige her, er du sikker ⭐.'}</span></p>`;
+}
+
+// Fremgang i aktiviteten efter et første svar: niveau op/ned, sikker eller mester – vises med det samme
+function progressNote(skillId, was) {
+  const s = ALL_SKILLS[skillId], lv = E.skillState(S.state, skillId).level, status = E.skillStatus(S.state, skillId);
+  if (status === 'mestret' && was.status !== 'mestret') return `🌟 Nu er du <b>mester</b> i ${s.name}!`;
+  if (status === 'sikker' && was.status !== 'sikker' && was.status !== 'mestret') return `⭐ Nu er du <b>sikker</b> i ${s.name}!`;
+  if (lv > was.lv) return lv - was.lv > 1 ? '⬆️ Du kan det allerede – nu springer vi til niveau 3!' : `⬆️ 3 rigtige i træk – nu bliver opgaverne lidt sværere (niveau ${lv} af 3).`;
+  if (lv < was.lv) return `Vi tager lidt lettere opgaver et øjeblik (niveau ${lv} af 3).`;
+  return '';
 }
 
 function showTask() {
@@ -974,7 +1062,7 @@ function renderTask(block, task) {
     const b = Z.BABIES[task.fact];
     if (b.expr) [b.expr.think, b.expr.cheer].forEach((src) => { new Image().src = src; }); // forhåndsindlæs udtryk
     banner = `<div class="baby-banner">${baby(task.fact).replace('class="baby ', 'class="baby idle ').replace(' new ', ' ')}
-      <div><div class="t">${b.name} vil have flaske</div><div class="s">Opvarmning med gangetabellen</div></div></div>`;
+      <div><div class="t">${b.name} vil have flaske</div><div class="s">Svar rigtigt og hurtigt – så vokser ${b.name}</div></div></div>`;
   }
   const help = (task.kind === 'main' || task.kind === 'practice') ? `<button class="link small" id="help">💡 Hjælp</button>` : '';
 
@@ -1147,8 +1235,9 @@ function answer(given, choiceIdx) {
   const correct = E.checkAnswer(p, given);
   const second = !!task.second; // andet forsøg efter en fejl
   const st = S.state;
-  let again = '', grew = '';
+  let again = '', grew = '', note = '';
   const b = task.kind === 'warm' ? Z.BABIES[task.fact] : null;
+  const was = task.kind === 'warm' ? null : { lv: E.skillState(st, task.skill).level, status: E.skillStatus(st, task.skill) };
 
   // Kun første forsøg tæller i den adaptive motor
   if (!second) {
@@ -1157,7 +1246,7 @@ function answer(given, choiceIdx) {
       E.recordFact(st, task.fact, correct, ms);
       const after = E.factBox(st, task.fact);
       if (correct && after > before) grew = after >= 5 ? `${b.name} er nu helt voksen! 🌟` : `${b.name} voksede: ${Z.STAGES[after].toLowerCase()} 🍼`;
-      else if (correct) grew = `${b.name} er mæt og glad 🍼`;
+      else if (correct) grew = before < 5 && ms >= E.FLUENT_MS ? `${b.name} er mæt og glad 🍼 – svar lidt hurtigere (under ${E.FLUENT_MS / 1000} sek.), så vokser den` : `${b.name} er mæt og glad 🍼`;
       if (!correct && !run.retried.has(task.fact)) {
         run.retried.add(task.fact);
         block.tasks.push({ kind: 'warm', fact: task.fact, p: factProblem(FACTS.find((f) => f.key === task.fact)) });
@@ -1165,6 +1254,7 @@ function answer(given, choiceIdx) {
       }
     } else {
       E.recordSkill(st, task.skill, correct, task.level, ms);
+      note = progressNote(task.skill, was);
     }
     run.results.push({ kind: task.kind, id: task.fact || task.skill, correct });
     save();
@@ -1194,7 +1284,7 @@ function answer(given, choiceIdx) {
     run.shownAt = Date.now();
     const aa = $('#aa');
     aa.insertAdjacentHTML('afterbegin', `<div class="feedback nudge"><div class="fh">${pick(NUDGE)}</div>
-      ${hint ? `<button class="link small" id="hint">💡 Vis et hint</button><div id="hinttext" hidden></div>` : ''}</div>`);
+      ${hint ? `<button class="link small" id="hint">💡 Vis et hint</button><div id="hinttext" hidden></div>` : ''}${note ? `<div class="lvl-note">${note}</div>` : ''}</div>`);
     on('#hint', 'click', () => {
       const h = $('#hinttext');
       h.innerHTML = hintPic ? `<div class="hint-row">${hintPic}<div>${hint}</div></div>` : hint;
@@ -1204,7 +1294,7 @@ function answer(given, choiceIdx) {
     return;
   }
 
-  sfx(correct ? (grew && grew.includes('voksede') ? 'grow' : 'correct') : 'wrong');
+  sfx(correct ? (/[⭐🌟]/u.test(note) ? 'level' : grew && grew.includes('voksede') ? 'grow' : 'correct') : 'wrong');
   if (b) {
     const kind = !correct ? 'think' : grew && grew.includes('voksede') ? 'grow' : 'happy';
     react(kind, correct ? b.expr?.cheer : b.expr?.think);
@@ -1222,12 +1312,13 @@ function answer(given, choiceIdx) {
     ? `<div style="font-weight:700">${grew || `${b.name} er mæt og glad 🍼`}</div>`
     : `<div class="small">${p.explain}</div>`;
   const fb = correct
-    ? `<div class="feedback good"><div class="fh"><span class="tick">✓</span>${praise}</div>${goodBody}</div>`
+    ? `<div class="feedback good"><div class="fh"><span class="tick">✓</span>${praise}</div>${goodBody}${note ? `<div class="lvl-note">${note}</div>` : ''}</div>`
     : `<div class="feedback retry">
         <div class="fh">Svaret er ${answerText(p)}</div>
         <div>${p.explain}</div>
         ${p.explainVisual ? `<div class="explain-visual">${p.explainVisual}</div>` : p.pic ? `<div class="explain-visual">${explainPic(p.pic, 'explain-pic')}</div>` : ''}
         ${again ? `<div class="small muted" style="margin-top:8px">${again}</div>` : ''}
+        ${note ? `<div class="lvl-note">${note}</div>` : ''}
         <div class="kaj">${avatar('kaj', 'sm')} ${pick(KAJ_OOPS)}</div>
       </div>`;
   const aa = $('#aa');
@@ -1958,4 +2049,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

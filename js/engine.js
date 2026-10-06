@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261006081127';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261006081127';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261006200944';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261006200944';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -198,9 +198,9 @@ export function buildSession(state, areaId) {
     area: areaId,
     main,
     blocks: [
-      { kind: 'warm', title: 'Opvarmning i Babyhuset', sub: 'Gangetabellen – ungerne vil have flaske', count: warm.length, tasks: warm },
+      { kind: 'warm', title: 'Babyhuset', sub: 'Gangetabellen – ungerne vil have flaske', count: warm.length, tasks: warm },
       { kind: 'main', title: AREAS.find((a) => a.id === areaId).place, sub: SKILLS[main].name, count: size.main, skill: main, area: areaId },
-      { kind: 'review', title: "Runde i zoo'en", sub: 'Blandede opgaver fra hele zoo\'en', count: review.length, skills: review },
+      { kind: 'review', title: 'Zoo-runden', sub: 'Blandede opgaver fra hele zoo\'en', count: review.length, skills: review },
     ],
   };
 }
