@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261006215831';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261006215831';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261006220244';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261006220244';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -180,10 +180,36 @@ function pickFacts(state, n) {
 
 // ---------- Session ----------
 
+// Den samme opgave (samme tal, samme tegning og samme svar) gives ikke to gange på samme dag til samme profil:
+// et lille fingeraftryk af hver opgave gemmes for dagen, og generatoren prøver igen ved et gensyn. Øvelser med
+// meget få mulige opgaver kan stadig gentage sig, når de er brugt op. (Babyhusets gangestykker og "Slå din rekord"
+// gentager med vilje og går ikke herigennem.)
+const TASK_TRIES = 30;
+export function taskKey(p) {
+  const text = `${p.prompt}|${p.visual || ''}|${JSON.stringify(p.answer)}`;
+  let h = 0x811c9dc5; // FNV-1a
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(36);
+}
+export function seenToday(state) {
+  const d = today();
+  if (state.seenTasks?.date !== d) state.seenTasks = { date: d, keys: [] };
+  return state.seenTasks;
+}
+
 function makeTask(kind, skillId, state) {
   const s = ALL_SKILLS[skillId];
   const level = skillState(state, skillId).level;
-  return { kind, skill: skillId, level, p: s.gen(level) };
+  const seen = seenToday(state);
+  let p, key;
+  for (let i = 0; i < TASK_TRIES; i++) {
+    p = s.gen(level);
+    key = taskKey(p);
+    if (!seen.keys.includes(key)) break;
+  }
+  seen.keys.push(key);
+  if (seen.keys.length > 800) seen.keys.splice(0, seen.keys.length - 800);
+  return { kind, skill: skillId, level, p };
 }
 
 // Dagens træning: opvarmning (tabel) → dagens sted → blandet repetition
