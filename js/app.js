@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261006230806';
-import * as E from './engine.js?v=20261006230806';
-import * as Z from './zoo.js?v=20261006230806';
-import { zooGate } from './scene.js?v=20261006230806';
-import { zooMap } from './map.js?v=20261006230806';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261006230806';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261006230806';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261006230806';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007074945';
+import * as E from './engine.js?v=20261007074945';
+import * as Z from './zoo.js?v=20261007074945';
+import { zooGate } from './scene.js?v=20261007074945';
+import { zooMap } from './map.js?v=20261007074945';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007074945';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007074945';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261007074945';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1128,7 +1128,7 @@ function mountInput(p, onSubmit) {
   if (p.input === 'choice') {
     const sym = p.choices.every((c) => c.length <= 1);
     // Lange svar (fx "Parallelogram") får lidt mindre skrift, så de kan være i knappen – også på telefon
-    aa.innerHTML = `<div class="choice-grid ${p.wide ? 'wide' : ''} ${p.cols === 2 ? 'cols-2' : ''}">${p.choices.map((c, i) => `<button class="choice ${sym ? 'sym' : ''} ${c.length > 9 ? 'long' : ''}" data-i="${i}">${esc(c)}</button>`).join('')}</div>`;
+    aa.innerHTML = `<div class="choice-grid ${p.wide ? 'wide' : ''} ${p.cols === 2 ? 'cols-2' : ''}">${p.choices.map((c, i) => `<button class="choice ${sym ? 'sym' : ''} ${c.length > 11 ? 'long xlong' : c.length > 9 ? 'long' : ''}" data-i="${i}">${esc(c)}</button>`).join('')}</div>`;
     const pickIdx = (i) => {
       if (S.run?.answered) return;
       $$('.choice').forEach((b) => (b.disabled = true));
