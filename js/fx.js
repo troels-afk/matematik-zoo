@@ -41,6 +41,11 @@ export function sfx(name) {
     case 'wrong': tone(t, N.G4, 0, 0.16, { gain: 0.05 }); tone(t, N.E4, 0.13, 0.24, { gain: 0.045 }); break;
     case 'grow': [N.C6, N.E6].forEach((f, i) => tone(t, f, i * 0.06, 0.18, { type: 'triangle', gain: 0.05 })); break;
     case 'level': [N.C5, N.E5, N.G5, N.C6, N.E6].forEach((f, i) => tone(t, f, i * 0.08, 0.35, { type: 'triangle', gain: 0.07 })); break;
+    case 'party': // fanfare, når snoren klippes til åbningsfesten
+      [N.G4, N.C5, N.E5, N.G5].forEach((f, i) => tone(t, f, i * 0.13, 0.2, { type: 'triangle', gain: 0.08 }));
+      [N.C6, N.E6, N.G5].forEach((f) => tone(t, f, 0.58, 1.2, { type: 'triangle', gain: 0.05 }));
+      tone(t, N.C5, 0.58, 1.2, { gain: 0.04 });
+      break;
     case 'finish':
       [N.C5, N.E5, N.G5].forEach((f) => tone(t, f, 0, 0.7, { gain: 0.045 }));
       tone(t, N.C6, 0.18, 0.8, { type: 'triangle', gain: 0.06 });

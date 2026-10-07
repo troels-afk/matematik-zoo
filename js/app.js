@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007090038';
-import * as E from './engine.js?v=20261007090038';
-import * as Z from './zoo.js?v=20261007090038';
-import { zooGate } from './scene.js?v=20261007090038';
-import { zooMap } from './map.js?v=20261007090038';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007090038';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007090038';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261007090038';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007191319';
+import * as E from './engine.js?v=20261007191319';
+import * as Z from './zoo.js?v=20261007191319';
+import { zooGate } from './scene.js?v=20261007191319';
+import { zooMap } from './map.js?v=20261007191319';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007191319';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007191319';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261007191319';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -215,7 +215,9 @@ function showRules(back = showHome) {
     <div class="rules">
       ${rule(ui('fest'), 'Målet: åbningsfesten', `<p>Zoo'en har været lukket hele vinteren. Når alle ${AREAS.length} områder har fået en stjerne ⭐, holder Bodil åbningsfest.</p>
         <p>Et område får sin stjerne, når du er <b>sikker ⭐</b> i alle områdets aktiviteter.</p>`,
-      `<div class="goal-bar" style="margin:0"><i style="width:${goalPct}%"></i></div><span><b>${stars} af ${AREAS.length}</b> områder har fået en stjerne</span>`)}
+      st.zoo.party ? `<span>🎉 Festen blev holdt ${partyDate(st.zoo.party.date)}.</span><button class="link small" id="rule-party">Se festen igen</button>`
+        : Z.partyReady(st) ? `<span>🎉 Alle områder har en stjerne – festen venter!</span><button class="link small" id="rule-party">Gå til festen</button>`
+        : `<div class="goal-bar" style="margin:0"><i style="width:${goalPct}%"></i></div><span><b>${stars} af ${AREAS.length}</b> områder har fået en stjerne</span>`)}
       ${rule(ui('opgave'), 'Dagens mission', `<p>Hver dag er der <b>én</b> mission. Den har tre dele:</p>
         <ol><li><b>Babyhuset</b> – giv ${size.warm} unger flaske (gangetabellen)</li>
           <li><b>Et område</b> – ${size.main} opgaver, hvor du hjælper Nora, Liv, Yasmin eller Kaj</li>
@@ -256,6 +258,7 @@ function showRules(back = showHome) {
   on('#back', 'click', back);
   on('#home', 'click', back);
   on('#tour', 'click', () => showIntroTour(() => showRules(back), 'Tilbage til reglerne'));
+  on('#rule-party', 'click', () => showParty(() => showRules(back)));
 }
 
 function showAbout(back = showHome) {
@@ -493,10 +496,11 @@ function showHome() {
       </div>
     </div>
 
+    ${Z.partyDue(st) ? partyCard() : ''}
     ${doneToday ? missionDone(log) : missionCard(st, mission)}
 
     <div class="section-title"><h2>Din zoo</h2><span class="muted small">${doneToday ? 'Tryk på et område for at øve noget bestemt' : '🔒 Klar dagens mission – så kan du øve frit i områderne'}</span></div>
-    <section class="map-wrap">
+    <section class="map-wrap${st.zoo.party ? ' festive' : ''}">
       <div class="map-scroll">${zooMap(mapData)}</div>
     </section>
 `);
@@ -527,6 +531,7 @@ function showHome() {
   const scroller = $('.map-scroll'), who = $('.zm-who');
   if (who && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = who.offsetLeft - scroller.clientWidth / 2;
   on('#start', 'click', () => { sfx('tap'); runSession(mission.area, mission); });
+  on('#party', 'click', () => { sfx('tap'); showParty(); });
   on('#to-map', 'click', () => { sfx('tap'); $('.map-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
   on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
@@ -691,15 +696,22 @@ function bonusSheet(fresh) {
 
 function bodilSheet(levels, first) {
   const st = S.state, msg = Z.homeMessage(st), done = freePlayOpen(st); // én mission om dagen
-  const stars = levels.filter((l) => l >= 3).length;
+  const stars = levels.filter((l) => l >= 3).length, gold = levels.filter((l) => l >= 4).length, ready = Z.partyReady(st);
+  const goal = st.zoo.party
+    ? `<span>🎉 <b>${esc(Z.zooName(st))} er åben!</b> Næste mål: guld-områder – <b>${gold} af ${AREAS.length}</b> er guld.</span>
+      <div class="goal-bar"><i style="width:${(100 * gold) / AREAS.length}%"></i></div>`
+    : `<span>🎯 <b>${stars} af ${AREAS.length}</b> områder har fået en stjerne. ${ready ? 'Festen venter på dig!' : 'Når alle har, holder vi åbningsfest!'}</span>
+      <div class="goal-bar"><i style="width:${(100 * levels.reduce((s, l) => s + Math.min(l, 3), 0)) / (3 * AREAS.length)}%"></i></div>`;
   openSheet(`
     ${say('bodil', msg.who === 'bodil' ? msg.text : `Godt at se dig, ${esc(st.name)}!`)}
-    <div class="goal-line"><span>🎯 <b>${stars} af ${AREAS.length}</b> områder har fået en stjerne. Når alle har, holder vi åbningsfest!</span>
-      <div class="goal-bar"><i style="width:${(100 * levels.reduce((s, l) => s + Math.min(l, 3), 0)) / (3 * AREAS.length)}%"></i></div></div>
-    <div class="row" style="justify-content:flex-end">${done
+    <div class="goal-line">${goal}</div>
+    <div class="row" style="justify-content:flex-end">${ready ? `<button class="btn ghost" id="b-party">${st.zoo.party ? 'Se festen igen' : 'Gå til festen 🎉'}</button>` : ''}${done
       ? '<button class="btn" data-close>Tak, Bodil</button>'
       : '<button class="btn ghost" data-close>Tak, Bodil</button><button class="btn" id="b-go">Start dagens vagt</button>'}</div>`,
-  (el) => el.querySelector('#b-go')?.addEventListener('click', () => taskSheet(first)));
+  (el) => {
+    el.querySelector('#b-go')?.addEventListener('click', () => taskSheet(first));
+    el.querySelector('#b-party')?.addEventListener('click', () => { closeSheet(); showParty(); });
+  });
 }
 
 function sprintEligible(st) {
@@ -1727,6 +1739,8 @@ function finish() {
   const after = snapshot(st), b = run.before;
   st.zoo.bestGuests = Math.max(st.zoo.bestGuests || 0, after.guests);
   const fresh = checkPatches(); // alle øvelser i en disciplin blev sikre → et nyt mærke til ranger-skjorten
+  const party = Z.partyDue(st); // alle områder har fået en stjerne, og festen er ikke holdt endnu
+  const partyWin = { e: '🎉', t: `Alle ${AREAS.length} områder har fået en stjerne – nu holder Bodil åbningsfest!` };
   const patchWin = (id) => ({ e: '🎽', t: `Nyt mærke til din ranger-skjorte: ${discById(id).name}` });
 
   const wins = [];
@@ -1759,8 +1773,9 @@ function finish() {
   const backArea = !backDisc && run.mode === 'practice' ? AREAS.find((x) => x.id === run.sess.area) : null;
   if (run.mode === 'daily') {
     const res = missionResults(st, run, b, after, born, grew, bonus);
-    res.extras = [...fresh.map(patchWin), ...res.extras].slice(0, 3);
+    res.extras = [...(party ? [partyWin] : []), ...fresh.map(patchWin), ...res.extras].slice(0, 3);
     res.patches = fresh.length;
+    res.party = party;
     // Til forsidens "Mission klaret" (lægges oven i tidligere vagter i dag)
     const prev = todayLog(st);
     st.zoo.today = {
@@ -1776,7 +1791,7 @@ function finish() {
   // Øvelse fra et område eller Øvebanen: en kort afslutning og tilbage, hvor hun kom fra (dagens mission har sin egen)
   const diff = after.guests - b.guests;
   if (diff > 0) wins.push({ e: '🎟️', t: `+${fmt(diff)} gæster om dagen` });
-  wins.unshift(...fresh.map(patchWin));
+  wins.unshift(...(party ? [partyWin] : []), ...fresh.map(patchWin));
   if (run.mixed) return showMixedDone(run, wins);
   const where = areaOf(run.sess.area)?.place || '', act = run.sess.blocks[0]?.sub || ALL_SKILLS[run.sess.main]?.name || '';
   const back = backDisc ? { id: 'backdisc', text: `← Tilbage til ${backDisc.name}`, go: () => showDiscipline(backDisc.id) }
@@ -1791,15 +1806,17 @@ function finish() {
       <p class="pd-count">Du øvede ${n} opgaver.</p>
       ${wins.length ? `<ul class="wins">${wins.map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>` : ''}
       <div class="row" style="justify-content:center">
-        ${fresh.length ? '<button class="btn big" id="sew">🧵 Sy mærket på din skjorte</button>' : ''}
-        ${back ? `<button class="btn ${fresh.length ? 'ghost' : 'big'}" id="${back.id}">${back.text}</button>` : ''}
-        <button class="btn ${back || fresh.length ? 'ghost' : 'big'}" id="home">Til zoo'en</button>
+        ${party ? '<button class="btn big" id="party">Til åbningsfesten 🎉</button>' : ''}
+        ${fresh.length ? `<button class="btn ${party ? 'ghost' : 'big'}" id="sew">🧵 Sy mærket på din skjorte</button>` : ''}
+        ${back ? `<button class="btn ${party || fresh.length ? 'ghost' : 'big'}" id="${back.id}">${back.text}</button>` : ''}
+        <button class="btn ${back || fresh.length || party ? 'ghost' : 'big'}" id="home">Til zoo'en</button>
       </div>
-    </div>`, (e) => { if (e.key === 'Enter') (fresh.length ? showShirt(backDisc?.id) : back ? back.go() : showHome()); });
+    </div>`, (e) => { if (e.key === 'Enter') (party ? showParty() : fresh.length ? showShirt(backDisc?.id) : back ? back.go() : showHome()); });
   on('#home', 'click', showHome);
+  on('#party', 'click', () => showParty());
   on('#sew', 'click', () => showShirt(backDisc?.id));
   if (back) on(`#${back.id}`, 'click', back.go);
-  if (bigWin || fresh.length) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
+  if (bigWin || fresh.length || party) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
 }
 
 // Hvad kom der ud af missionen? Det vigtigste først: nyt dyr > guld-område > flere gæster >
@@ -1876,18 +1893,104 @@ function showPayoff(st, res, b, after, bigWin, freeNew = false) {
         </div>
         ${res.extras.length ? `<ul class="payoff-extras">${res.extras.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
         <div class="mission-go">
-          <button class="btn big" id="home">Se din zoo</button>
+          ${res.party ? '<button class="btn big" id="party">Til åbningsfesten 🎉</button>' : ''}
+          <button class="btn ${res.party ? 'ghost' : 'big'}" id="home">Se din zoo</button>
           ${res.patches ? '<button class="btn ghost" id="sew">🧵 Sy mærket på din skjorte</button>' : ''}
           ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
         </div>
         ${freeNew ? '<p class="free-open">🔓 Nu er fri træning åben på kortet resten af dagen.</p>' : ''}
       </div>
-    </section>`, (e) => { if (e.key === 'Enter') showHome(); });
+    </section>`, (e) => { if (e.key === 'Enter') (res.party ? showParty() : showHome()); });
   on('#home', 'click', showHome);
+  on('#party', 'click', () => showParty());
   on('#sprint', 'click', startSprint);
   on('#sew', 'click', () => showShirt());
   if (main.kind === 'guests') setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 500);
   if (bigWin) { sfx('level'); setTimeout(() => confetti(), 300); } else sfx('finish');
+}
+
+// ================= Åbningsfesten =================
+// Målet i reglerne: når alle områder har fået en stjerne, holder Bodil fest ved porten, og hun klipper snoren over.
+// Første gang gemmes festen (state.zoo.party); bagefter kan den ses igen – så er snoren klippet. back = hvor ← fører hen
+
+const partyDate = (d) => { const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' }); };
+// Sløjfen midt på snoren
+const RIBBON_BOW = `<svg class="rb-bow" viewBox="-50 -40 100 84" aria-hidden="true">
+    <path d="M-4 4 L-16 40 L-8 35 L-1 42 Z M4 4 L16 40 L8 35 L1 42 Z" fill="#c62f2f"/>
+    <path d="M-6 0 C-30 -34 -48 -18 -40 0 C-48 18 -30 34 -6 0Z" fill="#d83a3a" stroke="#9e2020" stroke-width="2"/>
+    <path d="M6 0 C30 -34 48 -18 40 0 C48 18 30 34 6 0Z" fill="#d83a3a" stroke="#9e2020" stroke-width="2"/>
+    <rect x="-9" y="-9" width="18" height="18" rx="5" fill="#e04848" stroke="#9e2020" stroke-width="2"/>
+    <path d="M-24 -14 C-32 -15 -36 -7 -32 -1" fill="none" stroke="#ff9d9d" stroke-width="3" stroke-linecap="round"/>
+  </svg>`;
+
+// Kortet øverst på forsiden, mens festen venter
+const partyCard = () => `<section class="card party-card">
+    <img class="pty-art" src="${UI_ICONS.fest}" alt="">
+    <div class="pty-body"><span class="kicker">Alle ${AREAS.length} områder har fået en stjerne ⭐</span>
+      <h2>Åbningsfesten venter på dig!</h2>
+      <p>Bodil har pyntet porten. Du skal klippe snoren over, så zoo'en kan åbne for gæsterne.</p></div>
+    <button class="btn big" id="party">Gå til festen 🎉</button>
+  </section>`;
+
+function showParty(back = showHome) {
+  const st = S.state, first = !st.zoo.party, zname = esc(Z.zooName(st)), name = esc(st.name), art = Z.PARTY_ART, rb = art.ribbon;
+  const levels = levelsOf(st), gold = levels.filter((l) => l >= 4).length, fs = E.factSummary(st), patches = patchList(st);
+  const tasks = st.sessions.reduce((n, x) => n + (x.n || 0), 0), days = new Set(st.sessions.map((x) => x.date)).size;
+  const before = `Kære ${name}! Hele vinteren har du hjulpet os, og nu har alle ${AREAS.length} områder fået deres stjerne. Klip snoren over – så åbner vi ${zname} for gæsterne!`;
+  const after = `${zname} er åben! 🎉 Tusind tak, ${name} – uden dig var vi aldrig blevet klar.`;
+  const when = (p) => `Åbningsfesten · ${partyDate(p.date)}`;
+  view(`
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">${back === showHome ? "Zoo'en" : 'Tilbage'}</span></div>
+    <section class="party-stage${first ? '' : ' cut'}">
+      <div class="party-scene" style="aspect-ratio:${art.w} / ${art.h}">
+        <img src="${art.src}" alt="Åbningsfest ved zoo'ens port: Bodil med en stor saks, Kaj, Nora, Liv, Yasmin og dyreungerne" draggable="false">
+        ${first ? `<button class="ribbon" id="ribbon" style="left:${rb.x1}%;width:${rb.x2 - rb.x1}%;top:${rb.y}%" aria-label="Klip snoren over">
+          <span class="rb-half rb-l"></span><span class="rb-half rb-r"></span>${RIBBON_BOW}<span class="rb-snip" aria-hidden="true">✂️</span></button>` : ''}
+      </div>
+    </section>
+    <div class="party-text">
+      <span class="kicker">${first ? 'Den store åbningsdag' : when(st.zoo.party)}</span>
+      <h1>Åbningsfest i ${zname}!</h1>
+      <div class="party-say">${say('bodil', first ? before : after, 'lg')}</div>
+      ${first ? '<div><button class="btn big" id="cut">✂️ Klip snoren</button></div>' : ''}
+    </div>
+    <div class="party-after"${first ? ' hidden' : ''}>
+      <section class="card party-sum"><h2>Det har du klaret</h2>
+        <ul class="party-places">${AREAS.map((a) => `<li><span class="pp-art">${placeIc(a)}<b aria-hidden="true">⭐</b></span><span class="pp-nm">${a.place.replace(/(\S{4,})(undersøgelsen|klinikken)/, '$1&shy;$2')}</span></li>`).join('')}</ul>
+        <div class="party-stats">
+          <div><b>${fmt(Z.guestsPerDay(st))}</b><span>gæster om dagen</span></div>
+          <div><b>${fs.gold} af ${fs.total}</b><span>voksne unger i Babyhuset</span></div>
+          <div><b>${patches.filter((x) => x.p).length} af ${patches.length}</b><span>mærker på din ranger-skjorte</span></div>
+          <div><b>${fmt(tasks)}</b><span>opgaver på ${days} ${days === 1 ? 'dag' : 'dage'}</span></div>
+        </div>
+      </section>
+      <section class="card party-next">${say('kaj', `Næste mål: guld-områder! Bliv mester 🌟 i alle aktiviteterne i et område – så bliver det guld. ${gold} af ${AREAS.length} er guld nu. Og hvem har gemt kagen? 🦜`)}</section>
+      <div class="row party-go"><button class="btn big" id="home">Se din zoo</button></div>
+    </div>`, (e) => {
+    if (e.key === 'Escape') back();
+    else if (e.key === 'Enter' && !st.zoo.party) cut();
+  });
+  function cut() {
+    if (st.zoo.party) return;
+    st.zoo.party = { date: today(), guests: Z.guestsPerDay(st) };
+    save(true);
+    $('.party-stage').classList.add('cut');
+    $('#cut')?.remove();
+    sfx('party');
+    confetti({ count: 220, duration: 3400 });
+    setTimeout(() => {
+      $('.party-say').innerHTML = say('bodil', after, 'lg');
+      $('.party-text .kicker').textContent = when(st.zoo.party);
+      const more = $('.party-after');
+      more.hidden = false;
+      more.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 900);
+  }
+  on('#back', 'click', back);
+  on('#home', 'click', showHome);
+  on('#ribbon', 'click', cut);
+  on('#cut', 'click', cut);
+  if (!first) setTimeout(() => confetti({ count: 120 }), 300);
 }
 
 // ================= Dyrebogen =================
@@ -2418,4 +2521,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

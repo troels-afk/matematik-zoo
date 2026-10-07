@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261007090038';
-import * as E from './engine.js?v=20261007090038';
-import { today } from './util.js?v=20261007090038';
+import { AREAS, FACTS } from './curriculum.js?v=20261007191319';
+import * as E from './engine.js?v=20261007191319';
+import { today } from './util.js?v=20261007191319';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -99,6 +99,12 @@ export const DISC_BG = {
   'd-figurer': 'geometri', 'd-koordinater': 'oevebane', 'd-areal': 'geometri', 'd-maal': 'maaling', 'd-tid': 'maaling',
   'd-diagrammer': 'data', 'd-beskriv': 'data', 'd-chance': 'data',
 };
+// Åbningsfesten (målet i reglerne): når alle områder har fået en stjerne (niveau 3), holder Bodil fest ved porten, og
+// hun klipper snoren over. Det sker én gang og gemmes i state.zoo.party = { date, guests }. Tegningen (Batch 8) er
+// uden snor – den tegnes ovenpå mellem portens stolper (RIBBON: x1–x2 og y i % af billedet), så den kan klippes over
+export const PARTY_ART = { src: 'img/party/aabningsfest.webp', w: 1536, h: 1024, ribbon: { x1: 34, x2: 61.5, y: 52 } };
+export const partyReady = (state) => AREAS.every((a) => areaLevel(state, a.id) >= 3);
+export const partyDue = (state) => partyReady(state) && !state.zoo.party;
 // Zoo'ens steder som tegninger (Batch 7, img/place/) – ved områdernes navne i stedet for emoji
 export const PLACE_ART = Object.fromEntries(['tal', 'gange', 'division', 'brok', 'decimal', 'geometri', 'maaling', 'data', 'algebra']
   .map((k) => [k, `img/place/${k}.webp`]));
@@ -337,7 +343,10 @@ export function homeMessage(state) {
   }
   const levels = AREAS.map((a) => areaLevel(state, a.id));
   if (levels.every((l) => l >= 3)) {
-    return { who: 'bodil', text: `Alle områder har fået en stjerne. ${zoo} er byens bedste zoo – tak for din hjælp! 🎉` };
+    const gold = levels.filter((l) => l >= 4).length;
+    return { who: 'bodil', text: state.zoo.party
+      ? `${zoo} er åben, og gæsterne strømmer ind – tak for din hjælp! Næste mål: guld-områder. ${gold} af ${AREAS.length} er allerede guld.`
+      : `Alle områder har fået en stjerne! Nu holder vi åbningsfest – og du skal klippe snoren. 🎉` };
   }
   const due = E.factSummary(state).due;
   const pool = [
