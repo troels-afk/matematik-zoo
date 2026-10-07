@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261007074945';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261007074945';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261007080630';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261007080630';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -197,9 +197,9 @@ export function seenToday(state) {
   return state.seenTasks;
 }
 
-function makeTask(kind, skillId, state) {
+function makeTask(kind, skillId, state, lvl) {
   const s = ALL_SKILLS[skillId];
-  const level = skillState(state, skillId).level;
+  const level = lvl ?? skillState(state, skillId).level;
   const seen = seenToday(state);
   let p, key;
   for (let i = 0; i < TASK_TRIES; i++) {
@@ -273,7 +273,64 @@ export function nextTask(state, block, index) {
     return makeTask('main', block.skill, state);
   }
   if (block.kind === 'practice') return makeTask('practice', block.skill, state);
+  if (block.kind === 'mixed') return makeTask('mixed', block.skills[index], state, 3); // altid sværeste niveau
   return makeTask('review', block.skills[index % block.skills.length], state);
+}
+
+// ---------- Mærker til ranger-skjorten (Øvebanen) ----------
+// Hver disciplin giver ét mærke i tre trin, og et mærke kan aldrig tages fra hende igen:
+//  1 bronze "Kan det":    alle disciplinens øvelser er sikre ⭐ (mestringslæring)
+//  2 sølv "Kan blande":   en blandet runde – 10 opgaver på kryds og tværs, niveau 3, mindst 9 rigtige (blandet træning)
+//  3 guld "Husker det":   den blandede runde klaret igen mindst en uge efter sølv (spredt gentagelse)
+export const PATCH = { N: 10, PASS: 9, GOLD_DAYS: 7, TIERS: ['', 'bronze', 'silver', 'gold'] };
+
+export const patchOf = (state, discId) => state.patches?.[discId] || null;
+const solid = (state, id) => [STATUS.SIKKER, STATUS.MESTRET].includes(skillStatus(state, id));
+export const discProgress = (state, disc) => ({ done: disc.skills.filter((sk) => solid(state, sk.id)).length, total: disc.skills.length });
+
+// Bronze kommer af sig selv, når alle øvelserne er sikre – også når de er øvet i zoo'en. Giver de nye mærkers id'er.
+export function awardBronze(state, discs) {
+  const fresh = [];
+  for (const d of discs) {
+    if (patchOf(state, d.id) || !d.skills.length || !d.skills.every((sk) => solid(state, sk.id))) continue;
+    (state.patches ||= {})[d.id] = { tier: 1, at: [today()], pos: null, seen: false };
+    fresh.push(d.id);
+  }
+  return fresh;
+}
+
+// Den blandede runde: åben efter bronze (→ sølv) og igen en uge efter sølv (→ guld). Med guld kan den øves for sjov.
+export function mixedState(state, discId) {
+  const p = patchOf(state, discId);
+  if (!p) return { open: false, next: 1 };
+  if (p.tier >= 3) return { open: true, next: null };
+  if (p.tier === 1) return { open: true, next: 2 };
+  const wait = PATCH.GOLD_DAYS - daysBetween(p.at[1], today());
+  return wait > 0 ? { open: false, next: 3, wait } : { open: true, next: 3 };
+}
+
+// Efter en blandet runde: rykker mærket et trin op, hvis runden var god nok. Giver det nye trin (eller null).
+export function recordMixed(state, discId, correct) {
+  const p = patchOf(state, discId), m = mixedState(state, discId);
+  if (!p || !m.open || !m.next || correct < PATCH.PASS) return null;
+  p.tier = m.next;
+  p.at[m.next - 1] = today();
+  p.seen = false;
+  return p.tier;
+}
+
+// 10 opgaver fordelt jævnt på disciplinens øvelser i tilfældig rækkefølge – helst aldrig samme øvelse to gange i træk
+export function mixedBlock(disc, n = PATCH.N) {
+  const ids = disc.skills.map((sk) => sk.id);
+  let pool = [];
+  while (pool.length < n) pool.push(...shuffle(ids));
+  pool = pool.slice(0, n);
+  for (let i = 1; i < n; i++) {
+    if (pool[i] !== pool[i - 1]) continue;
+    const j = pool.findIndex((x, k) => k > i && x !== pool[i] && pool[k - 1] !== pool[i] && pool[k + 1] !== pool[i]);
+    if (j > 0) [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return { kind: 'mixed', title: disc.name, sub: ids.length > 1 ? 'Blandet runde' : 'Runde på niveau 3', count: n, skills: pool, disc: disc.id };
 }
 
 // ---------- Svar ----------

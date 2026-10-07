@@ -29,7 +29,9 @@
   --warm-soft: #fff2e7;
   --rp-good: #2e9e78; --rp-warn: #d99a00; --rp-bad: #c8503a; /* Øvebanen i tal: sidder godt / næsten / øv mere */
   --ic-base: var(--card); /* bunden i ikonfelterne – lys i mørkt tema, så sorte tegn (➕ ✖️ ➗) kan ses */
-  --note-glass: 56%; /* hvor meget af sedlen på Øvebanen der er dækket – resten er sløret scene */
+  /* Sedlen på Øvebanen: tyndt glas, så scenen ses tydeligt bagved – teksten får en lys glorie og tegningerne en lys plade */
+  --note-glass: 26%; --note-blur: 4px; --note-plate: color-mix(in srgb, var(--card) 80%, transparent);
+  --note-halo: 0 0 2px #fff, 0 0 9px rgba(255, 255, 255, .95), 0 0 18px rgba(255, 255, 255, .75);
 
   --c-tal: #6b8cf2;
   --c-gange: #eea23c;
@@ -62,7 +64,8 @@
     --primary: #45c296; --primary-ink: #7fdcb9; --primary-soft: #1d3d34;
     --coral-soft: #3b2a25; --sun-soft: #3a3322; --sky-soft: #1d3444; --lav-soft: #2a2842;
     --good-soft: #1b3a2f; --warm: #f0a45a; --warm-soft: #3a2b1d;
-    --rp-good: #45c296; --rp-warn: #ffc94d; --rp-bad: #f2885c; --ic-base: #dfe8ee; --note-glass: 74%;
+    --rp-good: #45c296; --rp-warn: #ffc94d; --rp-bad: #f2885c; --ic-base: #dfe8ee;
+    --note-glass: 46%; --note-blur: 5px; --note-halo: 0 0 2px #0e1820, 0 0 9px rgba(14, 24, 32, .95), 0 0 18px rgba(14, 24, 32, .75);
     --shadow: 0 1px 2px rgba(0,0,0,.2), 0 6px 20px rgba(0,0,0,.25);
     --shadow-lg: 0 2px 4px rgba(0,0,0,.2), 0 18px 40px rgba(0,0,0,.35);
     color-scheme: dark;
@@ -74,7 +77,8 @@
   --primary: #45c296; --primary-ink: #7fdcb9; --primary-soft: #1d3d34;
   --coral-soft: #3b2a25; --sun-soft: #3a3322; --sky-soft: #1d3444; --lav-soft: #2a2842;
   --good-soft: #1b3a2f; --warm: #f0a45a; --warm-soft: #3a2b1d;
-  --rp-good: #45c296; --rp-warn: #ffc94d; --rp-bad: #f2885c; --ic-base: #dfe8ee; --note-glass: 74%;
+  --rp-good: #45c296; --rp-warn: #ffc94d; --rp-bad: #f2885c; --ic-base: #dfe8ee;
+  --note-glass: 46%; --note-blur: 5px; --note-halo: 0 0 2px #0e1820, 0 0 9px rgba(14, 24, 32, .95), 0 0 18px rgba(14, 24, 32, .75);
   color-scheme: dark;
 }
 
@@ -1131,7 +1135,10 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   box-shadow: 0 2px 0 color-mix(in srgb, var(--line) 70%, transparent), 0 24px 50px rgba(31, 51, 70, .28); }
 /* Sedlen er af frostet glas, så scenen anes bagved – kun hvor browseren kan sløre baggrunden, ellers forbliver den hvid og let at læse */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .trail-note { background: color-mix(in srgb, var(--card) var(--note-glass), transparent); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4); }
+  .trail-note { background: color-mix(in srgb, var(--card) var(--note-glass), transparent);
+    -webkit-backdrop-filter: blur(var(--note-blur)) saturate(1.15); backdrop-filter: blur(var(--note-blur)) saturate(1.15); }
+  .trail-note .prompt, .trail-note .link { text-shadow: var(--note-halo); }
+  .trail-note .visual { background: var(--note-plate); border-radius: 16px; padding: 10px; }
 }
 /* Er sedlen bred nok, står en tegning ved siden af svaret – så tastatur og "Tjek" kan ses uden at scrolle */
 @container (min-width: 470px) {

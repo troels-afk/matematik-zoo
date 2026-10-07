@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007074945';
-import * as E from './engine.js?v=20261007074945';
-import * as Z from './zoo.js?v=20261007074945';
-import { zooGate } from './scene.js?v=20261007074945';
-import { zooMap } from './map.js?v=20261007074945';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007074945';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007074945';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261007074945';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007080630';
+import * as E from './engine.js?v=20261007080630';
+import * as Z from './zoo.js?v=20261007080630';
+import { zooGate } from './scene.js?v=20261007080630';
+import { zooMap } from './map.js?v=20261007080630';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007080630';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007080630';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261007080630';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1354,7 +1354,8 @@ async function quitSession() {
   if (run.results.length >= 5) logRun(run);
   save(true);
   S.run = null;
-  showHome();
+  // En øvelse fra Øvebanen stopper på Øvebanens oversigt, alt andet i zoo'en
+  if (DISCIPLINES.some((d) => d.id === run.sess.area)) showPracticeHub(); else showHome();
 }
 
 function logRun(run) {
