@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261007080630';
-import * as E from './engine.js?v=20261007080630';
-import { today } from './util.js?v=20261007080630';
+import { AREAS, FACTS } from './curriculum.js?v=20261007081928';
+import * as E from './engine.js?v=20261007081928';
+import { today } from './util.js?v=20261007081928';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -99,6 +99,9 @@ export const DISC_BG = {
   'd-figurer': 'geometri', 'd-koordinater': 'oevebane', 'd-areal': 'geometri', 'd-maal': 'maaling', 'd-tid': 'maaling',
   'd-diagrammer': 'data', 'd-beskriv': 'data', 'd-chance': 'data',
 };
+// Ranger-skjorten (Batch 6, img/shirt/): for- og bagside i samme udsnit (1000×915), så et mærkes plads (x, y i % af
+// billedet) betyder det samme på begge sider. Mærkerne er Øvebanens tegninger (DISC_ART) i en syet kant
+export const SHIRT = { f: { src: 'img/shirt/forside.webp', name: 'Forside' }, b: { src: 'img/shirt/ryg.webp', name: 'Ryggen' } };
 // Øvebanens tegninger (Batch 5, img/disc/): én pr. disciplin – på flisen på Øvebanen og øverst på disciplinens side
 export const DISC_ART = Object.fromEntries(['tal', 'plusminus', 'gange', 'regneregler', 'division', 'brok', 'decimal', 'ligninger', 'moenstre',
   'linjer', 'figurer', 'koordinater', 'areal', 'maal', 'tid', 'diagrammer', 'beskriv', 'chance'].map((k) => [`d-${k}`, `img/disc/${k}.webp`]));

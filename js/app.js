@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007080630';
-import * as E from './engine.js?v=20261007080630';
-import * as Z from './zoo.js?v=20261007080630';
-import { zooGate } from './scene.js?v=20261007080630';
-import { zooMap } from './map.js?v=20261007080630';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007080630';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007080630';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261007080630';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007081928';
+import * as E from './engine.js?v=20261007081928';
+import * as Z from './zoo.js?v=20261007081928';
+import { zooGate } from './scene.js?v=20261007081928';
+import { zooMap } from './map.js?v=20261007081928';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007081928';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007081928';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261007081928';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -22,10 +22,12 @@ document.addEventListener('keydown', (e) => {
   keyHandler?.(e);
 });
 
-function view(html, onKey = null) {
+// calm: tegn skærmen igen uden indgangsanimation og uden at rulle til toppen (fx når et mærke flyttes på skjorten)
+function view(html, onKey = null, { calm = false } = {}) {
+  app.classList.toggle('calm', calm);
   app.innerHTML = html;
   keyHandler = onKey;
-  window.scrollTo(0, 0);
+  if (!calm) window.scrollTo(0, 0);
 }
 const $ = (sel) => app.querySelector(sel);
 const $$ = (sel) => [...app.querySelectorAll(sel)];
@@ -232,6 +234,9 @@ function showRules(back = showHome) {
           <li><b>Øvebanen:</b> altid åben – øv lige det, du vil.</li>
           <li><b>⚡ Slå din rekord:</b> regn så mange gangestykker, du kan, på 60 sekunder. ${st.settings.sprint ? 'Den kommer, når du kender mindst 6 gangestykker.' : 'Den er slået fra lige nu – en voksen kan slå den til.'}</li></ul>`,
       doneToday ? '🔓 Fri træning er åben i dag' : '🔒 Fri træning åbner, når dagens mission er klaret')}
+      ${rule(`<img class="ui-ic" src="${Z.SHIRT.f.src}" alt="">`, 'Ranger-skjorten', `<p>Når du er sikker ⭐ i alle øvelser i en disciplin på Øvebanen, får du et mærke til din ranger-skjorte. Du bestemmer selv, hvor det skal sidde – og du kan altid flytte det.</p>
+        <ul><li><b>Bronzetråd</b> – du kan det</li><li><b>Sølvtråd</b> – klar en blandet runde: mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige</li><li><b>Guldtråd</b> – klar runden igen mindst ${E.PATCH.GOLD_DAYS} dage senere</li></ul>`,
+      `${patchList(st).filter((x) => x.p).length} af ${patchList(st).length} mærker`)}
       ${rule('🎁', 'Ugens bonus-unge', `<p>Øver du ${E.WEEK_GOAL} dage i én uge, flytter en bonus-unge ind i Babyhuset. Der er ${Z.BONUS.length} at samle.</p>`,
       `Denne uge: ${Math.min(week, E.WEEK_GOAL)} af ${E.WEEK_GOAL} dage · ${bonus} af ${Z.BONUS.length} samlet`)}
     </div>
@@ -443,6 +448,7 @@ function showHome() {
   if (reloadWhenIdle) { location.reload(); return; }
   closeSheet();
   const st = S.state;
+  checkPatches();
   const zname = Z.zooName(st);
   const levels = levelsOf(st);
   const fs = E.factSummary(st);
@@ -468,7 +474,7 @@ function showHome() {
     <div class="home-top">
       <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="row" style="gap:8px">
-        <button class="icon-btn pill" id="oeve" aria-label="Øvebanen">${ui('oeve')}<span>Øvebanen</span></button>
+        <button class="icon-btn pill" id="oeve" aria-label="Øvebanen${patchNews(st) ? ' – nyt på din ranger-skjorte' : ''}">${ui('oeve')}<span>Øvebanen</span>${patchNews(st) ? '<i class="pill-dot" aria-hidden="true"></i>' : ''}</button>
         <button class="icon-btn pill" id="help" title="Reglerne – sådan spiller du" aria-label="Regler – sådan spiller du"><b class="q" aria-hidden="true">?</b><span>Regler</span></button>
         <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.5" fill="currentColor"/></svg></button>
         <button class="icon-btn" id="parent" title="Forælder" aria-label="Forælder (kræver kode)"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.6" r="1.4" fill="currentColor"/></svg></button>
@@ -780,11 +786,13 @@ function showPlace(areaId) {
 
 function showPracticeHub() {
   const st = S.state;
+  checkPatches();
   const solid = (sk) => ['sikker', 'mestret'].includes(E.skillStatus(st, sk.id));
   const tile = (d) => {
-    const done = d.skills.filter(solid).length, n = d.skills.length;
+    const done = d.skills.filter(solid).length, n = d.skills.length, pt = E.patchOf(st, d.id);
     return `<button class="disc-tile" data-disc="${d.id}" style="--ac:${d.color}">
       <span class="dt-art" aria-hidden="true"><img src="${Z.DISC_ART[d.id]}" alt="" width="150" height="112" decoding="async"></span>
+      ${pt ? `<span class="dt-badge" title="Mærket til din ranger-skjorte"><i class="${TIER[pt.tier].cls}"></i>${TIER[pt.tier].name}</span>` : ''}
       <span class="dt-body"><span class="head dt-nm">${d.name.replace(/(\S{4,})(systemet)/, '$1&shy;$2')}</span>
         <span class="dt-d">${d.chapter ? `Kapitel ${d.chapter} i bogen` : d.desc}</span>
         <span class="disc-prog"><span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * done) / n)}%"></i></span>${done} af ${n} sikre ⭐</span></span>
@@ -796,18 +804,21 @@ function showPracticeHub() {
       <div class="oeve-glass"><h1>Øvebanen</h1>
         <p>Øv lige det, du vil – alt er åbent. Matematikken er delt op som i din matematikbog, og hver øvelse starter med et eksempel.</p></div>
     </section>
+    ${shirtTeaser(st)}
     ${PRACTICE_GROUPS.map((g) => `
       <div class="section-title"><h2>${g.name}</h2></div>
       <div class="disc-grid">${DISCIPLINES.filter((d) => d.group === g.id && d.skills.length).map(tile).join('')}</div>`).join('')}`,
   (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
   on('.disc-tile', 'click', (e) => { sfx('tap'); showDiscipline(e.currentTarget.dataset.disc); });
+  on('#shirt', 'click', () => { sfx('tap'); showShirt(); });
 }
 
 // ================= Øvebanen: en disciplin =================
 
 function showDiscipline(discId) {
   const st = S.state, d = DISCIPLINES.find((x) => x.id === discId);
+  checkPatches();
   const label = { ny: 'Ny', øver: 'I gang', sikker: 'Sikker ⭐', mestret: 'Mester 🌟' };
   const tables = d.skills.filter((sk) => sk.table);
   let n = 0;
@@ -841,11 +852,333 @@ function showDiscipline(discId) {
       <div style="flex:1;min-width:200px"><h1 style="margin:0">${d.name}</h1>
         <div class="muted" style="font-weight:700">${d.desc}${d.chapter ? ` · kapitel ${d.chapter} i matematikbogen` : ''}</div></div>
     </section>
+    ${patchCard(st, d)}
     <div style="margin-top:14px">${say('kaj', 'Kig på eksemplet først, hvis du er i tvivl. Opgaverne bliver sværere, efterhånden som du kan dem 🦜')}</div>
     <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showPracticeHub(); });
   on('#back', 'click', showPracticeHub);
+  on('#pc-mixed', 'click', () => { sfx('tap'); startMixed(discId); });
+  on('#pc-shirt', 'click', () => showShirt(discId));
   on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice, discId); });
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showDiscipline(discId), { btn: `Tilbage til ${d.name}`, back: `Tilbage til ${d.name}` }));
+}
+
+// ================= Ranger-skjorten: et mærke for hver disciplin på Øvebanen =================
+// Mærket kommer, når alle disciplinens øvelser er sikre ⭐ (E.awardBronze), og får sølv- og guldtråd af de blandede
+// runder (E.recordMixed). Det lander i sykurven, og hun trækker det selv derhen på skjorten, hvor det skal sidde – for
+// eller bag – og kan altid flytte det igen. pos = { side: 'f' | 'b', x, y (mærkets midte i % af billedet), r (hældning), z }
+
+const TIER = [
+  null,
+  { cls: 't-bronze', name: 'Bronze', thread: 'Bronzetråd', what: 'Kan det' },
+  { cls: 't-silver', name: 'Sølv', thread: 'Sølvtråd', what: 'Kan blande' },
+  { cls: 't-gold', name: 'Guld', thread: 'Guldtråd', what: 'Husker det' },
+];
+const TIER_WHY = [
+  '',
+  'Alle disciplinens øvelser er sikre ⭐ – så får du mærket.',
+  `Klar en blandet runde: ${E.PATCH.N} opgaver fra alle øvelserne på sværeste niveau – mindst ${E.PATCH.PASS} rigtige.`,
+  `Klar runden igen mindst ${E.PATCH.GOLD_DAYS} dage efter sølvtråden – så sidder det fast.`,
+];
+// Korte navne under de små mærker
+const PATCH_NAME = {
+  'd-tal': 'Titalssystemet', 'd-plusminus': 'Plus og minus', 'd-gange': 'Gange', 'd-regneregler': 'Regneregler',
+  'd-division': 'Division', 'd-brok': 'Brøker', 'd-decimal': 'Decimaltal', 'd-ligninger': 'Ligninger', 'd-moenstre': 'Mønstre',
+  'd-linjer': 'Linjer og vinkler', 'd-figurer': 'Figurer', 'd-koordinater': 'Koordinater', 'd-areal': 'Areal og omkreds',
+  'd-maal': 'Måling', 'd-tid': 'Tid', 'd-diagrammer': 'Diagrammer', 'd-beskriv': 'Beskriv data', 'd-chance': 'Chance',
+};
+const PATCH_STAR = '<svg class="patch-star" viewBox="-12 -12 24 24" aria-hidden="true"><path d="M0-10l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L0 4.9-5.9 8.2l1.3-6.6L-9.5-3l6.6-.8z"/></svg>';
+const SHIRT_PATCH = 15; // et mærke på skjorten er 15 % af skjortens bredde (samme som --s: 15cqw i CSS)
+const discById = (id) => DISCIPLINES.find((d) => d.id === id);
+const patchName = (d) => PATCH_NAME[d.id] || d.name;
+const patchList = (st) => DISCIPLINES.filter((d) => d.skills.length).map((d) => ({ d, p: E.patchOf(st, d.id) }));
+const unsewn = (st) => patchList(st).filter((x) => x.p && !x.p.pos);
+const patchNews = (st) => patchList(st).filter((x) => x.p && !x.p.seen).length;
+const mixedLabel = (d) => (d.skills.length > 1 ? 'Start den blandede runde' : 'Start runden på niveau 3');
+const daysTxt = (n) => `${n} ${n === 1 ? 'dag' : 'dage'}`;
+
+// Ét mærke: disciplinens tegning på rund stofbund med en syet kant i bronze-, sølv- eller guldtråd (tier 0 = mangler endnu)
+function patchArt(id, tier, { cls = '', attrs = '', style = '' } = {}) {
+  return `<span class="patch ${tier ? TIER[tier].cls : 'ghost'} ${cls}" style="--ac:${discById(id).color};${style}" ${attrs}>`
+    + `<img src="${Z.DISC_ART[id]}" alt="" draggable="false" decoding="async">${tier === 3 ? PATCH_STAR : ''}</span>`;
+}
+
+// Nye mærker deles ud, så snart alle øvelser i en disciplin er sikre – også når de er øvet i zoo'en
+function checkPatches() {
+  const fresh = E.awardBronze(S.state, DISCIPLINES);
+  if (fresh.length) save();
+  return fresh;
+}
+
+// Skjorten med de mærker, der sidder på den ene side (senest syede øverst). mini = det lille billede på Øvebanen
+function shirtStage(st, side, mini = false) {
+  const placed = patchList(st).filter((x) => x.p?.pos?.side === side).sort((a, b) => a.p.pos.z - b.p.pos.z);
+  return `<div class="shirt-stage${mini ? ' mini' : ''}" data-side="${side}">
+      <img class="shirt-img" src="${Z.SHIRT[side].src}" alt="" draggable="false" decoding="async">
+      ${placed.map(({ d, p }) => patchArt(d.id, p.tier, {
+        cls: `on-shirt${p.seen || mini ? '' : ' fresh'}`,
+        style: `left:${p.pos.x}%;top:${p.pos.y}%;--r:${p.pos.r}deg`,
+        attrs: mini ? 'aria-hidden="true"' : `data-patch="${d.id}" data-from="shirt" role="button" tabindex="0" aria-label="${esc(d.name)}: træk for at flytte mærket"`,
+      })).join('')}
+    </div>`;
+}
+
+// Det lille kort øverst på Øvebanen: skjorten, hvor mange mærker hun har, og om der venter nye i sykurven
+function shirtTeaser(st) {
+  const list = patchList(st), have = list.filter((x) => x.p).length, waiting = unsewn(st).length, news = patchNews(st);
+  const line = waiting ? `🧵 ${waiting === 1 ? 'Et nyt mærke venter' : `${waiting} nye mærker venter`} i sykurven`
+    : news ? '✨ Et af dine mærker har fået ny tråd' : have ? 'Se, hvilke mærker du mangler' : 'Klar en disciplin, og få dit første mærke';
+  return `<button class="card shirt-teaser" id="shirt">
+      <span class="st-mini">${shirtStage(st, 'f', true)}</span>
+      <span class="st-txt"><b class="head">Min ranger-skjorte</b>
+        <span>${have} af ${list.length} mærker</span>
+        <span class="${waiting || news ? 'st-new' : ''}">${line}</span>
+        <span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * have) / list.length)}%"></i></span></span>
+      <span class="st-go" aria-hidden="true">→</span>
+    </button>`;
+}
+
+// Mærket for disciplinen øverst på dens side: hvor langt hun er, og næste trin (den blandede runde)
+function patchCard(st, d) {
+  const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id), pr = E.discProgress(st, d);
+  let head, txt, btn = '';
+  if (!p) {
+    head = 'Mærket til din ranger-skjorte';
+    txt = `Bliv sikker ⭐ i ${pr.total === 1 ? 'øvelsen' : `alle ${pr.total} øvelser`} – så får du det. Du har ${pr.done} af ${pr.total}.`;
+  } else if (m.next === 2) {
+    head = `${TIER[1].thread} · ${TIER[1].what}`; txt = `Næste: sølvtråd. ${TIER_WHY[2]}`; btn = mixedLabel(d);
+  } else if (m.next === 3 && !m.open) {
+    head = `${TIER[2].thread} · ${TIER[2].what}`; txt = `Næste: guldtråd. Runden åbner igen om ${daysTxt(m.wait)} – så kan vi se, om du stadig husker det.`;
+  } else if (m.next === 3) {
+    head = `${TIER[2].thread} · ${TIER[2].what}`; txt = `Næste: guldtråd. Klar runden igen med mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige – så sidder det fast.`; btn = mixedLabel(d);
+  } else {
+    head = `${TIER[3].thread} · ${TIER[3].what}`; txt = 'Mærket er helt færdigt. Du kan stadig tage runden for sjov.'; btn = 'Tag runden for sjov';
+  }
+  return `<section class="card patch-card" style="--ac:${d.color}">
+      <button class="pc-patch" id="pc-shirt" aria-label="Se din ranger-skjorte">${patchArt(d.id, p?.tier || 0)}</button>
+      <div class="pc-txt"><b>${head}</b><span>${txt}</span>${p ? '' : `<span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * pr.done) / pr.total)}%"></i></span>`}</div>
+      ${btn ? `<button class="btn" id="pc-mixed">${btn}</button>` : ''}
+    </section>`;
+}
+
+// Min ranger-skjorte: skjorten (for og bag), sykurven med de mærker, der ikke er syet på endnu, og alle mærkerne –
+// også dem, der mangler, med hvor langt hun er. from = disciplinen, hun kom fra (ellers Øvebanen)
+function showShirt(from = null, side = 'f', calm = false) {
+  const st = S.state;
+  checkPatches();
+  const list = patchList(st), have = list.filter((x) => x.p), basket = unsewn(st);
+  const goBack = () => (from ? showDiscipline(from) : showPracticeHub());
+  const count = (s) => have.filter(({ p }) => p.pos?.side === s).length;
+  const sample = have[0]?.d.id || 'd-koordinater';
+  const hint0 = basket.length ? 'Træk et mærke fra sykurven op på skjorten – eller tryk på mærket og så på skjorten.'
+    : have.some(({ p }) => p.pos) ? 'Du kan altid flytte et mærke: træk det et nyt sted hen – eller ned i sykurven.' : '';
+  view(`
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">${from ? esc(discById(from).name) : 'Øvebanen'}</span></div>
+    <div class="shirt-head"><h1>Min ranger-skjorte</h1><span class="shirt-count">${have.length} af ${list.length} mærker</span></div>
+    <div class="shirt-layout">
+      <section class="shirt-col">
+        <div class="seg shirt-sides" role="tablist" aria-label="Skjortens side">${['f', 'b'].map((s) => `<button role="tab" data-side="${s}" aria-selected="${s === side}" class="${s === side ? 'on' : ''}">${Z.SHIRT[s].name}${count(s) ? ` · ${count(s)}` : ''}</button>`).join('')}</div>
+        <div class="shirt-card" role="region" aria-label="Din ranger-skjorte, ${Z.SHIRT[side].name.toLowerCase()}">${shirtStage(st, side)}</div>
+        <p class="shirt-hint" id="shirt-hint" aria-live="polite">${hint0}</p>
+      </section>
+      <div class="shirt-aside">
+        ${have.length ? '' : say('liv', 'Her er din ranger-skjorte! Når du er sikker ⭐ i alle øvelser i en disciplin på Øvebanen, får du et mærke til den – og du bestemmer selv, hvor det skal sidde.')}
+        <section class="card basket" id="basket" aria-label="Sykurven"><h2>🧵 Sykurven</h2>
+          ${basket.length ? `<div class="basket-items">${basket.map(({ d, p }) => `<button class="basket-item" data-patch="${d.id}" data-from="basket" aria-label="${esc(d.name)}: træk mærket op på skjorten">
+              ${patchArt(d.id, p.tier)}<span class="bi-nm">${patchName(d)}</span>${p.seen ? '' : '<b class="new-tag">Nyt!</b>'}</button>`).join('')}</div>`
+            : `<p class="muted basket-empty">${have.length ? 'Alle dine mærker er syet på 👏' : 'Her lander dit første mærke.'}</p>`}
+        </section>
+        <section class="card all-patches"><div class="spread"><h2>Alle mærker</h2><span class="muted small">Tryk og se, hvad der mangler</span></div>
+          <div class="ap-grid">${list.map(({ d, p }) => {
+            const pr = E.discProgress(st, d);
+            return `<button class="ap-item" data-info="${d.id}">${patchArt(d.id, p?.tier || 0, { cls: 'sm' })}<span class="ap-nm">${patchName(d)}</span>
+              <span class="ap-st ${p ? TIER[p.tier].cls : ''}">${p ? TIER[p.tier].name : `${pr.done} af ${pr.total} ⭐`}</span></button>`;
+          }).join('')}</div>
+        </section>
+        <section class="card tier-card"><h2>Mærket bliver flottere</h2>
+          <ul class="tier-list">${[1, 2, 3].map((t) => `<li>${patchArt(sample, t, { cls: 'sm' })}<div><b>${TIER[t].thread} · ${TIER[t].what}</b><span>${TIER_WHY[t]}</span></div></li>`).join('')}</ul>
+          <p class="small muted" style="margin:0">Et mærke kan aldrig blive taget fra dig igen.</p>
+        </section>
+      </div>
+    </div>`, (e) => { if (e.key === 'Escape' && !document.querySelector('.patch-ghost')) goBack(); }, { calm });
+  on('#back', 'click', goBack);
+  on('.shirt-sides [data-side]', 'click', (e) => { sfx('tap'); showShirt(from, e.currentTarget.dataset.side, true); });
+  on('.ap-item', 'click', (e) => patchSheet(e.currentTarget.dataset.info));
+  bindShirtDrag(side, () => showShirt(from, side, true));
+  // En ny tråd på et mærke, der allerede sidder på skjorten, glimter én gang
+  const fresh = have.filter(({ p }) => p.pos && !p.seen);
+  if (fresh.length) { fresh.forEach(({ p }) => { p.seen = true; }); save(); }
+}
+
+// Et mærke under "Alle mærker": hvad det kræver, og hvad næste trin er
+function patchSheet(id) {
+  const st = S.state, d = discById(id), p = E.patchOf(st, id), m = E.mixedState(st, id);
+  const left = d.skills.filter((sk) => !['sikker', 'mestret'].includes(E.skillStatus(st, sk.id)));
+  const next = !p ? `Bliv sikker ⭐ i ${left.length === 1 ? 'den sidste øvelse' : `de sidste ${left.length} øvelser`}: ${left.slice(0, 4).map((sk) => esc(sk.name)).join(', ')}${left.length > 4 ? ' …' : ''}.`
+    : m.next === 2 ? `<b>Næste: sølvtråd.</b> ${TIER_WHY[2]}`
+    : m.next === 3 ? `<b>Næste: guldtråd.</b> ${m.open ? 'Runden er åben igen nu.' : `Runden åbner igen om ${daysTxt(m.wait)} – så kan vi se, om du stadig husker det.`}`
+    : 'Mærket er helt færdigt – flot!';
+  const go = p && m.open && m.next;
+  openSheet(`<div class="patch-sheet">
+      ${patchArt(id, p?.tier || 0, { cls: 'lg' })}
+      <div class="ps-txt"><span class="kicker">${p ? `${TIER[p.tier].thread} · ${TIER[p.tier].what}` : 'Mangler endnu'}</span>
+        <h2>${d.name}</h2>
+        ${p ? `<p><b>Det kan du:</b> ${esc(d.desc)}</p>` : ''}
+        <p>${next}</p>
+        <div class="row">${go ? `<button class="btn" id="ps-mixed">${mixedLabel(d)}</button>` : ''}<button class="btn${go ? ' ghost' : ''}" id="ps-disc">Gå til ${esc(d.name)}</button></div>
+      </div></div>`, (el) => {
+    el.querySelector('#ps-mixed')?.addEventListener('click', () => { closeSheet(); startMixed(id); });
+    el.querySelector('#ps-disc').addEventListener('click', () => { closeSheet(); showDiscipline(id); });
+  });
+}
+
+// Er punktet (x, y i % af billedet) på stoffet? Skjortens gennemsigtige kant aflæses én gang på et lille lærred pr. side
+const shirtMasks = new Map();
+function onShirt(img, x, y) {
+  if (!(x > 2 && x < 98 && y > 2 && y < 98)) return false;
+  if (!img.complete || !img.naturalWidth) return true;
+  const key = img.currentSrc || img.src;
+  let m = shirtMasks.get(key);
+  if (!m) {
+    const c = document.createElement('canvas');
+    c.width = 100;
+    c.height = Math.round((100 * img.naturalHeight) / img.naturalWidth);
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0, c.width, c.height);
+    try { m = { w: c.width, h: c.height, a: g.getImageData(0, 0, c.width, c.height).data }; } catch { return true; }
+    shirtMasks.set(key, m);
+  }
+  const px = Math.min(m.w - 1, Math.floor((x / 100) * m.w)), py = Math.min(m.h - 1, Math.floor((y / 100) * m.h));
+  return m.a[(py * m.w + px) * 4 + 3] > 160;
+}
+
+// Træk et mærke fra sykurven op på skjorten – eller rundt på den og ned i kurven igen – med finger eller mus.
+// Et tryk uden at trække vælger mærket, og et tryk på skjorten syr det på dér (Enter vælger også)
+function bindShirtDrag(side, redraw) {
+  const st = S.state, stage = $('.shirt-stage'), img = stage.querySelector('.shirt-img'), basket = $('#basket'), hintEl = $('#shirt-hint');
+  const hint0 = hintEl.textContent;
+  const hint = (t) => { hintEl.textContent = t; };
+  const at = (cx, cy) => { const r = stage.getBoundingClientRect(); return { x: ((cx - r.left) / r.width) * 100, y: ((cy - r.top) / r.height) * 100 }; };
+  const inBasket = (cx, cy) => { const r = basket.getBoundingClientRect(); return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom; };
+  const place = (id, x, y) => {
+    if (!onShirt(img, x, y)) return false;
+    const p = E.patchOf(st, id), was = p.pos;
+    const clamp = (v, lo, hi) => Math.round(Math.min(hi, Math.max(lo, v)) * 10) / 10;
+    p.pos = { side, x: clamp(x, 7, 93), y: clamp(y, 6, 95), r: was?.r ?? Math.round(Math.random() * 24 - 12), z: Date.now() };
+    p.seen = true;
+    save();
+    sfx(was ? 'tap' : 'grow');
+    return true;
+  };
+  const unsew = (id) => { E.patchOf(st, id).pos = null; save(); sfx('tap'); };
+  let sel = null, drag = null, ghost = null;
+  const select = (id) => {
+    sel = sel === id ? null : id;
+    $$('[data-patch]').forEach((el) => el.classList.toggle('selected', el.dataset.patch === sel));
+    stage.classList.toggle('drop-ready', !!sel);
+    hint(!sel ? hint0 : E.patchOf(st, sel).pos ? 'Tryk et nyt sted på skjorten – eller på sykurven for at tage mærket af.' : 'Tryk på skjorten, dér hvor mærket skal sidde.');
+  };
+  const stop = () => {
+    ghost?.remove();
+    ghost = null;
+    stage.classList.remove('drop-ok');
+    if (!sel) stage.classList.remove('drop-ready');
+    drag?.el.classList.remove('lifting');
+    drag = null;
+  };
+  for (const el of $$('[data-patch]')) {
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button > 0 || drag) return;
+      drag = { el, id: el.dataset.patch, from: el.dataset.from, x0: e.clientX, y0: e.clientY, moved: false };
+      el.setPointerCapture?.(e.pointerId);
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (drag?.el !== el) return;
+      if (!drag.moved) {
+        if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 8) return;
+        drag.moved = true;
+        const src = el.matches('.patch') ? el : el.querySelector('.patch');
+        ghost = src.cloneNode(true);
+        ghost.classList.remove('on-shirt', 'fresh', 'selected');
+        ghost.classList.add('patch-ghost');
+        ['data-patch', 'data-from', 'role', 'tabindex', 'aria-label'].forEach((a) => ghost.removeAttribute(a));
+        ghost.style.setProperty('--s', `${(stage.clientWidth * SHIRT_PATCH) / 100}px`);
+        document.body.appendChild(ghost);
+        el.classList.add('lifting');
+        stage.classList.add('drop-ready');
+      }
+      ghost.style.left = `${e.clientX}px`;
+      ghost.style.top = `${e.clientY}px`;
+      const { x, y } = at(e.clientX, e.clientY);
+      stage.classList.toggle('drop-ok', onShirt(img, x, y));
+    });
+    el.addEventListener('pointerup', (e) => {
+      if (drag?.el !== el) return;
+      const d = drag;
+      stop();
+      if (!d.moved) return select(d.id);
+      const { x, y } = at(e.clientX, e.clientY);
+      if (place(d.id, x, y)) return redraw();
+      if (d.from === 'shirt' && inBasket(e.clientX, e.clientY)) { unsew(d.id); return redraw(); }
+      hint(d.from === 'shirt' ? 'Mærket blev siddende. Træk det ned i sykurven, hvis det skal af.' : 'Slip mærket på selve skjorten.');
+    });
+    el.addEventListener('pointercancel', () => { if (drag?.el === el) stop(); });
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(el.dataset.patch); } });
+  }
+  stage.addEventListener('click', (e) => {
+    if (!sel || e.target.closest('[data-patch]')) return;
+    const { x, y } = at(e.clientX, e.clientY);
+    if (place(sel, x, y)) redraw(); else hint('Tryk på selve skjorten.');
+  });
+  basket.addEventListener('click', (e) => {
+    if (!sel || e.target.closest('[data-patch]') || !E.patchOf(st, sel).pos) return;
+    unsew(sel);
+    redraw();
+  });
+}
+
+// Den blandede runde (sølv- og guldtråd): 10 opgaver på kryds og tværs af disciplinen på sværeste niveau – på stien
+function startMixed(discId) {
+  const d = discById(discId), block = E.mixedBlock(d);
+  S.run = { mode: 'practice', mixed: discId, sess: { area: d.id, main: d.skills[0].id, blocks: [block] }, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
+  goBlock();
+}
+
+// Slutningen på en blandet runde: et nyt trin på mærket fejres; ellers hvor mange der manglede – og at hun må prøve igen
+function showMixedDone(run, wins) {
+  const st = S.state, d = discById(run.mixed), n = run.results.length, ok = run.results.filter((r) => r.correct).length;
+  const tier = E.recordMixed(st, d.id, ok);
+  save(true);
+  const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id);
+  const can = tier === 2 ? `At blande opgaverne i ${d.name.toLowerCase()} og selv finde ud af, hvordan hver enkelt skal regnes.` : `At huske ${d.name.toLowerCase()} – også efter en uge.`;
+  const msg = tier ? `<div class="md-can"><b>Det kan du nu</b>${can}</div>`
+    : m.next ? `<p>Du skal have mindst ${E.PATCH.PASS} rigtige for ${TIER[m.next].thread.toLowerCase()}. Prøv igen, når du har lyst – hver runde gør det lettere at huske.</p>`
+    : '<p>Mærket er allerede i guldtråd – flot, at du holder det ved lige!</p>';
+  view(`
+    <div class="card sheet center stack practice-done mixed-done" style="margin-top:4vh">
+      ${patchArt(d.id, p.tier, { cls: `xl${tier ? ' fresh' : ''}` })}
+      <div class="kicker">${esc(d.name)} · ${esc(run.sess.blocks[0].sub)}</div>
+      <h1>${tier ? `${TIER[tier].thread} på dit mærke!` : 'Runden er slut'}</h1>
+      <p class="pd-count">${ok} af ${n} rigtige</p>
+      ${msg}
+      ${wins.length ? `<ul class="wins">${wins.map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>` : ''}
+      <div class="row" style="justify-content:center">
+        ${tier ? '<button class="btn big" id="md-shirt">Se din skjorte</button>' : m.open && m.next ? '<button class="btn big" id="md-again">Prøv runden igen</button>' : ''}
+        <button class="btn ${tier || (m.open && m.next) ? 'ghost' : 'big'}" id="md-back">← Tilbage til ${esc(d.name)}</button>
+      </div>
+    </div>`, (e) => { if (e.key === 'Enter') (tier ? showShirt(d.id) : showDiscipline(d.id)); });
+  on('#md-shirt', 'click', () => showShirt(d.id));
+  on('#md-again', 'click', () => startMixed(d.id));
+  on('#md-back', 'click', () => showDiscipline(d.id));
+  if (tier) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
+}
+
+// Til forældredelen: skjorten og hvor mange mærker der er i hvilken tråd
+function shirtParent(st) {
+  const list = patchList(st), have = list.filter((x) => x.p), n = (t) => have.filter(({ p }) => p.tier === t).length;
+  return `<div class="card shirt-parent"><span class="st-mini">${shirtStage(st, 'f', true)}</span>
+      <div><h3 style="margin:0 0 4px">Ranger-skjorten · ${have.length} af ${list.length} mærker</h3>
+        <p class="muted small" style="margin:0">${have.length ? `${n(1)} i bronze, ${n(2)} i sølv og ${n(3)} i guld. ` : ''}Et mærke kommer, når alle øvelser i en disciplin er sikre ⭐. Sølvtråd: en blandet runde med mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige på sværeste niveau. Guldtråd: den samme runde igen mindst ${E.PATCH.GOLD_DAYS} dage senere.</p></div>
+    </div>`;
 }
 
 // ================= Intro til en færdighed =================
@@ -1382,6 +1715,8 @@ function finish() {
   const bonus = Z.updateBonus(st); // en hel uge med 4 øvedage giver en bonus-unge
   const after = snapshot(st), b = run.before;
   st.zoo.bestGuests = Math.max(st.zoo.bestGuests || 0, after.guests);
+  const fresh = checkPatches(); // alle øvelser i en disciplin blev sikre → et nyt mærke til ranger-skjorten
+  const patchWin = (id) => ({ e: '🎽', t: `Nyt mærke til din ranger-skjorte: ${discById(id).name}` });
 
   const wins = [];
   let bigWin = false;
@@ -1413,6 +1748,8 @@ function finish() {
   const backArea = !backDisc && run.mode === 'practice' ? AREAS.find((x) => x.id === run.sess.area) : null;
   if (run.mode === 'daily') {
     const res = missionResults(st, run, b, after, born, grew, bonus);
+    res.extras = [...fresh.map(patchWin), ...res.extras].slice(0, 3);
+    res.patches = fresh.length;
     // Til forsidens "Mission klaret" (lægges oven i tidligere vagter i dag)
     const prev = todayLog(st);
     st.zoo.today = {
@@ -1428,6 +1765,8 @@ function finish() {
   // Øvelse fra et område eller Øvebanen: en kort afslutning og tilbage, hvor hun kom fra (dagens mission har sin egen)
   const diff = after.guests - b.guests;
   if (diff > 0) wins.push({ e: '🎟️', t: `+${fmt(diff)} gæster om dagen` });
+  wins.unshift(...fresh.map(patchWin));
+  if (run.mixed) return showMixedDone(run, wins);
   const where = areaOf(run.sess.area)?.place || '', act = run.sess.blocks[0]?.sub || ALL_SKILLS[run.sess.main]?.name || '';
   const back = backDisc ? { id: 'backdisc', text: `← Tilbage til ${backDisc.name}`, go: () => showDiscipline(backDisc.id) }
     : backArea ? { id: 'backarea', text: `← Tilbage til ${backArea.place}`, go: () => showPlace(backArea.id) } : null;
@@ -1441,13 +1780,15 @@ function finish() {
       <p class="pd-count">Du øvede ${n} opgaver.</p>
       ${wins.length ? `<ul class="wins">${wins.map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>` : ''}
       <div class="row" style="justify-content:center">
-        ${back ? `<button class="btn big" id="${back.id}">${back.text}</button>` : ''}
-        <button class="btn ${back ? 'ghost' : 'big'}" id="home">Til zoo'en</button>
+        ${fresh.length ? '<button class="btn big" id="sew">🧵 Sy mærket på din skjorte</button>' : ''}
+        ${back ? `<button class="btn ${fresh.length ? 'ghost' : 'big'}" id="${back.id}">${back.text}</button>` : ''}
+        <button class="btn ${back || fresh.length ? 'ghost' : 'big'}" id="home">Til zoo'en</button>
       </div>
-    </div>`, (e) => { if (e.key === 'Enter') (back ? back.go() : showHome()); });
+    </div>`, (e) => { if (e.key === 'Enter') (fresh.length ? showShirt(backDisc?.id) : back ? back.go() : showHome()); });
   on('#home', 'click', showHome);
+  on('#sew', 'click', () => showShirt(backDisc?.id));
   if (back) on(`#${back.id}`, 'click', back.go);
-  if (bigWin) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
+  if (bigWin || fresh.length) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
 }
 
 // Hvad kom der ud af missionen? Det vigtigste først: nyt dyr > guld-område > flere gæster >
@@ -1525,6 +1866,7 @@ function showPayoff(st, res, b, after, bigWin, freeNew = false) {
         ${res.extras.length ? `<ul class="payoff-extras">${res.extras.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
         <div class="mission-go">
           <button class="btn big" id="home">Se din zoo</button>
+          ${res.patches ? '<button class="btn ghost" id="sew">🧵 Sy mærket på din skjorte</button>' : ''}
           ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
         </div>
         ${freeNew ? '<p class="free-open">🔓 Nu er fri træning åben på kortet resten af dagen.</p>' : ''}
@@ -1532,6 +1874,7 @@ function showPayoff(st, res, b, after, bigWin, freeNew = false) {
     </section>`, (e) => { if (e.key === 'Enter') showHome(); });
   on('#home', 'click', showHome);
   on('#sprint', 'click', startSprint);
+  on('#sew', 'click', () => showShirt());
   if (main.kind === 'guests') setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 500);
   if (bigWin) { sfx('level'); setTimeout(() => confetti(), 300); } else sfx('finish');
 }
@@ -1754,6 +2097,7 @@ function showParent() {
 
     <div class="section-title"><h2>Øvebanen</h2></div>
     ${reportTeaser(st)}
+    ${shirtParent(st)}
 
     <div class="section-title"><h2>Seneste 14 dage</h2></div>
     <div class="card table-wrap">
@@ -2063,4 +2407,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

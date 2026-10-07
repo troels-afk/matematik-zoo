@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261007080630';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261007080630';
+import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261007081928';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261007081928';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -32,6 +32,7 @@ export function newState(name) {
     records: { sprint: 0 },
     settings: { length: 'normal', sprint: true, sound: true },
     zoo: { name: '', bestGuests: 0 },
+    patches: {}, // mærkerne til ranger-skjorten, pr. disciplin (se PATCH nedenfor)
   };
 }
 
@@ -319,17 +320,16 @@ export function recordMixed(state, discId, correct) {
   return p.tier;
 }
 
-// 10 opgaver fordelt jævnt på disciplinens øvelser i tilfældig rækkefølge – helst aldrig samme øvelse to gange i træk
+// 10 opgaver fordelt jævnt på disciplinens øvelser: omgange, hvor hver øvelse er med én gang i tilfældig rækkefølge.
+// Starter en omgang med den øvelse, den forrige sluttede med, byttes de to første – så kommer samme øvelse aldrig to gange i træk
 export function mixedBlock(disc, n = PATCH.N) {
-  const ids = disc.skills.map((sk) => sk.id);
-  let pool = [];
-  while (pool.length < n) pool.push(...shuffle(ids));
-  pool = pool.slice(0, n);
-  for (let i = 1; i < n; i++) {
-    if (pool[i] !== pool[i - 1]) continue;
-    const j = pool.findIndex((x, k) => k > i && x !== pool[i] && pool[k - 1] !== pool[i] && pool[k + 1] !== pool[i]);
-    if (j > 0) [pool[i], pool[j]] = [pool[j], pool[i]];
+  const ids = disc.skills.map((sk) => sk.id), pool = [];
+  while (pool.length < n) {
+    const round = shuffle(ids);
+    if (round.length > 1 && round[0] === pool[pool.length - 1]) [round[0], round[1]] = [round[1], round[0]];
+    pool.push(...round);
   }
+  pool.length = n;
   return { kind: 'mixed', title: disc.name, sub: ids.length > 1 ? 'Blandet runde' : 'Runde på niveau 3', count: n, skills: pool, disc: disc.id };
 }
 

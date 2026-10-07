@@ -1170,3 +1170,105 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .trail-stones li.now { width: 24px; height: 16px; transform: none; }
 }
 @media (max-width: 560px) { .trail-sign { font-size: .92rem; } .trail-stones { margin-bottom: 20vh; } }
+
+/* ---------- Ranger-skjorten: et mærke for hver disciplin på Øvebanen ---------- */
+/* Skærmen tegnes igen uden indgangsanimation, når et mærke flyttes (view(…, { calm: true })) */
+#app.calm > * { animation: none; }
+/* Et syet mærke: rund stofbund, disciplinens tegning, en kant i bronze-, sølv- eller guldtråd og stikkesting.
+   Mærket er en ting af stof – det ser ens ud i lyst og mørkt tema */
+.patch { --s: 76px; --t: calc(var(--s) * .07); position: relative; display: inline-grid; place-items: center; flex: none; width: var(--s); height: var(--s); border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #fffdf6 0 54%, color-mix(in srgb, var(--ac, #8fbf7a) 24%, #fff8ea) 56% 100%);
+  box-shadow: 0 0 0 var(--t) var(--thread), 0 0 0 calc(var(--t) * 1.35) var(--thread-dk), 0 calc(var(--t) * .9) calc(var(--t) * 1.8) rgba(30, 40, 30, .3); }
+.patch::before { content: ''; position: absolute; inset: calc(var(--t) * .55); border-radius: 50%; border: max(1.5px, calc(var(--t) * .28)) dashed var(--thread-hi); pointer-events: none; }
+.patch img { width: 84%; height: 84%; object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.patch-star { position: absolute; right: -6%; top: -6%; width: 32%; height: 32%; fill: #ffd34d; stroke: #a07406; stroke-width: 1.4; }
+.t-bronze { --thread: #bd7a3f; --thread-dk: #8a5226; --thread-hi: #f1c193; }
+.t-silver { --thread: #a7b2bb; --thread-dk: #6f7b85; --thread-hi: #f7fafc; }
+.t-gold { --thread: #e0a915; --thread-dk: #a07406; --thread-hi: #fff2b0; }
+.patch.ghost { background: transparent; box-shadow: none; border: 2px dashed var(--ink-3); }
+.patch.ghost::before { display: none; }
+.patch.ghost img { filter: grayscale(1); opacity: .35; }
+.patch.sm { --s: 52px; }
+.patch.lg { --s: 112px; }
+.patch.xl { --s: 150px; margin: 8px auto 6px; }
+.patch.fresh { animation: patch-glint 1.4s ease-out 2; }
+@keyframes patch-glint { 40% { filter: brightness(1.2) drop-shadow(0 0 12px #ffe39a); } }
+
+/* Skjorten: billedet og mærkerne ovenpå i % af billedet; et mærke er 15 % af skjortens bredde (SHIRT_PATCH i app.js) */
+.shirt-stage { position: relative; width: 100%; aspect-ratio: 1000 / 915; container-type: inline-size; }
+.shirt-img { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.shirt-stage .on-shirt { --s: 15cqw; position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); touch-action: none; cursor: grab; }
+.shirt-stage.mini .on-shirt { cursor: default; }
+.shirt-stage .on-shirt.selected, .basket-item.selected .patch { outline: 3px solid var(--primary); outline-offset: 6px; }
+.shirt-stage.drop-ready::after { content: ''; position: absolute; inset: 1%; border-radius: 30px; border: 3px dashed color-mix(in srgb, var(--primary) 50%, transparent); pointer-events: none; }
+.shirt-stage.drop-ok::after { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 7%, transparent); }
+.on-shirt.lifting, .basket-item.lifting { opacity: .3; }
+.patch-ghost { position: fixed; z-index: 60; left: -200px; top: -200px; transform: translate(-50%, -50%) rotate(-6deg) scale(1.06); pointer-events: none;
+  box-shadow: 0 0 0 var(--t) var(--thread), 0 0 0 calc(var(--t) * 1.35) var(--thread-dk), 0 16px 24px rgba(30, 40, 30, .35); }
+
+/* Skærmen "Min ranger-skjorte": skjorten til venstre (står fast, mens man ruller), sykurven og alle mærker til højre */
+.shirt-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin: 6px 2px 14px; }
+.shirt-head h1 { margin: 0; }
+.shirt-count { font: 600 1.1rem var(--font-head); color: var(--ink-2); }
+.shirt-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.shirt-col { display: grid; gap: 10px; justify-items: center; min-width: 0; }
+.shirt-card { width: 100%; max-width: 640px; padding: 16px; border-radius: var(--r-lg); box-shadow: var(--shadow);
+  background: radial-gradient(ellipse 72% 62% at 50% 46%, color-mix(in srgb, #f3d58f 34%, var(--card)), color-mix(in srgb, #7fb46e 26%, var(--card))); }
+.shirt-hint { margin: 0; min-height: 1.45em; max-width: 52ch; text-align: center; color: var(--ink-2); font-weight: 700; }
+.shirt-aside { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.shirt-aside h2 { margin: 0 0 10px; font-size: 1.2rem; }
+@media (min-width: 1000px) {
+  .shirt-layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .shirt-col { position: sticky; top: 12px; }
+}
+.basket-items { display: flex; flex-wrap: wrap; gap: 16px 20px; }
+.basket-item { position: relative; display: grid; justify-items: center; gap: 8px; padding: 10px 8px 4px; border-radius: 16px; touch-action: none; cursor: grab; }
+.bi-nm { font: 800 .8rem/1.2 var(--font-body); color: var(--ink-2); max-width: 96px; text-align: center; }
+.new-tag { position: absolute; top: -2px; right: -8px; padding: 2px 8px; border-radius: 99px; background: var(--coral); color: #fff; font: 800 .7rem var(--font-body); transform: rotate(8deg); }
+.basket-empty { margin: 0; }
+.ap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 14px 6px; }
+.ap-item { display: grid; justify-items: center; align-content: start; gap: 5px; padding: 8px 2px; border-radius: 14px; text-align: center; }
+.ap-item:hover { background: var(--card-2); }
+.ap-nm { font: 800 .74rem/1.2 var(--font-body); color: var(--ink); }
+.ap-st { padding: 1px 8px; border-radius: 99px; background: var(--line-2); color: var(--ink-2); font: 800 .68rem var(--font-body); }
+.ap-st.t-bronze { background: #f6dcc6; color: #7a3f12; }
+.ap-st.t-silver { background: #e9eef2; color: #46535e; }
+.ap-st.t-gold { background: #fff0b8; color: #7a5600; }
+.tier-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 14px; }
+.tier-list li { display: flex; gap: 16px; align-items: center; }
+.tier-list b { display: block; font: 600 1rem var(--font-head); }
+.tier-list span { color: var(--ink-2); font-size: .9rem; font-weight: 700; line-height: 1.35; }
+.patch-sheet { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+.patch-sheet .patch { margin: 10px; }
+.ps-txt { flex: 1; min-width: 220px; }
+.ps-txt h2 { margin: 2px 0 8px; }
+.ps-txt p { margin: 0 0 10px; line-height: 1.45; }
+
+/* Øvebanen: kortet med skjorten øverst, og mærket på disciplinernes egne sider */
+.shirt-teaser { display: flex; align-items: center; gap: 18px; width: 100%; margin-top: 16px; padding: 12px 20px 12px 12px; text-align: left; border: 1px solid var(--line-2); transition: transform .15s, box-shadow .15s; }
+.shirt-teaser:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.st-mini { flex: none; width: 150px; padding: 6px; border-radius: 16px;
+  background: radial-gradient(ellipse 72% 62% at 50% 46%, color-mix(in srgb, #f3d58f 34%, var(--card)), color-mix(in srgb, #7fb46e 26%, var(--card))); }
+.st-txt { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.st-txt b { font-size: 1.25rem; }
+.st-txt span { color: var(--ink-2); font-weight: 700; }
+.st-txt .st-new { color: var(--primary-ink); }
+.st-txt .bar-mini { max-width: 260px; margin-top: 2px; }
+.st-go { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; font: 600 1.2rem var(--font-head); }
+@media (max-width: 480px) { .st-mini { width: 104px; } .st-go { display: none; } }
+.patch-card { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; margin-top: 14px; padding: 14px 18px; }
+.pc-patch { flex: none; border-radius: 50%; padding: 8px; }
+.pc-txt { flex: 1; min-width: 220px; display: grid; gap: 4px; }
+.pc-txt b { font: 600 1.08rem var(--font-head); }
+.pc-txt span { color: var(--ink-2); font-weight: 700; line-height: 1.4; }
+.pc-txt .bar-mini { max-width: 220px; margin-top: 4px; }
+.dt-badge { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 4px; border-radius: 99px;
+  background: rgba(255, 255, 255, .94); color: #3b2f1a; font: 800 .72rem var(--font-body); box-shadow: 0 2px 6px rgba(0, 0, 0, .15); }
+.dt-badge i { width: 14px; height: 14px; border-radius: 50%; background: var(--thread); box-shadow: inset 0 0 0 2px var(--thread-dk); }
+.disc-tile { position: relative; }
+#oeve { position: relative; }
+.pill-dot { position: absolute; top: 3px; right: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 2px var(--card); }
+.mixed-done .md-can { background: var(--primary-soft); border-radius: 16px; padding: 12px 16px; text-align: left; line-height: 1.45; }
+.mixed-done .md-can b { display: block; font: 600 1.05rem var(--font-head); color: var(--primary-ink); }
+.shirt-parent { display: flex; gap: 16px; align-items: center; margin-top: 12px; }
+.shirt-parent .st-mini { width: 110px; }
