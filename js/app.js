@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007081928';
-import * as E from './engine.js?v=20261007081928';
-import * as Z from './zoo.js?v=20261007081928';
-import { zooGate } from './scene.js?v=20261007081928';
-import { zooMap } from './map.js?v=20261007081928';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007081928';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007081928';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261007081928';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007090038';
+import * as E from './engine.js?v=20261007090038';
+import * as Z from './zoo.js?v=20261007090038';
+import { zooGate } from './scene.js?v=20261007090038';
+import { zooMap } from './map.js?v=20261007090038';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007090038';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007090038';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261007090038';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -35,7 +35,11 @@ const on = (sel, ev, fn) => $$(sel).forEach((el) => el.addEventListener(ev, fn))
 const save = (now = false) => saveState(S.id, S.state, { now });
 const areaOf = (id) => AREAS.find((a) => a.id === id) || DISCIPLINES.find((a) => a.id === id);
 const ME = ['🦊', '🐼', '🦒', '🐧', '🦁', '🐨', '🦓', '🐢'];
-const meAvatar = (name) => ME[[...name].reduce((h, c) => h + c.charCodeAt(0), 0) % ME.length];
+// Profilens dyr (fast pr. navn): den tegnede unge fra Babyhuset
+const meAvatar = (name) => {
+  const e = ME[[...name].reduce((h, c) => h + c.charCodeAt(0), 0) % ME.length], art = Z.artFor(e);
+  return art ? `<img src="${art}" alt="" draggable="false">` : e;
+};
 
 function toast(msg) {
   const t = document.createElement('div');
@@ -94,8 +98,15 @@ const say = (who, text, size = '') => `
 const UI_ICONS = {
   baby: 'img/ui/babyhuset.webp', area: 'img/ui/zoo-omraade.webp', round: 'img/ui/zoo-runden.webp',
   oeve: 'img/ui/oevebane.webp', lyd: 'img/ui/lyd.webp', opgave: 'img/ui/opgave.webp',
+  fest: 'img/ui/fest.webp', stjerne: 'img/ui/stjerne.webp', billet: 'img/ui/billet.webp', gave: 'img/ui/gave.webp', sykurv: 'img/ui/sykurv.webp',
 };
 const ui = (key) => `<img class="ui-ic" src="${UI_ICONS[key]}" alt="" draggable="false">`;
+// Et sted i zoo'en eller en disciplin på Øvebanen som lille tegning ved navnet (Batch 5 og 7) – i stedet for emoji
+const placeIc = (a) => {
+  const src = Z.PLACE_ART[a.id] || Z.DISC_ART[a.id];
+  return src ? `<img class="place-ic" src="${src}" alt="" draggable="false">` : a.icon;
+};
+const lvIc = (n) => `<img class="lv-ic" src="${Z.LEVELS[n].art}" alt="" draggable="false">`;
 
 function baby(key, size = '') {
   const b = Z.BABIES[key];
@@ -137,7 +148,7 @@ async function showProfiles() {
     <div class="welcome center">
       <h1 style="margin-top:26px">Hvem skal passe zoo'en i dag?</h1>
       <div class="profiles">
-        ${profiles.map((p) => `<button class="profile-btn" data-id="${esc(p.id)}"><span class="avatar lg">${meAvatar(p.name)}</span>${esc(p.name)}</button>`).join('')}
+        ${profiles.map((p) => `<button class="profile-btn" data-id="${esc(p.id)}"><span class="avatar lg has-img">${meAvatar(p.name)}</span>${esc(p.name)}</button>`).join('')}
         <button class="profile-btn" id="new"><span class="avatar lg" style="background:var(--primary-soft)">＋</span>Ny profil</button>
       </div>
       <button class="link small" id="restore" style="margin-top:14px">Gendan fra backup</button>
@@ -202,7 +213,7 @@ function showRules(back = showHome) {
     <button class="back-link" id="back"><span class="icon-btn" aria-hidden="true">←</span>Tilbage til zoo'en</button>
     <div class="rules-head"><h1>Sådan spiller du</h1><p class="muted">Alle reglerne i ${esc(Z.zooName(st))} – kort og præcist.</p></div>
     <div class="rules">
-      ${rule('🎉', 'Målet: åbningsfesten', `<p>Zoo'en har været lukket hele vinteren. Når alle ${AREAS.length} områder har fået en stjerne ⭐, holder Bodil åbningsfest.</p>
+      ${rule(ui('fest'), 'Målet: åbningsfesten', `<p>Zoo'en har været lukket hele vinteren. Når alle ${AREAS.length} områder har fået en stjerne ⭐, holder Bodil åbningsfest.</p>
         <p>Et område får sin stjerne, når du er <b>sikker ⭐</b> i alle områdets aktiviteter.</p>`,
       `<div class="goal-bar" style="margin:0"><i style="width:${goalPct}%"></i></div><span><b>${stars} af ${AREAS.length}</b> områder har fået en stjerne</span>`)}
       ${rule(ui('opgave'), 'Dagens mission', `<p>Hver dag er der <b>én</b> mission. Den har tre dele:</p>
@@ -215,17 +226,17 @@ function showRules(back = showHome) {
         <p>Svarer du <b>rigtigt og hurtigt</b> (under ${E.FLUENT_MS / 1000} sekunder), vokser ungen: ${Z.STAGES.join(' → ')}.</p>
         <p>En unge, der har fået flaske, skal først have igen om nogle dage – jo større den er, jo længere tid går der. Svarer du forkert, starter ungen forfra, men den kommer igen lidt senere.</p>`,
       `${fs.solid} af ${fs.total} unger er store · ${fs.gold} er voksne`)}
-      ${rule('⭐', 'Stjerner i aktiviteterne', `<p>Hvert område har nogle aktiviteter, fx "${Z.ACTIVITIES.klokken.name}" i Zoo-uret. Hver aktivitet har 3 niveauer:</p>
+      ${rule(ui('stjerne'), 'Stjerner i aktiviteterne', `<p>Hvert område har nogle aktiviteter, fx "${Z.ACTIVITIES.klokken.name}" i Zoo-uret. Hver aktivitet har 3 niveauer:</p>
         <ul><li>3 rigtige i træk → lidt sværere opgaver</li><li>2 forkerte i træk → lidt lettere igen</li></ul>
         <p class="rule-chain"><span class="st ny">Ny</span>→<span class="st øver">I gang</span>→<span class="st sikker">Sikker ⭐</span>→<span class="st mestret">Mester 🌟</span></p>
         <p><b>Sikker ⭐</b>: 8 af dine sidste 10 svar på niveau 3 er rigtige. <b>Mester 🌟</b>: du er sikker på to forskellige dage.</p>`,
       `Du er sikker i ${sikre} af ${ids.length} aktiviteter`)}
       ${rule(ui('area'), 'Områderne vokser', `<p>Jo flere aktiviteter du er sikker i, jo flottere bliver området:</p>
-        <ul class="rule-levels">${Z.LEVELS.map((L, i) => `<li><span aria-hidden="true">${L.icon}</span><span><b>${L.name}</b> – ${levelWhy[i]}${i >= 1 && i <= 3 ? ' · et nyt dyr flytter ind' : ''}</span></li>`).join('')}</ul>`,
+        <ul class="rule-levels">${Z.LEVELS.map((L, i) => `<li><span aria-hidden="true">${lvIc(i)}</span><span><b>${L.name}</b> – ${levelWhy[i]}${i >= 1 && i <= 3 ? ' · et nyt dyr flytter ind' : ''}</span></li>`).join('')}</ul>`,
       `${open} åbne · ${stars} stjerne-områder · ${gold} guld-områder`)}
-      ${rule('🎟️', 'Gæster', `<p>Gæster pr. dag er zoo'ens point. Tallet vokser, når områderne bliver flottere, og når ungerne i Babyhuset bliver store.</p>`,
+      ${rule(ui('billet'), 'Gæster', `<p>Gæster pr. dag er zoo'ens point. Tallet vokser, når områderne bliver flottere, og når ungerne i Babyhuset bliver store.</p>`,
       `${fmt(Z.guestsPerDay(st))} gæster om dagen`)}
-      ${rule('🤔', 'Når du svarer forkert', `<p>Det gør ikke noget – sådan lærer man!</p>
+      ${rule(`<img class="ui-ic face" src="${Z.CAST.kaj.img}" alt="">`, 'Når du svarer forkert', `<p>Det gør ikke noget – sådan lærer man!</p>
         <ul><li>Skriver du et tal, får du et forsøg mere – og du kan trykke på "Vis et hint".</li>
           <li>Vælger du mellem knapper, får du ét forsøg.</li>
           <li>Bagefter viser Kaj, hvordan man regner det, og der kommer en lignende opgave senere.</li>
@@ -237,7 +248,7 @@ function showRules(back = showHome) {
       ${rule(`<img class="ui-ic" src="${Z.SHIRT.f.src}" alt="">`, 'Ranger-skjorten', `<p>Når du er sikker ⭐ i alle øvelser i en disciplin på Øvebanen, får du et mærke til din ranger-skjorte. Du bestemmer selv, hvor det skal sidde – og du kan altid flytte det.</p>
         <ul><li><b>Bronzetråd</b> – du kan det</li><li><b>Sølvtråd</b> – klar en blandet runde: mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige</li><li><b>Guldtråd</b> – klar runden igen mindst ${E.PATCH.GOLD_DAYS} dage senere</li></ul>`,
       `${patchList(st).filter((x) => x.p).length} af ${patchList(st).length} mærker`)}
-      ${rule('🎁', 'Ugens bonus-unge', `<p>Øver du ${E.WEEK_GOAL} dage i én uge, flytter en bonus-unge ind i Babyhuset. Der er ${Z.BONUS.length} at samle.</p>`,
+      ${rule(ui('gave'), 'Ugens bonus-unge', `<p>Øver du ${E.WEEK_GOAL} dage i én uge, flytter en bonus-unge ind i Babyhuset. Der er ${Z.BONUS.length} at samle.</p>`,
       `Denne uge: ${Math.min(week, E.WEEK_GOAL)} af ${E.WEEK_GOAL} dage · ${bonus} af ${Z.BONUS.length} samlet`)}
     </div>
     <div class="row rules-go"><button class="btn ghost big" id="tour">Se introen igen</button><button class="btn big" id="home">Tilbage til zoo'en</button></div>
@@ -249,7 +260,7 @@ function showRules(back = showHome) {
 
 function showAbout(back = showHome) {
   const skillCount = AREAS.reduce((n, a) => n + a.skills.length, 0);
-  const rows = AREAS.map((a) => `<tr><td>${a.icon} ${a.place}</td><td>${a.name}</td><td>${a.skills.map((sk) => sk.name).join(', ')}</td></tr>`).join('');
+  const rows = AREAS.map((a) => `<tr><td>${placeIc(a)} ${a.place}</td><td>${a.name}</td><td>${a.skills.map((sk) => sk.name).join(', ')}</td></tr>`).join('');
   const principle = (icon, title, body, src) => `
     <div class="card principle">
       <div class="pr-ic">${icon}</div>
@@ -304,7 +315,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
     // Første side er en scene som på missionerne og områdesiderne (se renderHero nedenfor)
     { hero: true, title: 'Velkommen til Matematik-Zoo!', text: "Zoo'en har været lukket hele vinteren. Vil du hjælpe Bodil med at åbne den igen?", cta: 'Kom indenfor' },
     {
-      art: `<div class="tour-icons">${AREAS.map((a) => `<span style="--ac:${a.color}">${a.icon}</span>`).join('')}</div>`,
+      art: `<div class="tour-icons">${AREAS.map((a) => `<span style="--ac:${a.color}">${placeIc(a)}</span>`).join('')}</div>`,
       title: 'Målet: den store åbningsdag',
       body: say('bodil', `Zoo'en har ${AREAS.length} områder. Hvert område bliver bedre, når du bliver god til noget matematik – så flytter der nye dyr ind og kommer flere gæster. Når alle ${AREAS.length} områder har fået en ⭐, holder vi åbningsfest!`),
     },
@@ -472,7 +483,7 @@ function showHome() {
 
   view(`
     <div class="home-top">
-      <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar has-img">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="row" style="gap:8px">
         <button class="icon-btn pill" id="oeve" aria-label="Øvebanen${patchNews(st) ? ' – nyt på din ranger-skjorte' : ''}">${ui('oeve')}<span>Øvebanen</span>${patchNews(st) ? '<i class="pill-dot" aria-hidden="true"></i>' : ''}</button>
         <button class="icon-btn pill" id="help" title="Reglerne – sådan spiller du" aria-label="Regler – sådan spiller du"><b class="q" aria-hidden="true">?</b><span>Regler</span></button>
@@ -706,8 +717,8 @@ function showPlace(areaId) {
   const story = esc(z.story || z.blurb).replace('{who}', `<b>${Z.CAST[z.who].name}</b>`);
   const cap = (x) => x[0].toUpperCase() + x.slice(1);
   // Niveauvejen: Åben → Populær → Stjerne → Guld (under opbygning står først, indtil området åbner)
-  const path = (lv ? '' : `<li class="now"><span>${Z.LEVELS[0].icon}</span><b>${Z.LEVELS[0].name}</b></li>`)
-    + [1, 2, 3, 4].map((n) => `<li class="${n < lv ? 'done' : n === lv ? 'now' : ''}" title="${Z.LEVELS[n].name}"><span>${Z.LEVELS[n].icon}</span>${n === lv ? `<b>${Z.LEVELS[n].name}</b>` : ''}</li>`).join('');
+  const path = (lv ? '' : `<li class="now"><span>${lvIc(0)}</span><b>${Z.LEVELS[0].name}</b></li>`)
+    + [1, 2, 3, 4].map((n) => `<li class="${n < lv ? 'done' : n === lv ? 'now' : ''}" title="${Z.LEVELS[n].name}"><span>${lvIc(n)}</span>${n === lv ? `<b>${Z.LEVELS[n].name}</b>` : ''}</li>`).join('');
   // Dyrene, der flytter ind ved niveau 1, 2 og 3
   const animals = z.animals.map((e, i) => {
     const b = Z.animalFor(e), open = lv > i;
@@ -925,13 +936,13 @@ function shirtStage(st, side, mini = false) {
 // Det lille kort øverst på Øvebanen: skjorten, hvor mange mærker hun har, og om der venter nye i sykurven
 function shirtTeaser(st) {
   const list = patchList(st), have = list.filter((x) => x.p).length, waiting = unsewn(st).length, news = patchNews(st);
-  const line = waiting ? `🧵 ${waiting === 1 ? 'Et nyt mærke venter' : `${waiting} nye mærker venter`} i sykurven`
+  const line = waiting ? `${waiting === 1 ? 'Et nyt mærke venter' : `${waiting} nye mærker venter`} i sykurven`
     : news ? '✨ Et af dine mærker har fået ny tråd' : have ? 'Se, hvilke mærker du mangler' : 'Klar en disciplin, og få dit første mærke';
   return `<button class="card shirt-teaser" id="shirt">
       <span class="st-mini">${shirtStage(st, 'f', true)}</span>
       <span class="st-txt"><b class="head">Min ranger-skjorte</b>
         <span>${have} af ${list.length} mærker</span>
-        <span class="${waiting || news ? 'st-new' : ''}">${line}</span>
+        <span class="${waiting || news ? 'st-new' : ''}">${waiting ? `<img class="place-ic" src="${UI_ICONS.sykurv}" alt="">` : ''}${line}</span>
         <span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * have) / list.length)}%"></i></span></span>
       <span class="st-go" aria-hidden="true">→</span>
     </button>`;
@@ -982,7 +993,7 @@ function showShirt(from = null, side = 'f', calm = false) {
       </section>
       <div class="shirt-aside">
         ${have.length ? '' : say('liv', 'Her er din ranger-skjorte! Når du er sikker ⭐ i alle øvelser i en disciplin på Øvebanen, får du et mærke til den – og du bestemmer selv, hvor det skal sidde.')}
-        <section class="card basket" id="basket" aria-label="Sykurven"><h2>🧵 Sykurven</h2>
+        <section class="card basket" id="basket" aria-label="Sykurven"><h2 class="with-ic">${ui('sykurv')}Sykurven</h2>
           ${basket.length ? `<div class="basket-items">${basket.map(({ d, p }) => `<button class="basket-item" data-patch="${d.id}" data-from="basket" aria-label="${esc(d.name)}: træk mærket op på skjorten">
               ${patchArt(d.id, p.tier)}<span class="bi-nm">${patchName(d)}</span>${p.seen ? '' : '<b class="new-tag">Nyt!</b>'}</button>`).join('')}</div>`
             : `<p class="muted basket-empty">${have.length ? 'Alle dine mærker er syet på 👏' : 'Her lander dit første mærke.'}</p>`}
@@ -1199,7 +1210,7 @@ function showIntro(skillId, next, { btn = 'Jeg er klar', back = 'Tilbage til opg
     view(`
       <button class="back-link" id="back"><span class="icon-btn" aria-hidden="true">←</span>${back}</button>
       <div class="card sheet intro-card stack">
-        <div class="kicker">${a.icon} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
+        <div class="kicker with-ic">${placeIc(a)} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
         <h1>${Z.ACTIVITIES[skillId]?.name || s.name}</h1>${Z.ACTIVITIES[skillId] ? `<div class="muted" style="font-weight:700;margin-top:-8px">${s.name}</div>` : ''}
         ${steps ? `${explainTop(s.intro, false)}${stepsBlock(steps, shown)}` : s.intro.cards ? explainCards(s.intro) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
         <div class="center">${more
@@ -1278,7 +1289,7 @@ function missionTrack(run, block) {
   if (run.mode !== 'daily') {
     const a = areaOf(run.sess.area);
     return `<div class="mission-track">
-      <div class="mt-title">${a.icon} <b>${a.place}</b> · ${esc(block.sub)}</div>
+      <div class="mt-title">${placeIc(a)} <b>${a.place}</b> · ${esc(block.sub)}</div>
       <ol class="mt-steps"><li class="current"><span class="mt-lbl">Øvelse</span> <span class="mt-count">${run.ti + 1}/${block.count}</span></li></ol></div>`;
   }
   const name = run.mission ? Z.CAST[run.mission.who].name : null;
@@ -1411,7 +1422,7 @@ function renderTask(block, task) {
   view(`
     ${trail ? `<div class="trail-bg" aria-hidden="true"><picture><source media="(orientation: portrait)" srcset="${trail.bg.s}"><img src="${trail.bg.l}" alt="" decoding="async"></picture></div>
     <div class="trail-top">
-      <div class="trail-sign"><button class="icon-btn" id="quit" aria-label="Stop">✕</button><span><span aria-hidden="true">${trail.d.icon}</span> <b>${trail.d.name}</b> · ${esc(block.sub)}</span></div>
+      <div class="trail-sign"><button class="icon-btn" id="quit" aria-label="Stop">✕</button><span>${placeIc(trail.d)} <b>${trail.d.name}</b> · ${esc(block.sub)}</span></div>
     </div>
     ${trailStones(run, block)}` : `<div class="session-top">
       <button class="icon-btn" id="quit" aria-label="Stop">✕</button>
@@ -1819,10 +1830,10 @@ function missionResults(st, run, b, after, born, grew, bonus = []) {
       sub: `${cap(Z.withArticle(nb.kind))} – fordi du har øvet ${E.WEEK_GOAL} dage i denne uge` };
     mainChip = { e: '🍼', t: `${nb.name} er flyttet ind i Babyhuset` };
   } else if (up) {
-    main = { kind: 'level', emoji: '🌟', kicker: 'Nyt niveau!', title: `${up.a.place} er blevet et guld-område`, sub: 'Alt sidder – også dagen efter.' };
+    main = { kind: 'level', emoji: '🌟', art: Z.LEVELS[4].art, kicker: 'Nyt niveau!', title: `${up.a.place} er blevet et guld-område`, sub: 'Alt sidder – også dagen efter.' };
     mainChip = upChip(up);
   } else if (diff > 0) {
-    main = { kind: 'guests', emoji: '🎟️', kicker: 'Flere gæster', title: `<span id="gc">${fmt(b.guests)}</span> gæster om dagen`, sub: `+${fmt(diff)} efter dagens vagt` };
+    main = { kind: 'guests', emoji: '🎟️', art: UI_ICONS.billet, kicker: 'Flere gæster', title: `<span id="gc">${fmt(b.guests)}</span> gæster om dagen`, sub: `+${fmt(diff)} efter dagens vagt` };
     mainChip = { e: '🎟️', t: `+${fmt(diff)} gæster om dagen` };
   } else {
     const a = areaOf(area), p = E.areaProgress(st, area), L = Z.LEVELS[Z.areaLevel(st, area)];
@@ -2037,7 +2048,7 @@ function showParent() {
         <td>${ss?.last ? fmtDate(ss.last) : '–'}</td></tr>`;
     }).join('');
     return `<div class="card" style="--ac:${a.color}">
-      <div class="spread"><h3 style="margin:0">${a.icon} ${a.name} <span class="muted small">· ${a.place}</span></h3><span class="muted small">${p.done}/${p.total} sikre</span></div>
+      <div class="spread"><h3 style="margin:0">${placeIc(a)} ${a.name} <span class="muted small">· ${a.place}</span></h3><span class="muted small">${p.done}/${p.total} sikre</span></div>
       <div class="bar-mini" style="margin:8px 0 10px"><i style="width:${(100 * p.done) / p.total}%"></i></div>
       <div class="table-wrap"><table><thead><tr><th>Færdighed</th><th>Status</th><th>Niv.</th><th>Rigtige 14 d.</th><th>Sidst</th></tr></thead><tbody>${rows}</tbody></table></div>
     </div>`;
@@ -2244,7 +2255,7 @@ function showPracticeReport(period = reportPeriod) {
   const tile = (label, value, note = '') => `<div class="rp-tile"><span class="rp-tl">${label}</span><span class="rp-tv">${value}</span>${note ? `<span class="rp-tn">${note}</span>` : ''}</div>`;
   const flagItem = (r) => {
     const d = rep.discOf(r.id);
-    return `<li class="rp-flag"><span class="rp-ic" aria-hidden="true">${d.icon}</span><div><div class="rp-fname">${r.s.name} <span class="muted small">· ${d.name}</span></div>
+    return `<li class="rp-flag"><span class="rp-ic" aria-hidden="true">${placeIc(d)}</span><div><div class="rp-fname">${r.s.name} <span class="muted small">· ${d.name}</span></div>
       <div class="small">${flagText(r, rep, name)}</div></div>${verdictChip(r.verdict)}</li>`;
   };
   const row = (r) => `<div class="rp-row">
@@ -2255,7 +2266,7 @@ function showPracticeReport(period = reportPeriod) {
     const done = rows.filter((r) => r.stats.n), idle = rows.filter((r) => !r.stats.n && !r.base);
     const open = verdict === 'oev' || verdict === 'naesten' || done.some((r) => r.verdict in { oev: 1, naesten: 1, langsom: 1 });
     return `<section class="card rp-disc${stats.n ? '' : ' idle'}" style="--ac:${d.color}">
-      <div class="rp-head"><span class="rp-ic" aria-hidden="true">${d.icon}</span>
+      <div class="rp-head"><span class="rp-ic" aria-hidden="true">${placeIc(d)}</span>
         <div class="rp-title"><h3>${d.name}</h3><span class="muted small">${d.chapter ? `Kapitel ${d.chapter} i matematikbogen` : 'Fælles Mål'}${stats.n ? ` · ${stats.n} svar` : ''}</span></div>
         ${stats.n ? verdictChip(verdict) : ''}</div>
       ${stats.n ? `<div class="rp-sum"><span class="rp-meter ${verdict}" aria-hidden="true"><i style="width:${stats.pct}%"></i></span>
@@ -2282,7 +2293,7 @@ function showPracticeReport(period = reportPeriod) {
           : '<p class="muted" style="margin:0">Ingen øvelser under 85 % rigtige 👍</p>'}
         ${slow.length ? `<h4 class="rp-sub">Rigtigt – men tager lang tid</h4><ul class="rp-flags">${slow.slice(0, 4).map(flagItem).join('')}</ul>` : ''}</div>
       <div class="card stack"><h3>Det går godt med</h3>
-        ${rep.strong.length ? `<ul class="rp-flags">${rep.strong.slice(0, 4).map((r) => `<li class="rp-flag"><span class="rp-ic" aria-hidden="true">${rep.discOf(r.id).icon}</span><div><div class="rp-fname">${r.s.name}</div>
+        ${rep.strong.length ? `<ul class="rp-flags">${rep.strong.slice(0, 4).map((r) => `<li class="rp-flag"><span class="rp-ic" aria-hidden="true">${placeIc(rep.discOf(r.id))}</span><div><div class="rp-fname">${r.s.name}</div>
           <div class="small">${r.stats.pct} % rigtige · ${fmtSec(r.stats.med)} pr. opgave</div></div>${verdictChip('godt')}</li>`).join('')}</ul>
           <p class="small muted" style="margin:0">Ros måden, ${esc(name)} regner på – ikke at ${esc(name)} er klog.</p>` : `<p class="muted" style="margin:0">Når en øvelse har mindst ${E.REPORT_MIN} svar og mindst 85 % rigtige, står den her.</p>`}</div>
     </div>

@@ -1,9 +1,9 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261007081928';
-import * as E from './engine.js?v=20261007081928';
-import { today } from './util.js?v=20261007081928';
+import { AREAS, FACTS } from './curriculum.js?v=20261007090038';
+import * as E from './engine.js?v=20261007090038';
+import { today } from './util.js?v=20261007090038';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -99,6 +99,9 @@ export const DISC_BG = {
   'd-figurer': 'geometri', 'd-koordinater': 'oevebane', 'd-areal': 'geometri', 'd-maal': 'maaling', 'd-tid': 'maaling',
   'd-diagrammer': 'data', 'd-beskriv': 'data', 'd-chance': 'data',
 };
+// Zoo'ens steder som tegninger (Batch 7, img/place/) – ved områdernes navne i stedet for emoji
+export const PLACE_ART = Object.fromEntries(['tal', 'gange', 'division', 'brok', 'decimal', 'geometri', 'maaling', 'data', 'algebra']
+  .map((k) => [k, `img/place/${k}.webp`]));
 // Ranger-skjorten (Batch 6, img/shirt/): for- og bagside i samme udsnit (1000×915), så et mærkes plads (x, y i % af
 // billedet) betyder det samme på begge sider. Mærkerne er Øvebanens tegninger (DISC_ART) i en syet kant
 export const SHIRT = { f: { src: 'img/shirt/forside.webp', name: 'Forside' }, b: { src: 'img/shirt/ryg.webp', name: 'Ryggen' } };
@@ -175,12 +178,13 @@ export const ZONES = {
 };
 
 // Områdets niveau – vokser med mestring af pensum
+// icon (emoji) bruges inde i tekst; art (Batch 7) er den tegnede udgave til niveau-stien og reglerne
 export const LEVELS = [
-  { name: 'Under opbygning', icon: '🚧' },
-  { name: 'Åben', icon: '🌱' },
-  { name: 'Populær', icon: '💚' },
-  { name: 'Stjerne-område', icon: '⭐' },
-  { name: 'Guld-område', icon: '🌟' },
+  { name: 'Under opbygning', icon: '🚧', art: 'img/ui/niveau-0.webp' },
+  { name: 'Åben', icon: '🌱', art: 'img/ui/niveau-1.webp' },
+  { name: 'Populær', icon: '💚', art: 'img/ui/niveau-2.webp' },
+  { name: 'Stjerne-område', icon: '⭐', art: 'img/ui/stjerne.webp' },
+  { name: 'Guld-område', icon: '🌟', art: 'img/ui/niveau-4.webp' },
 ];
 
 export function areaLevel(state, areaId) {
