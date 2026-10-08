@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008203551';
-import * as E from './engine.js?v=20261008203551';
-import * as Z from './zoo.js?v=20261008203551';
-import { zooMap } from './map.js?v=20261008203551';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008203551';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008203551';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008203551';
-import { esc, fmt, frac, pick, today, addDays, weekStart } from './util.js?v=20261008203551';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008205556';
+import * as E from './engine.js?v=20261008205556';
+import * as Z from './zoo.js?v=20261008205556';
+import { zooMap } from './map.js?v=20261008205556';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008205556';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008205556';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008205556';
+import { esc, fmt, frac, pick, today, addDays, weekStart } from './util.js?v=20261008205556';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -173,9 +173,9 @@ async function showProfiles() {
         <button class="btn big" type="submit">Åbn porten</button>
       </form>
       <footer class="wp-foot"><span>Gratis · ingen login · fremskridtet gemmes kun på denne enhed</span>
-        <span class="copyright">© 2026 Troels Christensen</span>
         <span><button class="link small" id="restore">Gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button></span></footer>
-    </section>`);
+    </section>
+    <small class="welcome-copy">© 2026 Troels Christensen</small>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
   on('#new', 'click', () => { $('#newform').hidden = false; $('#nm').focus(); $('#newform').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
   on('#restore', 'click', pickBackup);
@@ -266,7 +266,7 @@ function showRules(back = showHome) {
           <li><b>⚡ Slå din rekord:</b> regn så mange gangestykker, du kan, på 60 sekunder. ${st.settings.sprint ? 'Den kommer, når du kender mindst 6 gangestykker.' : 'Den er slået fra lige nu – en voksen kan slå den til.'}</li></ul>`,
       doneToday ? '🔓 Fri træning er åben i dag' : '🔒 Fri træning åbner, når dagens mission er klaret')}
       ${rule(`<img class="ui-ic" src="${Z.SHIRT.f.src}" alt="">`, 'Ranger-skjorten', `<p>Når du er sikker ⭐ i alle øvelser i en disciplin på Øvebanen, får du et mærke til din ranger-skjorte. Du bestemmer selv, hvor det skal sidde – og du kan altid flytte det.</p>
-        <ul><li><b>Bronzetråd</b> – du kan det</li><li><b>Sølvtråd</b> – klar en blandet runde: mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige</li><li><b>Guldtråd</b> – klar runden igen mindst ${E.PATCH.GOLD_DAYS} dage senere</li></ul>`,
+        <ul><li><b>Bronze</b> – ${TIER_WHY[1]}</li><li><b>Sølv</b> – ${TIER_WHY[2]}</li><li><b>Guld</b> – ${TIER_WHY[3]}</li></ul><p class="small muted">${SIKKER_HOW}</p>`,
       `${patchList(st).filter((x) => x.p).length} af ${patchList(st).length} mærker`)}
       ${rule(ui('gave'), 'Ugens bonus-unge', `<p>Øver du ${E.WEEK_GOAL} dage i én uge, flytter en bonus-unge ind i Babyhuset. Der er ${Z.BONUS.length} at samle.</p>`,
       `Denne uge: ${Math.min(week, E.WEEK_GOAL)} af ${E.WEEK_GOAL} dage · ${bonus} af ${Z.BONUS.length} samlet`)}
@@ -918,12 +918,26 @@ const TIER = [
   { cls: 't-silver', name: 'Sølv', thread: 'Sølvtråd', what: 'Kan blande' },
   { cls: 't-gold', name: 'Guld', thread: 'Guldtråd', what: 'Husker det' },
 ];
+// Hvornår man får bronze, sølv og guld – de samme korte sætninger overalt (disciplinen, skjorten, reglerne)
 const TIER_WHY = [
   '',
-  'Alle disciplinens øvelser er sikre ⭐ – så får du mærket.',
-  `Klar en blandet runde: ${E.PATCH.N} opgaver fra alle øvelserne på sværeste niveau – mindst ${E.PATCH.PASS} rigtige.`,
-  `Klar runden igen mindst ${E.PATCH.GOLD_DAYS} dage efter sølvtråden – så sidder det fast.`,
+  'Alle øvelserne i disciplinen er Sikker ⭐.',
+  `Klar den blandede runde med mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige.`,
+  `Klar den blandede runde igen – tidligst ${E.PATCH.GOLD_DAYS} dage efter sølv.`,
 ];
+const SIKKER_HOW = 'En øvelse er Sikker ⭐, når 8 af dine sidste 10 svar på sværeste niveau er rigtige.';
+// De tre trin for én disciplin: ✓ klaret · næste (og hvor langt hun er) · venter
+function tierLadder(st, d) {
+  const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id), pr = E.discProgress(st, d), tier = p?.tier || 0;
+  const now = ['', `${pr.done} af ${pr.total} ${pr.total === 1 ? 'øvelse' : 'øvelser'} er Sikker ⭐`, 'Runden er åben – prøv den, når du er klar',
+    m.next === 3 && !m.open ? `Runden åbner igen om ${daysTxt(m.wait)}` : 'Runden er åben igen'];
+  return `<ol class="tier-ladder">${[1, 2, 3].map((t) => {
+    const at = tier >= t ? 'done' : tier === t - 1 ? 'next' : 'later';
+    const why = t === 1 && pr.total === 1 ? 'Øvelsen er Sikker ⭐.' : TIER_WHY[t];
+    return `<li class="tl-${at} ${TIER[t].cls}"><span class="tl-dot" aria-hidden="true">${at === 'done' ? '✓' : ''}</span>
+      <span class="tl-txt"><b>${TIER[t].name}</b> ${why}${at === 'next' ? `<span class="tl-now">${now[t]}</span>` : ''}</span></li>`;
+  }).join('')}</ol>`;
+}
 // Korte navne under de små mærker
 const PATCH_NAME = {
   'd-tal': 'Titalssystemet', 'd-plusminus': 'Plus og minus', 'd-gange': 'Gange', 'd-regneregler': 'Regneregler',
@@ -988,23 +1002,11 @@ function shirtTeaser(st) {
 
 // Mærket for disciplinen øverst på dens side: hvor langt hun er, og næste trin (den blandede runde)
 function patchCard(st, d) {
-  const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id), pr = E.discProgress(st, d);
-  let head, txt, btn = '';
-  if (!p) {
-    head = 'Mærket til din ranger-skjorte';
-    txt = `Bliv sikker ⭐ i ${pr.total === 1 ? 'øvelsen' : `alle ${pr.total} øvelser`} – så får du det. Du har ${pr.done} af ${pr.total}.`;
-  } else if (m.next === 2) {
-    head = `${TIER[1].thread} · ${TIER[1].what}`; txt = `Næste: sølvtråd. ${TIER_WHY[2]}`; btn = mixedLabel(d);
-  } else if (m.next === 3 && !m.open) {
-    head = `${TIER[2].thread} · ${TIER[2].what}`; txt = `Næste: guldtråd. Runden åbner igen om ${daysTxt(m.wait)} – så kan vi se, om du stadig husker det.`;
-  } else if (m.next === 3) {
-    head = `${TIER[2].thread} · ${TIER[2].what}`; txt = `Næste: guldtråd. Klar runden igen med mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige – så sidder det fast.`; btn = mixedLabel(d);
-  } else {
-    head = `${TIER[3].thread} · ${TIER[3].what}`; txt = 'Mærket er helt færdigt. Du kan stadig tage runden for sjov.'; btn = 'Tag runden for sjov';
-  }
+  const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id);
+  const btn = !p ? '' : !m.next ? 'Tag runden for sjov' : m.open ? mixedLabel(d) : '';
   return `<section class="card patch-card" style="--ac:${d.color}">
       <button class="pc-patch" id="pc-shirt" aria-label="Se din ranger-skjorte">${patchArt(d.id, p?.tier || 0)}</button>
-      <div class="pc-txt"><b>${head}</b><span>${txt}</span>${p ? '' : `<span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * pr.done) / pr.total)}%"></i></span>`}</div>
+      <div class="pc-txt"><b>${p?.tier === 3 ? 'Mærket er helt færdigt – guld!' : 'Mærket til din ranger-skjorte'}</b>${tierLadder(st, d)}</div>
       ${btn ? `<button class="btn" id="pc-mixed">${btn}</button>` : ''}
     </section>`;
 }
@@ -1043,9 +1045,9 @@ function showShirt(from = null, side = 'f', calm = false) {
               <span class="ap-st ${p ? TIER[p.tier].cls : ''}">${p ? TIER[p.tier].name : `${pr.done} af ${pr.total} ⭐`}</span></button>`;
           }).join('')}</div>
         </section>
-        <section class="card tier-card"><h2>Mærket bliver flottere</h2>
-          <ul class="tier-list">${[1, 2, 3].map((t) => `<li>${patchArt(sample, t, { cls: 'sm' })}<div><b>${TIER[t].thread} · ${TIER[t].what}</b><span>${TIER_WHY[t]}</span></div></li>`).join('')}</ul>
-          <p class="small muted" style="margin:0">Et mærke kan aldrig blive taget fra dig igen.</p>
+        <section class="card tier-card"><h2>Bronze, sølv og guld</h2>
+          <ul class="tier-list">${[1, 2, 3].map((t) => `<li>${patchArt(sample, t, { cls: 'sm' })}<div><b>${TIER[t].name} · ${TIER[t].what}</b><span>${TIER_WHY[t]}</span></div></li>`).join('')}</ul>
+          <p class="small muted" style="margin:0">${SIKKER_HOW} Et mærke kan aldrig blive taget fra dig igen.</p>
         </section>
       </div>
     </div>`, (e) => { if (e.key === 'Escape' && !document.querySelector('.patch-ghost')) goBack(); }, { calm });
@@ -1063,16 +1065,15 @@ function patchSheet(id) {
   const st = S.state, d = discById(id), p = E.patchOf(st, id), m = E.mixedState(st, id);
   const left = d.skills.filter((sk) => !['sikker', 'mestret'].includes(E.skillStatus(st, sk.id)));
   const next = !p ? `Bliv sikker ⭐ i ${left.length === 1 ? 'den sidste øvelse' : `de sidste ${left.length} øvelser`}: ${left.slice(0, 4).map((sk) => esc(sk.name)).join(', ')}${left.length > 4 ? ' …' : ''}.`
-    : m.next === 2 ? `<b>Næste: sølvtråd.</b> ${TIER_WHY[2]}`
-    : m.next === 3 ? `<b>Næste: guldtråd.</b> ${m.open ? 'Runden er åben igen nu.' : `Runden åbner igen om ${daysTxt(m.wait)} – så kan vi se, om du stadig husker det.`}`
-    : 'Mærket er helt færdigt – flot!';
+    : !m.next ? 'Mærket er helt færdigt – flot!' : '';
   const go = p && m.open && m.next;
   openSheet(`<div class="patch-sheet">
       ${patchArt(id, p?.tier || 0, { cls: 'lg' })}
-      <div class="ps-txt"><span class="kicker">${p ? `${TIER[p.tier].thread} · ${TIER[p.tier].what}` : 'Mangler endnu'}</span>
+      <div class="ps-txt"><span class="kicker">${p ? `${TIER[p.tier].name} · ${TIER[p.tier].what}` : 'Mangler endnu'}</span>
         <h2>${d.name}</h2>
         ${p ? `<p><b>Det kan du:</b> ${esc(d.desc)}</p>` : ''}
-        <p>${next}</p>
+        ${tierLadder(st, d)}
+        ${next ? `<p>${next}</p>` : ''}
         <div class="row">${go ? `<button class="btn" id="ps-mixed">${mixedLabel(d)}</button>` : ''}<button class="btn${go ? ' ghost' : ''}" id="ps-disc">Gå til ${esc(d.name)}</button></div>
       </div></div>`, (el) => {
     el.querySelector('#ps-mixed')?.addEventListener('click', () => { closeSheet(); startMixed(id); });
@@ -1205,7 +1206,7 @@ function showMixedDone(run, wins) {
   const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id);
   const can = tier === 2 ? `At blande opgaverne i ${d.name.toLowerCase()} og selv finde ud af, hvordan hver enkelt skal regnes.` : `At huske ${d.name.toLowerCase()} – også efter en uge.`;
   const msg = tier ? `<div class="md-can"><b>Det kan du nu</b>${can}</div>`
-    : m.next ? `<p>Du skal have mindst ${E.PATCH.PASS} rigtige for ${TIER[m.next].thread.toLowerCase()}. Prøv igen, når du har lyst – hver runde gør det lettere at huske.</p>`
+    : m.next ? `<p>Du skal have mindst ${E.PATCH.PASS} rigtige for ${TIER[m.next].name.toLowerCase()}. Prøv igen, når du har lyst – hver runde gør det lettere at huske.</p>`
     : '<p>Mærket er allerede i guldtråd – flot, at du holder det ved lige!</p>';
   view(`
     <div class="card sheet center stack practice-done mixed-done" style="margin-top:4vh">
