@@ -498,6 +498,8 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .avatar { width: 54px; height: 54px; }
 }
 .icon-btn.pill { width: auto; padding: 0 14px; gap: 6px; display: inline-flex; align-items: center; font: 600 .95rem var(--font-head); color: var(--ink); }
+/* Øvebanen: "For forældre" (hængelåsen) øverst til højre – fører til Øvebanen i tal bag forældrekoden */
+.oeve-parent { margin-left: auto; }
 @media (max-width: 520px) { .icon-btn.pill span { display: none; } .icon-btn.pill { padding: 0; width: 48px; justify-content: center; } }
 
 /* ---------- Om appen ---------- */

@@ -1,14 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008175700';
-import * as E from './engine.js?v=20261008175700';
-import * as Z from './zoo.js?v=20261008175700';
-import { zooGate } from './scene.js?v=20261008175700';
-import { zooMap } from './map.js?v=20261008175700';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008175700';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008175700';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008175700';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261008175700';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008194551';
+import * as E from './engine.js?v=20261008194551';
+import * as Z from './zoo.js?v=20261008194551';
+import { zooGate } from './scene.js?v=20261008194551';
+import { zooMap } from './map.js?v=20261008194551';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008194551';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008194551';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008194551';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261008194551';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -95,6 +95,9 @@ const say = (who, text, size = '') => `
   <div class="say">${avatar(who, size)}
     <div class="bubble"><span class="who">${Z.CAST[who].name} · ${Z.CAST[who].role}</span><span class="txt">${text}</span></div>
   </div>`;
+
+// Hængelåsen: forældredelen bag koden (på forsiden og på Øvebanen)
+const LOCK_IC = '<svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.6" r="1.4" fill="currentColor"/></svg>';
 
 // Tegnede ikoner i stedet for emoji: de tre missionstrin, Øvebanen, lyd og dagens mission
 const UI_ICONS = {
@@ -493,7 +496,7 @@ function showHome() {
         <button class="icon-btn pill" id="oeve" aria-label="Øvebanen${patchNews(st) ? ' – nyt på din ranger-skjorte' : ''}">${ui('oeve')}<span>Øvebanen</span>${patchNews(st) ? '<i class="pill-dot" aria-hidden="true"></i>' : ''}</button>
         <button class="icon-btn pill" id="help" title="Reglerne – sådan spiller du" aria-label="Regler – sådan spiller du"><b class="q" aria-hidden="true">?</b><span>Regler</span></button>
         <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.5" fill="currentColor"/></svg></button>
-        <button class="icon-btn" id="parent" title="Forælder" aria-label="Forælder (kræver kode)"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.6" r="1.4" fill="currentColor"/></svg></button>
+        <button class="icon-btn" id="parent" title="Forælder" aria-label="Forælder (kræver kode)">${LOCK_IC}</button>
         <button class="icon-btn snd ${st.settings.sound ? '' : 'off'}" id="snd" aria-label="Lyd" aria-pressed="${st.settings.sound}">${ui('lyd')}</button>
       </div>
     </div>
@@ -548,7 +551,7 @@ function showHome() {
     sfx('tap');
   });
   on('#switch', 'click', () => { try { localStorage.removeItem('mr_last'); } catch { /* */ } showProfiles(); });
-  on('#parent', 'click', parentGate);
+  on('#parent', 'click', () => parentGate());
   if (freshBonus.length) setTimeout(() => bonusSheet(freshBonus), 400);
 }
 
@@ -824,7 +827,8 @@ function showPracticeHub() {
     </button>`;
   };
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Zoo'en</span></div>
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Zoo'en</span>
+      <button class="icon-btn pill oeve-parent" id="oeve-parent" title="Sådan går det på Øvebanen – for forældre" aria-label="For forældre: sådan går det på Øvebanen (kræver kode)">${LOCK_IC}<span>For forældre</span></button></div>
     <section class="oeve-hero">
       <div class="oeve-glass"><h1>Øvebanen</h1>
         <p>Øv lige det, du vil – alt er åbent. Matematikken er delt op som i din matematikbog, og hver øvelse starter med et eksempel.</p></div>
@@ -837,6 +841,8 @@ function showPracticeHub() {
   on('#back', 'click', showHome);
   on('.disc-tile', 'click', (e) => { sfx('tap'); showDiscipline(e.currentTarget.dataset.disc); });
   on('#shirt', 'click', () => { sfx('tap'); showShirt(); });
+  // Kun Øvebanens tal – bag forældrekoden, og tilbage til Øvebanen bagefter
+  on('#oeve-parent', 'click', () => parentGate(() => showPracticeReport(reportPeriod, 'oeve'), showPracticeHub));
 }
 
 // ================= Øvebanen: en disciplin =================
@@ -2201,7 +2207,7 @@ function startSprint() {
 // Simpel børnesikring – ikke rigtig sikkerhed (koden kan ses i kildekoden)
 const PARENT_PASSWORD = 'Forældre';
 
-function parentGate() {
+function parentGate(onOk = showParent, onBack = showHome) {
   view(`
     <div class="card sheet stack" style="max-width:480px;margin-top:8vh">
       <h2>Forældre-adgang</h2>
@@ -2210,12 +2216,12 @@ function parentGate() {
         <input id="g" class="field" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
         <div class="row"><button class="btn" type="submit">Åbn</button><button class="btn ghost" type="button" id="back">Tilbage</button></div>
       </form>
-    </div>`, (e) => { if (e.key === 'Escape') showHome(); });
+    </div>`, (e) => { if (e.key === 'Escape') onBack(); });
   $('#g').focus();
-  on('#back', 'click', showHome);
+  on('#back', 'click', onBack);
   on('#f', 'submit', (e) => {
     e.preventDefault();
-    if ($('#g').value.trim() === PARENT_PASSWORD) showParent();
+    if ($('#g').value.trim() === PARENT_PASSWORD) onOk();
     else { toast('Forkert adgangskode'); $('#g').value = ''; $('#g').focus(); }
   });
 }
@@ -2445,8 +2451,10 @@ function reportTeaser(st) {
   </div>`;
 }
 
-function showPracticeReport(period = reportPeriod) {
+// from: 'parent' (forældredelen) eller 'oeve' (knappen på Øvebanen) – tilbage-knappen og Escape fører dertil
+function showPracticeReport(period = reportPeriod, from = 'parent') {
   reportPeriod = period;
+  const back = from === 'oeve' ? showPracticeHub : showParent;
   const st = S.state, rep = practiceReport(st, period), name = st.name;
   const acc = rep.flagged.filter((r) => r.verdict !== 'langsom'), slow = rep.flagged.filter((r) => r.verdict === 'langsom');
   const tile = (label, value, note = '') => `<div class="rp-tile"><span class="rp-tl">${label}</span><span class="rp-tv">${value}</span>${note ? `<span class="rp-tn">${note}</span>` : ''}</div>`;
@@ -2474,7 +2482,7 @@ function showPracticeReport(period = reportPeriod) {
     </section>`;
   };
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til forældreoverblikket">←</button>
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="${from === 'oeve' ? 'Tilbage til Øvebanen' : 'Tilbage til forældreoverblikket'}">←</button>
       <div style="flex:1"><h1 style="margin:0">Øvebanen i tal</h1><span class="muted">${esc(name)} · rigtige og tid pr. opgave</span></div></div>
     <div class="rp-filter"><span class="muted small">Periode</span>
       <div class="seg" id="rp-period">${REPORT_PERIODS.map(([v, l]) => `<button data-v="${v}" class="${v === period ? 'on' : ''}">${l}</button>`).join('')}</div></div>
@@ -2502,9 +2510,9 @@ function showPracticeReport(period = reportPeriod) {
       Alle svar tæller – både fra Øvebanen og fra zoo'ens missioner (appen gemmer de seneste 40 svar pr. øvelse).
       Vurderingen kræver mindst ${E.REPORT_MIN} svar: under 70 % rigtige = <b>øv mere</b>, under 85 % = <b>næsten</b>.
       <b>Tager lang tid</b>: et gangestykke tager over ${fmtSec(E.FLUENT_MS)}, eller en anden øvelse tager over dobbelt så lang tid som ${esc(genitive(name))} typiske opgave (og over et halvt minut).
-    </div>`, (e) => { if (e.key === 'Escape') showParent(); });
-  on('#back', 'click', showParent);
-  on('#rp-period button', 'click', (e) => showPracticeReport(e.currentTarget.dataset.v));
+    </div>`, (e) => { if (e.key === 'Escape') back(); });
+  on('#back', 'click', back);
+  on('#rp-period button', 'click', (e) => showPracticeReport(e.currentTarget.dataset.v, from));
 }
 
 // ================= Backup: gem og indlæs fremskridt som fil =================
