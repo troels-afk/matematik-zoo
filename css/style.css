@@ -154,8 +154,6 @@ label.lbl { font: 600 1rem var(--font-head); display: block; margin-bottom: 6px;
 /* ---------- Forside ---------- */
 .hero { position: relative; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg); background: #cfeaf3; }
 .scene { display: block; width: 100%; height: clamp(190px, 30vw, 290px); }
-.scene-title { font-family: var(--font-head); font-weight: 600; fill: #1f3346; }
-.peek { animation: bob 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom center; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 .me-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 99px; background: rgba(255, 255, 255, .88); backdrop-filter: blur(6px); box-shadow: var(--shadow-sm); font: 600 1rem var(--font-head); color: #1f3346; }
 .me-chip .avatar { width: 34px; height: 34px; font-size: 20px; box-shadow: none; }
@@ -301,10 +299,45 @@ label.lbl { font: 600 1rem var(--font-head); display: block; margin-bottom: 6px;
 .timer { font: 600 2.6rem var(--font-head); font-variant-numeric: tabular-nums; }
 
 /* ---------- Profiler ---------- */
-.welcome { max-width: 760px; margin: 0 auto; }
-.profiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin: 22px 0; }
-.profile-btn { width: 190px; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); border: 1px solid var(--line-2); padding: 22px 12px; font: 600 1.25rem var(--font-head); display: flex; flex-direction: column; align-items: center; gap: 8px; transition: transform .12s; }
-.profile-btn:hover { transform: translateY(-2px); }
+/* ---------- Velkomsten (profilvalget, forslag A "Ved porten"): den malede indgang, træskiltet og et glaspanel ---------- */
+#app:has(> .welcome-bg) { min-height: 100dvh; display: flex; flex-direction: column; gap: 14px; }
+#app > .welcome-bg { animation: none; }
+.welcome-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #3d6b3a; }
+.welcome-bg picture, .welcome-bg img { display: block; width: 100%; height: 100%; }
+.welcome-bg img { object-fit: cover; object-position: 30% 40%; }
+.welcome-sign { position: relative; z-index: 2; align-self: flex-start; display: flex; align-items: center; gap: 12px; padding: 9px 20px 9px 10px; border-radius: 18px;
+  background: linear-gradient(#a8743f, #8a5a2b); border: 3px solid #6d4420; box-shadow: 0 6px 0 #5a3618, 0 14px 30px rgba(0, 0, 0, .25); color: #fff7e6; }
+.ws-paw { width: 44px; height: 44px; border-radius: 50%; background: #fff3d6; display: grid; place-items: center; box-shadow: inset 0 0 0 3px #e6c48c; flex: none; }
+.ws-paw svg { width: 26px; height: 26px; fill: #8a5a2b; }
+.welcome-sign b { display: block; font: 600 clamp(1.45rem, 3.6vw, 2.1rem)/1.1 var(--font-head); letter-spacing: .3px; text-shadow: 0 2px 0 rgba(0, 0, 0, .25); }
+.welcome-sign small { display: block; font: 800 .8rem var(--font-body); opacity: .9; }
+.welcome-panel { position: relative; z-index: 2; margin-top: auto; align-self: flex-end; width: min(100%, 540px); padding: 18px 18px 14px; border-radius: 26px;
+  background: color-mix(in srgb, var(--card) 80%, transparent); box-shadow: 0 20px 50px rgba(20, 40, 20, .35); }
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .welcome-panel { background: color-mix(in srgb, var(--card) 70%, transparent); backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
+}
+@media (orientation: portrait) { .welcome-panel { align-self: center; } }
+.wp-hello { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.wp-hello .avatar { width: 62px; height: 62px; box-shadow: 0 0 0 3px #fff; }
+.wp-hello h1 { margin: 0; font-size: 1.55rem; line-height: 1.15; text-wrap: balance; }
+.wp-hello p { margin: 2px 0 0; font-weight: 700; color: var(--ink-2); }
+.profiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; padding: 0 10px; }
+/* En dyrepassers adgangsbillet: papir med takker i siderne – ser ens ud i lyst og mørkt tema */
+.ticket { position: relative; display: flex; align-items: center; gap: 12px; padding: 11px 16px 11px 12px; border-radius: 16px; text-align: left;
+  background: #fffaf0; border: 2px solid #e8d3a8; box-shadow: 0 4px 0 #e2c793; color: #2a3a2a; transition: transform .12s; }
+.ticket:hover { transform: translateY(-2px); }
+.ticket::before, .ticket::after { content: ''; position: absolute; top: 50%; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%;
+  background: color-mix(in srgb, var(--card) 85%, #c9b98f); border: 2px solid #e8d3a8; }
+.ticket::before { left: -11px; } .ticket::after { right: -11px; }
+.ticket .avatar { width: 56px; height: 56px; background: #d9f0e6; box-shadow: inset 0 0 0 3px #fff; }
+.ticket.new { background: rgba(255, 250, 240, .72); border-style: dashed; box-shadow: none; }
+.ticket.new .avatar { background: #fff; color: var(--primary); font: 600 1.8rem var(--font-head); }
+.tk-txt { display: grid; gap: 1px; min-width: 0; }
+.tk-txt b { font: 600 1.25rem var(--font-head); }
+.tk-txt span { font-size: .86rem; font-weight: 800; color: #5d6b5a; }
+.tk-txt .tk-prog { color: #8a6a12; }
+#newform { margin-top: 14px; padding: 14px; border-radius: 18px; background: var(--card); }
+.wp-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 14px; margin-top: 14px; font-size: .8rem; font-weight: 700; color: var(--ink-2); }
 
 /* ---------- Forælder ---------- */
 table { width: 100%; border-collapse: collapse; font-size: .92rem; }

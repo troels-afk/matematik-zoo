@@ -1,14 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008201729';
-import * as E from './engine.js?v=20261008201729';
-import * as Z from './zoo.js?v=20261008201729';
-import { zooGate } from './scene.js?v=20261008201729';
-import { zooMap } from './map.js?v=20261008201729';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008201729';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008201729';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008201729';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261008201729';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008203004';
+import * as E from './engine.js?v=20261008203004';
+import * as Z from './zoo.js?v=20261008203004';
+import { zooMap } from './map.js?v=20261008203004';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008203004';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008203004';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008203004';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261008203004';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -145,28 +144,41 @@ const levelsOf = (st) => AREAS.map((a) => Z.areaLevel(st, a.id));
 
 // ================= Profiler =================
 
+// Velkomsten (matzoo.dk): den malede indgang som baggrund, træskiltet og Bodil i et glaspanel. Hver dyrepasser
+// har en adgangsbillet med sin zoo og hvor langt den er nået
+const PAW_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="5.2" ry="4.4"/><ellipse cx="5.6" cy="10.4" rx="2.2" ry="2.8"/><ellipse cx="9.6" cy="6.4" rx="2.2" ry="2.9"/><ellipse cx="14.4" cy="6.4" rx="2.2" ry="2.9"/><ellipse cx="18.4" cy="10.4" rx="2.2" ry="2.8"/></svg>';
 async function showProfiles() {
   let profiles = [];
   try { profiles = await listProfiles(); } catch { /* vis tom liste */ }
+  const tickets = await Promise.all(profiles.map(async (p) => {
+    let st = null;
+    try { st = migrate(await loadState(p.id)); } catch { /* kun navnet */ }
+    return { ...p, zoo: st?.zoo?.name, stars: st ? AREAS.filter((a) => Z.areaLevel(st, a.id) >= 3).length : 0, patches: st ? Object.keys(st.patches || {}).length : 0 };
+  }));
+  const bg = Z.PRACTICE_BG.tal;
   view(`
-    <section class="hero">${zooGate('Matematik-Zoo', { animals: ['🦒', '🐘', '🦁', '🐧', '🦓', '🦊'], art: Z.artFor })}</section>
-    <div class="welcome center">
-      <h1 style="margin-top:26px">Hvem skal passe zoo'en i dag?</h1>
+    <div class="welcome-bg" aria-hidden="true"><picture><source media="(orientation: portrait)" srcset="${bg.s}"><img src="${bg.l}" alt="" decoding="async"></picture></div>
+    <header class="welcome-sign"><span class="ws-paw">${PAW_IC}</span><span><b>Matematik-Zoo</b><small>matzoo.dk · matematik for 4. klasse</small></span></header>
+    <section class="welcome-panel">
+      <div class="wp-hello">${avatar('bodil')}<div><h1>Hvem skal passe zoo'en i dag?</h1><p>Bodil holder porten åben for dig.</p></div></div>
       <div class="profiles">
-        ${profiles.map((p) => `<button class="profile-btn" data-id="${esc(p.id)}"><span class="avatar lg has-img">${meAvatar(p.name)}</span>${esc(p.name)}</button>`).join('')}
-        <button class="profile-btn" id="new"><span class="avatar lg" style="background:var(--primary-soft)">＋</span>Ny profil</button>
+        ${tickets.map((p) => `<button class="profile-btn ticket" data-id="${esc(p.id)}"><span class="avatar has-img">${meAvatar(p.name)}</span>
+          <span class="tk-txt"><b>${esc(p.name)}</b>${p.zoo ? `<span>${esc(p.zoo)}</span>` : ''}<span class="tk-prog">⭐ ${p.stars} af ${AREAS.length} områder${p.patches ? ` · ${p.patches} ${p.patches === 1 ? 'mærke' : 'mærker'}` : ''}</span></span></button>`).join('')}
+        <button class="profile-btn ticket new" id="new"><span class="avatar">＋</span><span class="tk-txt"><b>Ny dyrepasser</b><span>Lav din egen zoo</span></span></button>
       </div>
-      <button class="link small" id="restore" style="margin-top:14px">Gendan fra backup</button>
-      <form id="newform" class="card stack" style="display:none;max-width:480px;margin:0 auto;text-align:left">
+      <form id="newform" class="stack" hidden>
         ${say('bodil', 'Hej! Jeg er Bodil, direktør for zoo\'en. Hvad hedder du?')}
         <div><label class="lbl" for="nm">Dit navn</label><input id="nm" class="field" maxlength="24" autocomplete="off" autocapitalize="words"></div>
         <div><label class="lbl" for="zn">Hvad skal din zoo hedde?</label><input id="zn" class="field" maxlength="28" autocomplete="off" autocapitalize="words" placeholder="fx Solsikke Zoo"></div>
         <button class="btn big" type="submit">Åbn porten</button>
       </form>
-    </div>`);
+      <footer class="wp-foot"><span>Gratis · ingen login · fremskridtet gemmes kun på denne enhed</span>
+        <span><button class="link small" id="restore">Gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button></span></footer>
+    </section>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
-  on('#new', 'click', () => { $('#newform').style.display = 'block'; $('#nm').focus(); });
+  on('#new', 'click', () => { $('#newform').hidden = false; $('#nm').focus(); $('#newform').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
   on('#restore', 'click', pickBackup);
+  on('#about-w', 'click', () => showAbout(showProfiles));
   on('#nm', 'input', () => { $('#zn').placeholder = Z.defaultZooName($('#nm').value); });
   on('#newform', 'submit', async (e) => {
     e.preventDefault();
