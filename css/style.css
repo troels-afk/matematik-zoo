@@ -540,27 +540,30 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 @media (max-width: 520px) { .icon-btn.pill span { display: none; } .icon-btn.pill { padding: 0; width: 48px; justify-content: center; } }
 
 /* ---------- Om appen ---------- */
-.about { margin-top: 16px; max-width: 860px; }
-.about .card h2 { margin-bottom: .5em; }
-.about .card p + p { margin-top: .6em; }
-.about table td:first-child { white-space: nowrap; font-weight: 700; }
-#about-p { flex: none; white-space: nowrap; }
-@media (max-width: 480px) { #about-p .about-lbl { display: none; } } /* telefon: kun 📚, så titlen kan stå */
-/* Telefon: pensum-tabellen som en liste (sted · emne, færdighederne under) i stedet for at rulle sidelæns */
-@media (max-width: 560px) {
-  .about table, .about tbody, .about tr, .about td { display: block; }
-  .about thead { display: none; }
-  .about tr { padding: 8px 0; border-bottom: 1px solid var(--line-2); }
-  .about td { padding: 0; border: 0; }
-  .about td:first-child, .about td:nth-child(2) { display: inline; }
-  .about td:nth-child(2)::before { content: ' · '; font-weight: 700; color: var(--ink-3); }
-  .about td:nth-child(3) { margin-top: 2px; color: var(--ink-2); }
-}
-.principle { display: flex; gap: 16px; align-items: flex-start; }
-.principle .pr-ic { width: 52px; height: 52px; border-radius: 16px; background: var(--lav-soft); display: grid; place-items: center; font-size: 1.6rem; flex: none; }
-.principle h3 { margin: 0 0 4px; }
-.principle p { margin: 0; }
-.principle .src { margin-top: 6px; font-size: .82rem; color: var(--ink-2); font-style: italic; }
+/* Som reglerne: den malede forside (zoo'en set fra oven) med formålet i glas, pensum som zoo'ens steder og principperne
+   som regel-kort med tegnede ikoner */
+.about { display: grid; gap: 0; margin-top: 10px; }
+.about-hero { background-image: url(../img/map/zoo-map-base.webp); background-position: 50% 62%; }
+.about-hero .oeve-glass { width: min(100%, 520px); }
+.about-lead { margin: 0 2px 14px; max-width: 72ch; color: var(--ink-2); line-height: 1.55; }
+.about-note { margin: 12px 2px 0; max-width: 72ch; }
+.pensum-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (min-width: 1000px) { .pensum-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.pensum-tile { display: flex; flex-direction: column; gap: 2px; padding: 0 14px 14px; overflow: hidden; border-radius: var(--r); background: var(--card);
+  border: 1px solid var(--line-2); box-shadow: var(--shadow); }
+.pn-art { display: grid; place-items: center; height: 108px; margin: 0 -14px 10px;
+  background: radial-gradient(ellipse 72% 64% at 50% 60%, color-mix(in srgb, var(--ac) 34%, var(--card)), color-mix(in srgb, var(--ac) 10%, var(--card))); }
+.pn-art img { width: 116px; height: 92px; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(31, 51, 70, .14)); }
+.pn-topic { font: 600 .74rem var(--font-head); text-transform: uppercase; letter-spacing: .8px; color: color-mix(in srgb, var(--ac) 62%, var(--ink)); }
+.pensum-tile h3 { margin: 0; font-size: 1.08rem; text-wrap: balance; hyphens: auto; overflow-wrap: anywhere; }
+.pensum-tile p { margin: 4px 0 0; font-size: .86rem; line-height: 1.45; color: var(--ink-2); }
+.principle .rule-ic { width: 56px; height: 56px; border-radius: 16px; }
+.principle .rule-ic .ui-ic { width: 48px; height: 48px; }
+.principle .rule-ic .ui-ic.face { width: 50px; height: 50px; }
+.principle .pr-src { margin-top: 2px; font-size: .82rem; color: var(--ink-2); font-style: italic; }
+.about .copyright { margin-top: 22px; }
+#about-p { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
+@media (max-width: 480px) { #about-p .about-lbl { display: none; } } /* telefon: kun ikonet, så titlen kan stå */
 
 /* ---------- Zoo-kortet (forsiden) ---------- */
 /* Grundkortet er landskabet; områderne ligger ovenpå som knapper med procent-placering.
@@ -1099,9 +1102,7 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .rec-env { display: block; width: 190px; }
 }
 
-/* ---------- Fri træning åbner efter dagens mission ---------- */
-.rec-act.rec-locked { background: linear-gradient(135deg, var(--card-2), var(--card) 70%); border-color: var(--line); }
-.rec-lock { margin: 6px 0 0; font-weight: 700; color: var(--ink-2); }
+/* "Mission klaret": en ny mission venter i morgen – og der kan øves frit på kortet */
 .free-open { margin: 0; font-weight: 700; color: var(--primary-ink); }
 
 /* ---------- Opgavens scene: områdets miljø over opgaven (aldrig tekst oven på billedet) ---------- */

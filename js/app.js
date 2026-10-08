@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008205556';
-import * as E from './engine.js?v=20261008205556';
-import * as Z from './zoo.js?v=20261008205556';
-import { zooMap } from './map.js?v=20261008205556';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008205556';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008205556';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008205556';
-import { esc, fmt, frac, pick, today, addDays, weekStart } from './util.js?v=20261008205556';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008212453';
+import * as E from './engine.js?v=20261008212453';
+import * as Z from './zoo.js?v=20261008212453';
+import { zooMap } from './map.js?v=20261008212453';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008212453';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008212453';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008212453';
+import { esc, fmt, frac, pick, today, addDays, weekStart } from './util.js?v=20261008212453';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -97,12 +97,15 @@ const say = (who, text, size = '') => `
 
 // Hængelåsen: forældredelen bag koden (på forsiden og på Øvebanen)
 const LOCK_IC = '<svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.6" r="1.4" fill="currentColor"/></svg>';
+const INFO_IC = '<svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.5" fill="currentColor"/></svg>';
 
 // Tegnede ikoner i stedet for emoji: de tre missionstrin, Øvebanen, lyd og dagens mission
 const UI_ICONS = {
   baby: 'img/ui/babyhuset.webp', area: 'img/ui/zoo-omraade.webp', round: 'img/ui/zoo-runden.webp',
   oeve: 'img/ui/oevebane.webp', lyd: 'img/ui/lyd.webp', opgave: 'img/ui/opgave.webp',
   fest: 'img/ui/fest.webp', stjerne: 'img/ui/stjerne.webp', billet: 'img/ui/billet.webp', gave: 'img/ui/gave.webp', sykurv: 'img/ui/sykurv.webp',
+  // Om appen (Batch 9): principperne bag appen
+  kalender: 'img/ui/kalender.webp', trin: 'img/ui/trin.webp', vaekst: 'img/ui/vaekst.webp', skildpadde: 'img/ui/skildpadde.webp', foraeldre: 'img/ui/foraeldre.webp',
 };
 const ui = (key) => `<img class="ui-ic" src="${UI_ICONS[key]}" alt="" draggable="false">`;
 // Et sted i zoo'en eller en disciplin på Øvebanen som lille tegning ved navnet (Batch 5 og 7) – i stedet for emoji
@@ -179,7 +182,7 @@ async function showProfiles() {
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
   on('#new', 'click', () => { $('#newform').hidden = false; $('#nm').focus(); $('#newform').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
   on('#restore', 'click', pickBackup);
-  on('#about-w', 'click', () => showAbout(showProfiles));
+  on('#about-w', 'click', () => showAbout(showProfiles, 'Tilbage'));
   on('#nm', 'input', () => { $('#zn').placeholder = Z.defaultZooName($('#nm').value); });
   on('#newform', 'submit', async (e) => {
     e.preventDefault();
@@ -261,10 +264,11 @@ function showRules(back = showHome) {
           <li>Vælger du mellem knapper, får du ét forsøg.</li>
           <li>Bagefter viser Kaj, hvordan man regner det, og der kommer en lignende opgave senere.</li>
           <li>Det er dit første svar, der tæller for stjernerne. 💡 Hjælp viser altid, hvordan man gør.</li></ul>`)}
-      ${rule(ui('oeve'), 'Når missionen er klaret', `<ul><li><b>Fri træning:</b> tryk på et område på kortet, og øv dér. Den åbner, når dagens mission er klaret.</li>
+      ${rule(ui('oeve'), 'Når du vil øve mere', `<ul><li><b>Fri træning:</b> tryk på et område på kortet, og øv dér – når som helst.</li>
           <li><b>Øvebanen:</b> altid åben – øv lige det, du vil.</li>
           <li><b>⚡ Slå din rekord:</b> regn så mange gangestykker, du kan, på 60 sekunder. ${st.settings.sprint ? 'Den kommer, når du kender mindst 6 gangestykker.' : 'Den er slået fra lige nu – en voksen kan slå den til.'}</li></ul>`,
-      doneToday ? '🔓 Fri træning er åben i dag' : '🔒 Fri træning åbner, når dagens mission er klaret')}
+      !st.settings.sprint ? '🔓 Områderne og Øvebanen er altid åbne' : sprintEligible(st) ? '⚡ Slå din rekord er klar – du finder den i Babyhuset'
+        : `⚡ Du kender ${FACTS.filter((f) => E.factBox(st, f.key) >= 2).length} af de 6 gangestykker, der skal til for at slå din rekord`)}
       ${rule(`<img class="ui-ic" src="${Z.SHIRT.f.src}" alt="">`, 'Ranger-skjorten', `<p>Når du er sikker ⭐ i alle øvelser i en disciplin på Øvebanen, får du et mærke til din ranger-skjorte. Du bestemmer selv, hvor det skal sidde – og du kan altid flytte det.</p>
         <ul><li><b>Bronze</b> – ${TIER_WHY[1]}</li><li><b>Sølv</b> – ${TIER_WHY[2]}</li><li><b>Guld</b> – ${TIER_WHY[3]}</li></ul><p class="small muted">${SIKKER_HOW}</p>`,
       `${patchList(st).filter((x) => x.p).length} af ${patchList(st).length} mærker`)}
@@ -279,48 +283,52 @@ function showRules(back = showHome) {
   on('#rule-party', 'click', () => showParty(() => showRules(back)));
 }
 
-function showAbout(back = showHome) {
+// Om appen – bygget som reglerne: en malet forside med formålet, pensum som zoo'ens steder (tegningerne) og
+// principperne bag appen som kort med tegnede ikoner (Batch 9) i stedet for emoji
+function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
   const skillCount = AREAS.reduce((n, a) => n + a.skills.length, 0);
-  const rows = AREAS.map((a) => `<tr><td>${placeIc(a)} ${a.place}</td><td>${a.name}</td><td>${a.skills.map((sk) => sk.name).join(', ')}</td></tr>`).join('');
-  const principle = (icon, title, body, src) => `
-    <div class="card principle">
-      <div class="pr-ic">${icon}</div>
-      <div><h3>${title}</h3><p>${body}</p>${src ? `<p class="src">${src}</p>` : ''}</div>
-    </div>`;
+  const places = [
+    ...AREAS.map((a) => ({ art: Z.PLACE_ART[a.id], ac: a.color, place: a.place, topic: a.name, what: a.skills.map((sk) => sk.name).join(' · ') })),
+    { art: UI_ICONS.baby, ac: 'var(--sun)', place: 'Babyhuset', topic: 'Gangetabellen', what: `De ${FACTS.length} gangestykker fra 2 til 9` },
+  ];
+  const tile = (p) => `<li class="pensum-tile" style="--ac:${p.ac}">
+      <span class="pn-art"><img src="${p.art}" alt="" draggable="false"></span>
+      <span class="pn-topic">${p.topic}</span>
+      <h3>${p.place}</h3>
+      <p>${p.what}</p>
+    </li>`;
+  const principle = (icon, title, body, src) => `<section class="card rule principle">
+      <h2><span class="rule-ic" aria-hidden="true">${icon}</span>${title}</h2>
+      <p>${body}</p>
+      <p class="pr-src">${src}</p>
+    </section>`;
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Tilbage</span></div>
-    <section class="area-hero" style="--ac:var(--c-maal)">
-      <span class="big">📚</span>
-      <div style="flex:1;min-width:220px"><h1 style="margin:0">Om appen</h1>
-        <div class="muted" style="font-weight:700">Hvorfor Matematik-Zoo er bygget, som den er: pensum, forskning og de valg, vi har truffet.</div></div>
-    </section>
+    <button class="back-link" id="back"><span class="icon-btn" aria-hidden="true">←</span>${backLabel}</button>
+    <div class="about">
+      <section class="oeve-hero about-hero">
+        <div class="oeve-glass"><h1>Om Matematik-Zoo</h1>
+          <p>Appen skal hjælpe en elev i 4. klasse med at komme struktureret igennem <b>hele årets matematikpensum</b> – lidt hver dag, uden pres og uden reklamer. Zoo'en er rammen, der gør det sjovt at komme tilbage, men det er matematikken, der får zoo'en til at vokse.</p>
+        </div>
+      </section>
 
-    <div class="about stack">
-      <div class="card">
-        <h2>Formålet</h2>
-        <p>Appen skal hjælpe en elev i 4. klasse med at komme struktureret igennem <b>hele årets matematikpensum</b> – lidt hver dag, uden pres og uden reklamer. Zoo'en er rammen, der gør det sjovt at komme tilbage, men det er matematikken, der får zoo'en til at vokse.</p>
+      <div class="section-title"><h2>Pensum</h2><span class="muted small">Fælles Mål · KonteXt+ 4</span></div>
+      <p class="about-lead">Indholdet følger de fire kompetenceområder i Fælles Mål for matematik (tal og algebra, geometri og måling, statistik og sandsynlighed samt matematiske kompetencer) og er struktureret som i lærebogssystemet KonteXt+ 4. Det giver ${skillCount} færdigheder fordelt på ${AREAS.length} områder i zoo'en – plus gangetabellen i Babyhuset.</p>
+      <ul class="pensum-grid">${places.map(tile).join('')}</ul>
+      <p class="small muted about-note">Hver færdighed har tre niveauer. På Øvebanen kan alt øves frit – delt op i discipliner som i matematikbogen, med flere målrettede øvelser end i zoo'en (fx gangetabellen én tabel ad gangen).</p>
+
+      <div class="section-title"><h2>Det bygger appen på</h2><span class="muted small">Forskningen bag – og de valg, vi har truffet</span></div>
+      <div class="rules">
+        ${principle(ui('kalender'), 'Spredt gentagelse', 'Gangestykker huskes bedre, når man henter dem frem med voksende mellemrum. Hver unge i Babyhuset er et gangestykke i et "Leitner-system": den kommer igen efter 1, 2, 4, 7 og 14 dage, så længe den huskes – og hurtigt igen, hvis den driller.', 'Kilde: forskning i genkaldelse og spaced repetition (fx Rohrer).')}
+        ${principle(ui('round'), 'Blandede opgaver', 'Opgavetyper blandes i stedet for at komme i lange blokke. I et studie med 4.-klasseelever fik de, der øvede blandet, 77 % rigtige dagen efter mod 38 % for dem, der øvede én type ad gangen.', 'Kilde: Taylor & Rohrer (2010).')}
+        ${principle(ui('trin'), 'Sværhedsgrad der passer', 'Hver færdighed har tre niveauer. Appen går op efter 3 rigtige i træk og ned efter 2 forkerte, så eleven typisk rammer 80–90 % rigtige. En færdighed er "sikker" ved 8 af 10 rigtige og "mestret", når den sidder på to forskellige dage.', 'Kilde: mestringslæring, Education Endowment Foundation.')}
+        ${principle(`<img class="ui-ic" src="${Z.DISC_ART['d-tal']}" alt="" draggable="false">`, 'Fra konkret til abstrakt', 'Nye emner starter med en tegning eller et gennemregnet eksempel trin for trin – tallinjer, brøkstænger, positionstabeller – før der regnes med tal alene.', 'Kilde: konkret–billede–abstrakt (CPA) og EEF\'s vejledning om matematikundervisning.')}
+        ${principle(`<img class="ui-ic face" src="${Z.CAST.kaj.img}" alt="" draggable="false">`, 'Forklaringer i stedet for kryds', 'Ved et forkert svar viser Kaj den rigtige løsning med en strategi, fx "7 × 8 = 7 × 7 + 7", og opgaven kommer igen senere. Uddybende feedback virker bedre end bare rigtigt/forkert.', 'Kilde: Shute (2008) om formativ feedback.')}
+        ${principle(ui('area'), 'Matematikken er selve spillet', 'Historien om zoo\'en ligger mellem opgaverne, og regnestykkerne handler om zoo\'ens dyr og gæster. Når matematikken er selve aktiviteten, lærer børn mere og spiller længere, end når den bare er en adgangsbillet til et spil.', 'Kilde: Habgood & Ainsworth (Zombie Division); Walkington (2013) om personlige tekstopgaver.')}
+        ${principle(ui('vaekst'), 'Ingen straf og ingen belønninger udefra', 'Der er ingen liv, point-fradrag, ranglister, butik eller valuta. Belønningen er, at ungerne vokser og zoo\'en bliver større. Ydre belønninger kan svække lysten til at lære, og straf for fejl kan skabe matematikangst.', 'Kilde: Deci, Koestner & Ryan (1999).')}
+        ${principle(ui('skildpadde'), 'Tid uden pres', 'Tidtagning findes kun i den valgfrie "Slå din rekord" – og kun på gangestykker, der allerede sidder. Træningen tager ca. 15 minutter, og målet er 4 dage om ugen.', 'Kilde: What Works Clearinghouse (2021) om flydende regnefærdighed.')}
+        ${principle(ui('foraeldre'), 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
       </div>
-
-      <div class="card">
-        <h2>Pensum</h2>
-        <p>Indholdet følger de fire kompetenceområder i Fælles Mål for matematik (tal og algebra, geometri og måling, statistik og sandsynlighed samt matematiske kompetencer) og er struktureret som i lærebogssystemet KonteXt+ 4. Det giver ${skillCount} færdigheder fordelt på ${AREAS.length} områder i zoo'en – plus gangetabellen i Babyhuset.</p>
-        <div class="table-wrap"><table><thead><tr><th>Sted i zoo'en</th><th>Emne</th><th>Færdigheder</th></tr></thead><tbody>${rows}
-          <tr><td>🍼 Babyhuset</td><td>Gangetabellen</td><td>De 36 gangestykker fra 2 til 9</td></tr></tbody></table></div>
-        <p class="small muted">Hver færdighed har tre niveauer. På Øvebanen kan alt øves frit – delt op i discipliner som i matematikbogen, med flere målrettede øvelser end i zoo'en (fx gangetabellen én tabel ad gangen).</p>
-      </div>
-
-      <h2 class="section-title" style="margin-bottom:0">Det bygger appen på</h2>
-      ${principle('🔁', 'Spredt gentagelse', 'Gangestykker huskes bedre, når man henter dem frem med voksende mellemrum. Hver unge i Babyhuset er et gangestykke i et "Leitner-system": den kommer igen efter 1, 2, 4, 7 og 14 dage, så længe den huskes – og hurtigt igen, hvis den driller.', 'Kilde: forskning i genkaldelse og spaced repetition (fx Rohrer).')}
-      ${principle('🔀', 'Blandede opgaver', 'Opgavetyper blandes i stedet for at komme i lange blokke. I et studie med 4.-klasseelever fik de, der øvede blandet, 77 % rigtige dagen efter mod 38 % for dem, der øvede én type ad gangen.', 'Kilde: Taylor & Rohrer (2010).')}
-      ${principle('🎯', 'Sværhedsgrad der passer', 'Hver færdighed har tre niveauer. Appen går op efter 3 rigtige i træk og ned efter 2 forkerte, så eleven typisk rammer 80–90 % rigtige. En færdighed er "sikker" ved 8 af 10 rigtige og "mestret", når den sidder på to forskellige dage.', 'Kilde: mestringslæring, Education Endowment Foundation.')}
-      ${principle('🧱', 'Fra konkret til abstrakt', 'Nye emner starter med en tegning eller et gennemregnet eksempel trin for trin – tallinjer, brøkstænger, positionstabeller – før der regnes med tal alene.', 'Kilde: konkret–billede–abstrakt (CPA) og EEF\'s vejledning om matematikundervisning.')}
-      ${principle('💬', 'Forklaringer i stedet for kryds', 'Ved et forkert svar vises den rigtige løsning med en strategi, fx "7 × 8 = 7 × 7 + 7". Opgaven kommer igen senere. Uddybende feedback virker bedre end bare rigtigt/forkert.', 'Kilde: Shute (2008) om formativ feedback.')}
-      ${principle('🦁', 'Matematikken er selve spillet', 'Historien om zoo\'en ligger mellem opgaverne, og regnestykkerne handler om zoo\'ens dyr og gæster. Når matematikken er selve aktiviteten, lærer børn mere og spiller længere, end når den bare er en adgangsbillet til et spil.', 'Kilde: Habgood & Ainsworth (Zombie Division); Walkington (2013) om personlige tekstopgaver.')}
-      ${principle('🌱', 'Ingen straf og ingen belønninger udefra', 'Der er ingen liv, point-fradrag, ranglister, butik eller valuta. Belønningen er, at ungerne vokser og zoo\'en bliver større. Ydre belønninger kan svække lysten til at lære, og straf for fejl kan skabe matematikangst.', 'Kilde: Deci, Koestner & Ryan (1999).')}
-      ${principle('⏱️', 'Tid uden pres', 'Tidtagning findes kun i den valgfrie "Slå din rekord" – og kun på gangestykker, der allerede sidder. Træningen tager ca. 15 minutter, og målet er 4 dage om ugen.', 'Kilde: What Works Clearinghouse (2021) om flydende regnefærdighed.')}
-      ${principle('👨‍👧', 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
       <p class="small muted copyright">© 2026 Troels Christensen. Alle rettigheder forbeholdes.</p>
-
     </div>`, (e) => { if (e.key === 'Escape') back(); });
   on('#back', 'click', back);
 }
@@ -328,7 +336,7 @@ function showAbout(back = showHome) {
 // ================= Intro: sådan spiller du =================
 
 function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
-  const st = S.state, firstTime = !st.zoo.introSeen; // åbnes den igen via ?, går sidste knap bare tilbage
+  const st = S.state, firstTime = !st.zoo.introSeen; // åbnes den igen via ?, går sidste knap tilbage dertil
   const someBabies = FACTS.slice(0, 6).map((f, i) => {
     const b = Z.BABIES[f.key];
     return `<span class="baby has-img" style="--st:${i}"><img src="${b.img}" alt="" draggable="false"></span>`;
@@ -348,7 +356,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
         <li><span class="n">3</span><div><div class="t">Zoo-runden</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div><span class="ico">${ui('round')}</span></li>
       </ol>`,
       title: 'Sådan går en dag',
-      body: say('nora', 'Én mission om dagen – det tager cirka 15 minutter. Bagefter kan du øve frit i områderne på kortet. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
+      body: say('nora', 'Én mission om dagen – det tager cirka 15 minutter. Du kan også altid øve frit i områderne på kortet. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
     },
     {
       art: `<div class="tour-babies">${someBabies}</div>`,
@@ -363,14 +371,8 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
     },
   ];
   let i = 0;
-  const finish = () => { st.zoo.introSeen = true; save(); done(); };
-  // Første gang: "Start min første mission" starter dagens anbefalede mission (samme som forsiden ville vise)
-  const startFirstMission = async () => {
-    st.zoo.introSeen = true;
-    await save(true);
-    const m = todaysMission(st);
-    runSession(m.area, m);
-  };
+  // Første gang fører sidste knap ("Gå til zoo'en") og "Spring over" til zoo-kortet, hvor dagens mission venter
+  const finish = async () => { st.zoo.introSeen = true; await save(true); done(); };
   const keys = (e) => {
     if (e.key === 'Enter' || e.key === 'ArrowRight') next();
     else if (e.key === 'ArrowLeft' && i) { i--; render(); }
@@ -408,14 +410,14 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
         ${dots()}
         <div class="row" style="justify-content:center">
           ${i ? '<button class="btn ghost big" id="prev">←</button>' : ''}
-          <button class="btn big" id="next">${last ? (firstTime ? 'Start min første mission' : backLabel) : 'Næste'}</button>
+          <button class="btn big" id="next">${last ? (firstTime ? "Gå til zoo'en" : backLabel) : 'Næste'}</button>
         </div>
       </div>`, keys);
     on('#next', 'click', next);
     on('#prev', 'click', () => { i--; render(); });
     on('#skip', 'click', finish);
   };
-  const next = () => { sfx('tap'); if (i < pages.length - 1) { i++; render(); } else if (firstTime) startFirstMission(); else finish(); };
+  const next = () => { sfx('tap'); if (i < pages.length - 1) { i++; render(); } else finish(); };
   render();
 }
 
@@ -442,9 +444,9 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheetEl?
 
 // Dagens missioner: { date, area (den seneste), done: [områder klaret i dag], mission, chips }
 const todayLog = (st) => (st.zoo.today?.date === today() ? st.zoo.today : null);
-// Fri træning i områderne åbner, når dagens mission er klaret – dag for dag. Kortet, områdesiderne,
-// "Se hvordan", Babyhuset og Dyrebogen kan altid ses, og Øvebanen er altid åben (alt frit).
-const freePlayOpen = (st) => !!todayLog(st)?.mission;
+// Én mission om dagen: når den er klaret, venter en ny i morgen. Fri træning i områderne og på Øvebanen er altid
+// åben – missionen er hovedvejen (kun den fodrer ungerne i Babyhuset), men den er ikke en lås.
+const missionDoneToday = (st) => !!todayLog(st)?.mission;
 
 function isoWeek(d = new Date()) {
   const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -509,7 +511,7 @@ function showHome() {
       <div class="row" style="gap:8px">
         <button class="icon-btn pill" id="oeve" aria-label="Øvebanen${patchNews(st) ? ' – nyt på din ranger-skjorte' : ''}">${ui('oeve')}<span>Øvebanen</span>${patchNews(st) ? '<i class="pill-dot" aria-hidden="true"></i>' : ''}</button>
         <button class="icon-btn pill" id="help" title="Reglerne – sådan spiller du" aria-label="Regler – sådan spiller du"><b class="q" aria-hidden="true">?</b><span>Regler</span></button>
-        <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen"><svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.5" fill="currentColor"/></svg></button>
+        <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen">${INFO_IC}</button>
         <button class="icon-btn" id="parent" title="Forælder" aria-label="Forælder (kræver kode)">${LOCK_IC}</button>
         <button class="icon-btn snd ${st.settings.sound ? '' : 'off'}" id="snd" aria-label="Lyd" aria-pressed="${st.settings.sound}">${ui('lyd')}</button>
       </div>
@@ -518,7 +520,7 @@ function showHome() {
     ${Z.partyDue(st) ? partyCard() : ''}
     ${doneToday ? missionDone(log) : missionCard(st, mission)}
 
-    <div class="section-title"><h2>Din zoo</h2><span class="muted small">${doneToday ? 'Tryk på et område for at øve noget bestemt' : '🔒 Klar dagens mission – så kan du øve frit i områderne'}</span></div>
+    <div class="section-title"><h2>Din zoo</h2><span class="muted small">Tryk på et område for at øve noget bestemt</span></div>
     <section class="map-wrap${st.zoo.party ? ' festive' : ''}">
       <div class="map-scroll">${zooMap(mapData)}</div>
     </section>
@@ -648,7 +650,7 @@ function missionDone(log) {
         <h1>Dagens mission er klaret!</h1>
         <p class="mission-need">${missionDoneHtml(t)}</p>
         ${chips.length ? `<ul class="payoff-extras">${chips.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
-        <p class="free-open">🔓 Fri træning er åben i dag – vælg et område på kortet. En ny mission venter i morgen.</p>
+        <p class="free-open">En ny mission venter i morgen. Vil du øve mere, så vælg et område på kortet.</p>
         <div class="mission-go">
           <button class="btn big" id="to-map">Øv frit på kortet</button>
           <button class="link" id="see-baby">Se Babyhuset</button>
@@ -714,7 +716,7 @@ function bonusSheet(fresh) {
 }
 
 function bodilSheet(levels, first) {
-  const st = S.state, msg = Z.homeMessage(st), done = freePlayOpen(st); // én mission om dagen
+  const st = S.state, msg = Z.homeMessage(st), done = missionDoneToday(st); // én mission om dagen
   const stars = levels.filter((l) => l >= 3).length, gold = levels.filter((l) => l >= 4).length, ready = Z.partyReady(st);
   const goal = st.zoo.party
     ? `<span>🎉 <b>${esc(Z.zooName(st))} er åben!</b> Næste mål: guld-områder – <b>${gold} af ${AREAS.length}</b> er guld.</span>
@@ -762,19 +764,17 @@ function showPlace(areaId) {
   // den der er længst tid siden (samme valg som dagens træning bruger)
   const recId = E.currentSkill(st, areaId) || [...a.skills].sort((x, y) => (st.skills[x.id]?.last || 0) - (st.skills[y.id]?.last || 0))[0].id;
   const recIdx = a.skills.findIndex((sk) => sk.id === recId), rec = a.skills[recIdx], recStatus = E.skillStatus(st, rec.id);
-  const free = freePlayOpen(st);
   const recBlock = `
-    <section class="card rec-act ${free ? '' : 'rec-locked'}">
+    <section class="card rec-act">
       <div class="rec-body">
         <span class="kicker">Næste opgave for dig · aktivitet ${recIdx + 1} af ${a.skills.length}</span>
         <h2>${actOf(rec).name} <span class="st ${recStatus}">${label[recStatus]}</span></h2>
         <p class="rec-desc">${actOf(rec).desc}</p>
         <span class="act-skill">${rec.name}</span>
-        ${free ? '' : '<p class="rec-lock">🔒 Fri træning åbner, når dagens mission er klaret.</p>'}
       </div>
       <div class="rec-env" aria-hidden="true">${envPic(Z.AREA_ENV[areaId])}</div>
       <div class="rec-go">
-        ${free ? `<button class="btn big" data-practice="${rec.id}">Øv nu</button>` : '<button class="btn big" id="to-mission">Gå til dagens mission</button>'}
+        <button class="btn big" data-practice="${rec.id}">Øv nu</button>
         <button class="link" data-intro="${rec.id}">Se hvordan</button>
       </div>
     </section>`;
@@ -797,7 +797,7 @@ function showPlace(areaId) {
         <span class="act-desc">${act.desc}</span>
         <span class="act-skill">${sk.name}</span>
       </div>
-      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button>${free ? `<button class="btn sm" data-practice="${sk.id}">Øv</button>` : ''}</div>
+      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button><button class="btn sm" data-practice="${sk.id}">Øv</button></div>
     </li>`;
   }).join('');
   view(`
@@ -820,7 +820,6 @@ function showPlace(areaId) {
     <ol class="acts">${acts}</ol>` : ''}`, (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
   on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice); });
-  on('#to-mission', 'click', () => { sfx('tap'); showHome(); });
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), { btn: `Tilbage til ${a.place}`, back: `Tilbage til ${a.place}` }));
 }
 
@@ -1400,7 +1399,7 @@ function snapshot(st) {
 const blockIcon = (b) => ui(b.kind === 'warm' ? 'baby' : b.kind === 'review' ? 'round' : 'area');
 
 function runSession(areaId, mission = null) {
-  if (freePlayOpen(S.state)) return showHome(); // én mission om dagen – derefter fri træning
+  if (missionDoneToday(S.state)) return showHome(); // én mission om dagen
   const sess = E.buildSession(S.state, areaId);
   const m = mission ? { who: mission.who, title: mission.title } : null;
   S.run = { mode: 'daily', sess, mission: m, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
@@ -1899,7 +1898,7 @@ function finish() {
     };
     save(true);
     S.run = null;
-    return showPayoff(st, res, b, after, bigWin, !prev?.mission);
+    return showPayoff(st, res, b, after, bigWin);
   }
   save(true);
   S.run = null;
@@ -1991,7 +1990,7 @@ function missionResults(st, run, b, after, born, grew, bonus = []) {
 }
 
 // Missionens slutning: samme scene som ved starten, nu i "efter"-tilstand
-function showPayoff(st, res, b, after, bigWin, freeNew = false) {
+function showPayoff(st, res, b, after, bigWin) {
   const { t, main } = res;
   const art = main.art ? `<img src="${main.art}" alt="">` : main.icon ? ui(main.icon) : `<span aria-hidden="true">${main.emoji}</span>`;
   view(`
@@ -2013,7 +2012,6 @@ function showPayoff(st, res, b, after, bigWin, freeNew = false) {
           ${res.patches ? '<button class="btn ghost" id="sew">🧵 Sy mærket på din skjorte</button>' : ''}
           ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
         </div>
-        ${freeNew ? '<p class="free-open">🔓 Nu er fri træning åben på kortet resten af dagen.</p>' : ''}
       </div>
     </section>`, (e) => { if (e.key === 'Enter') (res.party ? showParty() : showHome()); });
   on('#home', 'click', showHome);
@@ -2364,13 +2362,13 @@ function showParent(tab = parentTab) {
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button>
       <div style="flex:1"><h1 style="margin:0">Forældre</h1><span class="muted">${esc(st.name)} · ${esc(Z.zooName(st))}</span></div>
-      <button class="btn ghost" id="about-p" aria-label="Om appen">📚<span class="about-lbl"> Om appen</span></button></div>
+      <button class="btn ghost" id="about-p" aria-label="Om appen">${INFO_IC}<span class="about-lbl">Om appen</span></button></div>
     <div class="seg parent-tabs" role="tablist" aria-label="Forældredelen">${PARENT_TABS.map(([v, l]) => `<button role="tab" data-tab="${v}" aria-selected="${v === tab}" class="${v === tab ? 'on' : ''}">${l}</button>`).join('')}</div>
     <div class="parent-body">${tab === 'fremskridt' ? progress() : tab === 'indstillinger' ? settings() : overview()}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
 
   on('.parent-tabs [data-tab]', 'click', (e) => { sfx('tap'); showParent(e.currentTarget.dataset.tab); });
   on('#back', 'click', showHome);
-  on('#about-p', 'click', () => showAbout(() => showParent()));
+  on('#about-p', 'click', () => showAbout(() => showParent(), 'Tilbage til forældredelen'));
   on('#rp-open', 'click', () => showPracticeReport());
   const paintSeg = () => {
     $$('#len button').forEach((x) => x.classList.toggle('on', x.dataset.v === st.settings.length));
