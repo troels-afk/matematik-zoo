@@ -1126,6 +1126,33 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 
 /* ---------- Forældredelen: Øvebanen i tal ---------- */
 .rp-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 4px 2px 16px; }
+/* ---------- Forældredelen: tre faner (Overblik, Fremskridt, Indstillinger) ---------- */
+.parent-tabs { display: flex; width: fit-content; max-width: 100%; margin: 0 0 18px; }
+.parent-tabs button { flex: 1 1 auto; }
+.parent-body { display: grid; gap: 16px; }
+.parent-body > .section-title { margin: 14px 2px 0; }
+.parent-body > .rp-tiles { margin: 0; }
+.pt-week { display: grid; gap: 10px; }
+.pt-week h3 { margin: 0; }
+.pt-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; max-width: 420px; }
+.pt-day { display: grid; justify-items: center; gap: 4px; font: 600 .85rem var(--font-head); color: var(--ink-2); }
+.pt-day i { width: 30px; height: 30px; border-radius: 50%; border: 2px dashed var(--line); }
+.pt-day.on i { border: 0; background: var(--primary); box-shadow: inset 0 0 0 4px color-mix(in srgb, #fff 35%, var(--primary)); }
+.pt-day.today { color: var(--ink); }
+.pt-day.today i { outline: 2px solid var(--sun); outline-offset: 2px; }
+details.card > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; cursor: pointer; list-style: none; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::after { content: '›'; font: 600 1.4rem/1 var(--font-head); color: var(--ink-3); transition: transform .2s; }
+details.card[open] > summary::after { transform: rotate(90deg); }
+details.card[open] > summary { margin-bottom: 12px; }
+.pt-recent summary h3 { margin: 0; flex: 1; }
+.area-det summary .ad-name { flex: 1 1 260px; min-width: 0; }
+.area-det summary .ad-prog { display: flex; align-items: center; gap: 10px; flex: 0 1 260px; }
+.area-det summary .bar-mini { flex: 1; min-width: 80px; }
+.pt-name { flex-wrap: nowrap; }
+.pt-name .field { flex: 1; min-width: 0; max-width: 320px; min-height: 48px; }
+.pt-danger { border-color: color-mix(in srgb, var(--coral) 45%, var(--line)); }
+.pt-danger h3 { color: color-mix(in srgb, var(--coral) 75%, var(--ink)); }
 .rp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; margin-bottom: 16px; }
 .rp-tile { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 2px; }
 .rp-tl { font: 700 .85rem var(--font-body); color: var(--ink-2); }
@@ -1421,3 +1448,6 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .map-wrap.festive::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 34px; pointer-events: none; z-index: 6;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'%3E%3Cpath d='M0 3 Q100 25 200 3' fill='none' stroke='%237a5a3a' stroke-width='2'/%3E%3Cpath d='M10 6 L30 9 L19 31Z' fill='%23ff8a65'/%3E%3Cpath d='M50 10 L70 13 L59 35Z' fill='%23ffc94d'/%3E%3Cpath d='M90 13 L110 13 L100 36Z' fill='%232e9e78'/%3E%3Cpath d='M130 13 L150 10 L141 35Z' fill='%238fd3f4'/%3E%3Cpath d='M170 9 L190 6 L181 31Z' fill='%23b7a6e8'/%3E%3C/svg%3E") repeat-x 0 0 / 160px 32px; }
 @media (prefers-reduced-motion: reduce) { .pty-art, .rb-snip { animation: none; } .rb-half, .rb-bow { transition: none; } }
+
+.copyright { margin: 10px 0 0; text-align: center; opacity: .75; }
+.wp-foot .copyright { margin: 0; }

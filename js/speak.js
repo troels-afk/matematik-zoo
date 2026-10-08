@@ -1,7 +1,7 @@
 // Oplæsning: Kaj forklarer med Microsofts danske stemme Jeppe (Azure, da-DK-JeppeNeural). Klippene er lavet på forhånd
 // af tools/lyd/tts.py og ligger i lyd/ – appen kalder aldrig Azure. lyd/manifest.json: say-tekst → { f: fil, d: sek. }.
 // Klippene spilles i samme AudioContext som lydeffekterne (fx.js), så iPad'en også tillader dem langt fra et tryk.
-import { audioCtx } from './fx.js?v=20261008203004';
+import { audioCtx } from './fx.js?v=20261008203551';
 
 let clips = null, loading = null;
 const buffers = new Map(); // fil → Promise<AudioBuffer>

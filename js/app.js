@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008203004';
-import * as E from './engine.js?v=20261008203004';
-import * as Z from './zoo.js?v=20261008203004';
-import { zooMap } from './map.js?v=20261008203004';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008203004';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008203004';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008203004';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261008203004';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008203551';
+import * as E from './engine.js?v=20261008203551';
+import * as Z from './zoo.js?v=20261008203551';
+import { zooMap } from './map.js?v=20261008203551';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008203551';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008203551';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008203551';
+import { esc, fmt, frac, pick, today, addDays, weekStart } from './util.js?v=20261008203551';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -173,6 +173,7 @@ async function showProfiles() {
         <button class="btn big" type="submit">Åbn porten</button>
       </form>
       <footer class="wp-foot"><span>Gratis · ingen login · fremskridtet gemmes kun på denne enhed</span>
+        <span class="copyright">© 2026 Troels Christensen</span>
         <span><button class="link small" id="restore">Gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button></span></footer>
     </section>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
@@ -318,6 +319,7 @@ function showAbout(back = showHome) {
       ${principle('🌱', 'Ingen straf og ingen belønninger udefra', 'Der er ingen liv, point-fradrag, ranglister, butik eller valuta. Belønningen er, at ungerne vokser og zoo\'en bliver større. Ydre belønninger kan svække lysten til at lære, og straf for fejl kan skabe matematikangst.', 'Kilde: Deci, Koestner & Ryan (1999).')}
       ${principle('⏱️', 'Tid uden pres', 'Tidtagning findes kun i den valgfrie "Slå din rekord" – og kun på gangestykker, der allerede sidder. Træningen tager ca. 15 minutter, og målet er 4 dage om ugen.', 'Kilde: What Works Clearinghouse (2021) om flydende regnefærdighed.')}
       ${principle('👨‍👧', 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
+      <p class="small muted copyright">© 2026 Troels Christensen. Alle rettigheder forbeholdes.</p>
 
     </div>`, (e) => { if (e.key === 'Escape') back(); });
   on('#back', 'click', back);
@@ -2217,7 +2219,9 @@ function startSprint() {
 // ================= Forælder =================
 
 // Simpel børnesikring – ikke rigtig sikkerhed (koden kan ses i kildekoden)
-const PARENT_PASSWORD = 'Forældre';
+const PARENT_PASSWORD = 'IngridJespersen';
+// Store/små bogstaver og mellemrum er ligegyldige (iPad'en skriver selv stort begyndelsesbogstav)
+const parentCodeOk = (v) => v.replace(/\s+/g, '').toLowerCase() === PARENT_PASSWORD.toLowerCase();
 
 function parentGate(onOk = showParent, onBack = showHome) {
   view(`
@@ -2233,7 +2237,7 @@ function parentGate(onOk = showParent, onBack = showHome) {
   on('#back', 'click', onBack);
   on('#f', 'submit', (e) => {
     e.preventDefault();
-    if ($('#g').value.trim() === PARENT_PASSWORD) onOk();
+    if (parentCodeOk($('#g').value)) onOk();
     else { toast('Forkert adgangskode'); $('#g').value = ''; $('#g').focus(); }
   });
 }
@@ -2242,123 +2246,135 @@ function fmtDate(ts) {
   return new Date(ts).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
 }
 
-function showParent() {
+// Forældredelen i tre faner: Overblik (ugen, nøgletal, hvad der driller), Fremskridt (Øvebanen, gangetabellen,
+// zoo'ens områder) og Indstillinger (træningen, zoo'en, backup, appen, slet profil). Fanen huskes, mens appen er åben
+let parentTab = 'overblik';
+const PARENT_TABS = [['overblik', 'Overblik'], ['fremskridt', 'Fremskridt'], ['indstillinger', 'Indstillinger']];
+function showParent(tab = parentTab) {
+  parentTab = tab;
   const st = S.state;
   const fs = E.factSummary(st);
   const trouble = E.troubleSpots(st);
   const since14 = Date.now() - 14 * 86400000;
-  const recent = st.sessions.filter((s) => s.t >= since14).slice().reverse();
+  const recent = st.sessions.filter((x) => x.t >= since14).slice().reverse();
   const totalSkills = Object.keys(SKILLS).length;
   const sikre = Object.keys(SKILLS).filter((id) => ['sikker', 'mestret'].includes(E.skillStatus(st, id))).length;
+  const tile = (label, value, note = '') => `<div class="rp-tile"><span class="rp-tl">${label}</span><span class="rp-tv">${value}</span>${note ? `<span class="rp-tn">${note}</span>` : ''}</div>`;
 
-  const areaBlocks = AREAS.map((a) => {
-    const p = E.areaProgress(st, a.id);
-    const rows = a.skills.map((s) => {
-      const status = E.skillStatus(st, s.id);
-      const ss = st.skills[s.id];
-      const acc = E.skillAccuracy(st, s.id);
-      return `<tr><td>${s.name}</td><td><span class="st ${status}">${status}</span></td>
-        <td>${ss && ss.hist.length ? ss.level : '–'}</td>
-        <td>${acc ? `${acc.pct} % <span class="muted">(${acc.n})</span>` : '–'}</td>
-        <td>${ss?.last ? fmtDate(ss.last) : '–'}</td></tr>`;
+  const overview = () => {
+    // Ugen: mandag–søndag med en prik for hver dag, hun har øvet
+    const mon = weekStart(today()), days = new Set(st.sessions.map((x) => x.date)), now = today();
+    const week = ['M', 'T', 'O', 'T', 'F', 'L', 'S'].map((l, i) => {
+      const d = addDays(mon, i);
+      return `<span class="pt-day${days.has(d) ? ' on' : ''}${d === now ? ' today' : ''}" title="${d}"><i></i>${l}</span>`;
     }).join('');
-    return `<div class="card" style="--ac:${a.color}">
-      <div class="spread"><h3 style="margin:0">${placeIc(a)} ${a.name} <span class="muted small">· ${a.place}</span></h3><span class="muted small">${p.done}/${p.total} sikre</span></div>
-      <div class="bar-mini" style="margin:8px 0 10px"><i style="width:${(100 * p.done) / p.total}%"></i></div>
-      <div class="table-wrap"><table><thead><tr><th>Færdighed</th><th>Status</th><th>Niv.</th><th>Rigtige 14 d.</th><th>Sidst</th></tr></thead><tbody>${rows}</tbody></table></div>
-    </div>`;
-  }).join('');
+    const ago = E.daysSinceLast(st);
+    const rep = practiceReport(st, '30');
+    const troubleAreas = [...new Set(trouble.skills.map((t) => SKILLS[t.id].area))];
+    const talkAreas = (troubleAreas.length ? troubleAreas : E.suggestAreas(st, 2)).slice(0, 2);
+    const talk = talkAreas.flatMap((id) => areaOf(id).snak);
+    if (trouble.facts.length) talk.unshift(`Spørg løbende: ${trouble.facts.slice(0, 3).map((f) => `${f.a}×${f.b}`).join(', ')} – og spørg, hvordan det blev regnet ud.`);
+    return `
+      <section class="card pt-week">
+        <div class="spread"><h3>Denne uge</h3><span class="muted small">${E.fullWeeksStreak(st)} fulde uger i træk</span></div>
+        <div class="pt-days">${week}</div>
+        <p class="muted small" style="margin:0">${E.weekSessions(st)} af ${E.WEEK_GOAL} øvedage · ${ago == null ? 'ikke øvet endnu' : ago === 0 ? 'øvede i dag' : ago === 1 ? 'øvede i går' : `øvede for ${ago} dage siden`} · ${st.sessions.length} øvetider i alt</p>
+      </section>
+      <div class="rp-tiles">
+        ${tile('Sikre færdigheder', `${sikre} af ${totalSkills}`, "i zoo'en")}
+        ${tile('Gangetabellen', `${fs.solid} af ${fs.total}`, `sidder godt · ${fs.introduced} introduceret`)}
+        ${tile('Rigtige i første forsøg', rep.total.n ? `${rep.total.pct} %` : '–', rep.total.n ? `de seneste 30 dage · typisk ${fmtSec(rep.total.med)}` : 'ingen svar de seneste 30 dage')}
+      </div>
+      <div class="grid2">
+        <section class="card stack"><h3>Det driller lige nu</h3>
+          ${trouble.skills.length || trouble.facts.length ? `
+            ${trouble.skills.map((t) => `<div>🟠 ${SKILLS[t.id].name} <span class="muted small">(${t.acc.pct} % rigtige, ${t.acc.n} svar)</span></div>`).join('')}
+            ${trouble.facts.length ? `<div>🟠 Tabeller: ${trouble.facts.map((f) => `${f.a}×${f.b}`).join(', ')}</div>` : ''}`
+            : '<div class="muted">Intet driller lige nu 👍 <span class="small">(vises, når noget har under 70 % rigtige over mindst 5 svar)</span></div>'}
+          <div><button class="btn ghost" id="rp-open">Se Øvebanen i tal →</button></div></section>
+        <section class="card stack"><h3>Snak om det i bilen</h3>
+          ${talk.map((t) => `<div>💬 ${t}</div>`).join('')}
+          <div class="small muted">Ros strategien ("smart at du brugte 7×7 først") frem for "du er klog".</div></section>
+      </div>
+      <details class="card pt-recent"${recent.length ? '' : ' open'}><summary><h3>Seneste 14 dage</h3><span class="muted small">${recent.length} ${recent.length === 1 ? 'øvetid' : 'øvetider'}</span></summary>
+        <div class="table-wrap">${recent.length ? `<table><thead><tr><th>Dato</th><th>Hvad</th><th>Opgaver</th><th>Rigtige</th><th>Tid</th></tr></thead><tbody>
+          ${recent.map((x) => `<tr><td>${fmtDate(x.t)}</td><td>${x.mode === 'practice' ? 'Øvede: ' : ''}${areaOf(x.area)?.place || (x.mode === 'practice' ? 'Øvebanen' : '')}${x.main ? ` · ${ALL_SKILLS[x.main]?.name || ''}` : ''}</td>
+            <td>${x.n}</td><td>${x.correct}</td><td>${Math.round(x.ms / 60000)} min</td></tr>`).join('')}
+        </tbody></table>` : '<p class="muted" style="margin:0">Ingen øvetider endnu.</p>'}</div></details>`;
+  };
 
-  let heat = '<div></div>';
-  for (let b = 2; b <= 9; b++) heat += `<div class="h">${b}</div>`;
-  for (let a = 2; a <= 9; a++) {
-    heat += `<div class="h">${a}</div>`;
-    for (let b = 2; b <= 9; b++) {
-      const key = a <= b ? `${a}x${b}` : `${b}x${a}`;
-      const box = E.factBox(st, key);
-      heat += `<div class="c b${box}" title="${a}×${b}: kasse ${box < 0 ? '–' : box}">${a * b}</div>`;
+  const progress = () => {
+    let heat = '<div></div>';
+    for (let c = 2; c <= 9; c++) heat += `<div class="h">${c}</div>`;
+    for (let r = 2; r <= 9; r++) {
+      heat += `<div class="h">${r}</div>`;
+      for (let c = 2; c <= 9; c++) {
+        const key = r <= c ? `${r}x${c}` : `${c}x${r}`;
+        const box = E.factBox(st, key);
+        heat += `<div class="c b${box}" title="${r}×${c}: kasse ${box < 0 ? '–' : box}">${r * c}</div>`;
+      }
     }
-  }
+    const areaBlocks = AREAS.map((a) => {
+      const pr = E.areaProgress(st, a.id);
+      const rows = a.skills.map((sk) => {
+        const status = E.skillStatus(st, sk.id), ss = st.skills[sk.id], acc = E.skillAccuracy(st, sk.id);
+        return `<tr><td>${sk.name}</td><td><span class="st ${status}">${status}</span></td>
+          <td>${ss && ss.hist.length ? ss.level : '–'}</td>
+          <td>${acc ? `${acc.pct} % <span class="muted">(${acc.n})</span>` : '–'}</td>
+          <td>${ss?.last ? fmtDate(ss.last) : '–'}</td></tr>`;
+      }).join('');
+      return `<details class="card area-det" style="--ac:${a.color}"><summary>
+          <span class="ad-name">${placeIc(a)} <b>${a.name}</b> <span class="muted small">· ${a.place}</span></span>
+          <span class="ad-prog"><span class="bar-mini" aria-hidden="true"><i style="width:${(100 * pr.done) / pr.total}%"></i></span><span class="muted small">${pr.done} af ${pr.total} sikre</span></span></summary>
+        <div class="table-wrap"><table><thead><tr><th>Færdighed</th><th>Status</th><th>Niv.</th><th>Rigtige 14 d.</th><th>Sidst</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
+    }).join('');
+    return `
+      <div class="section-title"><h2>Øvebanen</h2></div>
+      ${reportTeaser(st)}
+      ${shirtParent(st)}
+      <div class="section-title"><h2>Gangetabellen</h2><span class="muted small">${fs.solid} af ${fs.total} sidder godt · ${fs.gold} voksne unger · ${Z.bonusOf(st).length} af ${Z.BONUS.length} bonus-unger</span></div>
+      <div class="card"><div class="heat">${heat}</div>
+        <div class="small muted" style="margin-top:8px">Rød = drillede sidst · grøn = sidder fast · grå = ikke introduceret endnu</div></div>
+      <div class="section-title"><h2>Zoo'ens områder</h2><span class="muted small">Tryk på et område for at se færdighederne</span></div>
+      <div class="stack">${areaBlocks}</div>`;
+  };
 
-  const troubleAreas = [...new Set(trouble.skills.map((t) => SKILLS[t.id].area))];
-  const talkAreas = (troubleAreas.length ? troubleAreas : E.suggestAreas(st, 2)).slice(0, 2);
-  const talk = talkAreas.flatMap((id) => areaOf(id).snak);
-  if (trouble.facts.length) talk.unshift(`Spørg løbende: ${trouble.facts.slice(0, 3).map((f) => `${f.a}×${f.b}`).join(', ')} – og spørg, hvordan det blev regnet ud.`);
+  const settings = () => `
+    <section class="card stack"><h3>Træningen</h3>
+      <div class="spread"><span>Længde på dagens træning</span>
+        <div class="seg" id="len"><button data-v="kort">Kort (~10 min)</button><button data-v="normal">Normal (~15 min)</button></div></div>
+      <div class="spread"><span>"Slå din rekord" <span class="muted small">(tidtagning, kun kendte tabeller)</span></span>
+        <div class="seg" id="spr"><button data-v="1">Til</button><button data-v="0">Fra</button></div></div>
+      <div class="spread"><span>Lyd og Kajs oplæsning</span>
+        <div class="seg" id="snd"><button data-v="1">Til</button><button data-v="0">Fra</button></div></div></section>
+    <section class="card stack"><h3>Zoo'en</h3>
+      <div><label class="lbl" for="zname">Zoo'ens navn</label>
+        <div class="row pt-name"><input id="zname" class="field" maxlength="28" value="${esc(Z.zooName(st))}"><button class="btn ghost" id="zsave">Gem</button></div></div></section>
+    <section class="card stack"><h3>Backup</h3>
+      <p style="margin:0">Gem en kopi af ${esc(st.name)}s fremskridt som en fil. Den kan gendanne fremskridtet eller flytte det til en anden enhed.
+        <span class="muted">Data gemmes ${storageMode() === 'api' ? 'på serveren (deles mellem enheder)' : 'kun på denne enhed – tag en backup en gang imellem'}.</span></p>
+      <div class="row"><button class="btn" id="bk-save">Gem backup</button><button class="btn ghost" id="bk-load">Indlæs backup</button></div></section>
+    <section class="card stack"><h3>Appen</h3>
+      <p class="small muted" style="margin:0">Som app: på iPad Safari → Del → "Føj til hjemmeskærm", på Mac Safari → Arkiv → "Føj til Dock". Appen har sit eget lager, så gem en backup i browseren først og indlæs den i appen bagefter. Appen opdaterer sig selv, når den åbnes.</p>
+      <div class="spread"><span class="small muted" id="app-version">Version fra ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div></section>
+    <section class="card stack pt-danger"><h3>Slet profil</h3>
+      <div class="spread"><span class="small muted">Sletter ${esc(st.name)}s profil og alt fremskridt på denne enhed. Tag en backup først.</span><button class="btn ghost" id="del">Slet profil</button></div></section>`;
 
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button>
-      <div style="flex:1"><h1 style="margin:0">Forældreoverblik</h1><span class="muted">${esc(st.name)} · ${esc(Z.zooName(st))}</span></div>
+      <div style="flex:1"><h1 style="margin:0">Forældre</h1><span class="muted">${esc(st.name)} · ${esc(Z.zooName(st))}</span></div>
       <button class="btn ghost" id="about-p" aria-label="Om appen">📚<span class="about-lbl"> Om appen</span></button></div>
+    <div class="seg parent-tabs" role="tablist" aria-label="Forældredelen">${PARENT_TABS.map(([v, l]) => `<button role="tab" data-tab="${v}" aria-selected="${v === tab}" class="${v === tab ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <div class="parent-body">${tab === 'fremskridt' ? progress() : tab === 'indstillinger' ? settings() : overview()}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
 
-    <div class="grid2">
-      <div class="card stack">
-        <h3>Status</h3>
-        <div>📅 ${E.weekSessions(st)} af ${E.WEEK_GOAL} dage denne uge · ${E.fullWeeksStreak(st)} fulde uger i træk</div>
-        <div>🧭 ${sikre} af ${totalSkills} færdigheder er sikre</div>
-        <div>🍼 Gangetabel: ${fs.solid} af ${fs.total} sidder godt (${fs.introduced} introduceret, ${fs.gold} voksne)</div>
-        <div>🎁 Bonus-unger: ${Z.bonusOf(st).length} af ${Z.BONUS.length} (én pr. uge med ${E.WEEK_GOAL} øvedage)</div>
-        <div>📚 ${st.sessions.length} sessioner i alt${E.daysSinceLast(st) != null ? ` · sidst for ${E.daysSinceLast(st)} dag(e) siden` : ''}</div>
-      </div>
-      <div class="card stack">
-        <h3>Driller lige nu</h3>
-        ${trouble.skills.length || trouble.facts.length ? `
-          ${trouble.skills.map((t) => `<div>🟠 ${SKILLS[t.id].name} <span class="muted small">(${t.acc.pct} % rigtige, ${t.acc.n} svar)</span></div>`).join('')}
-          ${trouble.facts.length ? `<div>🟠 Tabeller: ${trouble.facts.map((f) => `${f.a}×${f.b}`).join(', ')}</div>` : ''}`
-          : '<div class="muted">Intet driller lige nu 👍 (vises når noget har under 70 % rigtige over mindst 5 svar)</div>'}
-      </div>
-      <div class="card stack">
-        <h3>Snak om det i bilen</h3>
-        ${talk.map((t) => `<div>💬 ${t}</div>`).join('')}
-        <div class="small muted">Ros strategien ("smart at du brugte 7×7 først") frem for "du er klog".</div>
-      </div>
-      <div class="card">
-        <h3>Gangetabel</h3>
-        <div class="heat">${heat}</div>
-        <div class="small muted" style="margin-top:8px">Rød = drillede sidst · grøn = sidder fast · grå = ikke introduceret endnu</div>
-      </div>
-    </div>
-
-    <div class="section-title"><h2>Pensum</h2></div>
-    <div class="stack">${areaBlocks}</div>
-
-    <div class="section-title"><h2>Øvebanen</h2></div>
-    ${reportTeaser(st)}
-    ${shirtParent(st)}
-
-    <div class="section-title"><h2>Seneste 14 dage</h2></div>
-    <div class="card table-wrap">
-      ${recent.length ? `<table><thead><tr><th>Dato</th><th>Hvad</th><th>Opgaver</th><th>Rigtige</th><th>Tid</th></tr></thead><tbody>
-        ${recent.map((s) => `<tr><td>${fmtDate(s.t)}</td><td>${s.mode === 'practice' ? 'Øvede: ' : ''}${areaOf(s.area)?.place || (s.mode === 'practice' ? 'Øvebanen' : '')}${s.main ? ` · ${ALL_SKILLS[s.main]?.name || ''}` : ''}</td>
-          <td>${s.n}</td><td>${s.correct}</td><td>${Math.round(s.ms / 60000)} min</td></tr>`).join('')}
-      </tbody></table>` : '<p class="muted">Ingen sessioner endnu.</p>'}
-    </div>
-
-    <div class="section-title"><h2>Indstillinger</h2></div>
-    <div class="card stack">
-      <div class="spread"><label class="lbl" for="zname" style="margin:0">Zoo'ens navn</label>
-        <div class="row"><input id="zname" class="field" style="max-width:280px;min-height:48px" maxlength="28" value="${esc(Z.zooName(st))}"><button class="btn ghost" id="zsave">Gem</button></div></div>
-      <div class="spread"><span>Længde på dagens træning</span>
-        <div class="seg" id="len"><button data-v="kort">Kort (~10 min)</button><button data-v="normal">Normal (~15 min)</button></div></div>
-      <div class="spread"><span>"Slå din rekord" (tidtagning, kun kendte tabeller)</span>
-        <div class="seg" id="spr"><button data-v="1">Til</button><button data-v="0">Fra</button></div></div>
-      <div class="spread"><span>Lyd</span>
-        <div class="seg" id="snd"><button data-v="1">Til</button><button data-v="0">Fra</button></div></div>
-      <div class="spread"><span class="muted small">Data gemmes ${storageMode() === 'api' ? 'på serveren (deles mellem enheder)' : 'på denne enhed – tag en backup en gang imellem'}.</span>
-        <button class="btn ghost" id="del">Slet profil</button></div>
-    </div>
-
-    <div class="section-title"><h2>Backup og app</h2></div>
-    <div class="card stack">
-      <p style="margin:0">Gem en kopi af ${esc(st.name)}s fremskridt som en fil. Den kan gendanne fremskridtet eller flytte det til en anden enhed.</p>
-      <div class="row"><button class="btn" id="bk-save">Gem backup</button><button class="btn ghost" id="bk-load">Indlæs backup</button></div>
-      <p class="small muted" style="margin:0">Som app: på iPad Safari → Del → "Føj til hjemmeskærm", på Mac Safari → Arkiv → "Føj til Dock". Appen har sit eget lager, så gem en backup i browseren først og indlæs den i appen bagefter. Appen opdaterer sig selv, når den åbnes.</p>
-      <div class="spread"><span class="small muted" id="app-version">Version fra ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div>
-    </div>`, (e) => { if (e.key === 'Escape') showHome(); });
-
+  on('.parent-tabs [data-tab]', 'click', (e) => { sfx('tap'); showParent(e.currentTarget.dataset.tab); });
+  on('#back', 'click', showHome);
+  on('#about-p', 'click', () => showAbout(() => showParent()));
+  on('#rp-open', 'click', () => showPracticeReport());
   const paintSeg = () => {
-    $$('#len button').forEach((b) => b.classList.toggle('on', b.dataset.v === st.settings.length));
-    $$('#spr button').forEach((b) => b.classList.toggle('on', (b.dataset.v === '1') === st.settings.sprint));
-    $$('#snd button').forEach((b) => b.classList.toggle('on', (b.dataset.v === '1') === st.settings.sound));
+    $$('#len button').forEach((x) => x.classList.toggle('on', x.dataset.v === st.settings.length));
+    $$('#spr button').forEach((x) => x.classList.toggle('on', (x.dataset.v === '1') === st.settings.sprint));
+    $$('#snd button').forEach((x) => x.classList.toggle('on', (x.dataset.v === '1') === st.settings.sound));
   };
   on('#len button', 'click', (e) => { st.settings.length = e.currentTarget.dataset.v; save(); paintSeg(); });
   on('#spr button', 'click', (e) => { st.settings.sprint = e.currentTarget.dataset.v === '1'; save(); paintSeg(); });
@@ -2369,9 +2385,6 @@ function showParent() {
     save();
     toast('Navnet er gemt');
   });
-  on('#back', 'click', showHome);
-  on('#about-p', 'click', () => showAbout(showParent));
-  on('#rp-open', 'click', () => showPracticeReport());
   on('#bk-save', 'click', exportBackup);
   on('#bk-load', 'click', pickBackup);
   on('#check-update', 'click', async () => {
