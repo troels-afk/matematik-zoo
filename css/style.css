@@ -1194,10 +1194,10 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .patch.fresh { animation: patch-glint 1.4s ease-out 2; }
 @keyframes patch-glint { 40% { filter: brightness(1.2) drop-shadow(0 0 12px #ffe39a); } }
 
-/* Skjorten: billedet og mærkerne ovenpå i % af billedet; et mærke er 15 % af skjortens bredde (SHIRT_PATCH i app.js) */
+/* Skjorten: billedet og mærkerne ovenpå i % af billedet; et mærke er 10 % af skjortens bredde (SHIRT_PATCH i app.js), så alle 18 kan sidde på én side */
 .shirt-stage { position: relative; width: 100%; aspect-ratio: 1000 / 915; container-type: inline-size; }
 .shirt-img { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; -webkit-user-drag: none; }
-.shirt-stage .on-shirt { --s: 15cqw; position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); touch-action: none; cursor: grab; }
+.shirt-stage .on-shirt { --s: 10cqw; position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); touch-action: none; cursor: grab; }
 .shirt-stage.mini .on-shirt { cursor: default; }
 .shirt-stage .on-shirt.selected, .basket-item.selected .patch { outline: 3px solid var(--primary); outline-offset: 6px; }
 .shirt-stage.drop-ready::after { content: ''; position: absolute; inset: 1%; border-radius: 30px; border: 3px dashed color-mix(in srgb, var(--primary) 50%, transparent); pointer-events: none; }

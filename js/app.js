@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261007191319';
-import * as E from './engine.js?v=20261007191319';
-import * as Z from './zoo.js?v=20261007191319';
-import { zooGate } from './scene.js?v=20261007191319';
-import { zooMap } from './map.js?v=20261007191319';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261007191319';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261007191319';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261007191319';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008171320';
+import * as E from './engine.js?v=20261008171320';
+import * as Z from './zoo.js?v=20261008171320';
+import { zooGate } from './scene.js?v=20261008171320';
+import { zooMap } from './map.js?v=20261008171320';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008171320';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008171320';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261008171320';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -910,7 +910,7 @@ const PATCH_NAME = {
   'd-maal': 'Måling', 'd-tid': 'Tid', 'd-diagrammer': 'Diagrammer', 'd-beskriv': 'Beskriv data', 'd-chance': 'Chance',
 };
 const PATCH_STAR = '<svg class="patch-star" viewBox="-12 -12 24 24" aria-hidden="true"><path d="M0-10l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L0 4.9-5.9 8.2l1.3-6.6L-9.5-3l6.6-.8z"/></svg>';
-const SHIRT_PATCH = 15; // et mærke på skjorten er 15 % af skjortens bredde (samme som --s: 15cqw i CSS)
+const SHIRT_PATCH = 10; // et mærke på skjorten er 10 % af skjortens bredde (samme som --s: 10cqw i CSS) – så er der plads til alle 18 på én side
 const discById = (id) => DISCIPLINES.find((d) => d.id === id);
 const patchName = (d) => PATCH_NAME[d.id] || d.name;
 const patchList = (st) => DISCIPLINES.filter((d) => d.skills.length).map((d) => ({ d, p: E.patchOf(st, d.id) }));
