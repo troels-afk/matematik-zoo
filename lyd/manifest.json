@@ -1,0 +1,59 @@
+{
+ "voice": "da-DK-JeppeNeural",
+ "rate": "default",
+ "genereret": "2026-10-08",
+ "clips": {
+  "Det virker også baglæns. Du kan dele tælleren og nævneren med det samme tal. Seks ottendedele er det samme som tre fjerdedele. Der har vi delt begge med 2.": {
+   "f": "4dd4fb67fc43.mp3",
+   "d": 11.19
+  },
+  "Du kan også hoppe på tallinjen. Hop 4 ad gangen: 4, 8, 12, 16, 20. Det er 5 hop. Et hop mere ville lande på 24, og det er for langt. Fra 20 op til 23 mangler der 3. Det er resten.": {
+   "f": "d6cf4296ec65.mp3",
+   "d": 18.77
+  },
+  "Gang tælleren og nævneren med det samme tal, så får du en brøk, der er lige så stor. På tegningen ganger vi med 3 både oppe og nede. 1 gange 3 er 3, og 2 gange 3 er 6. Så en halv er lig med tre sjettedele. Ganger du med 2 i stedet, får du to fjerdedele.": {
+   "f": "17422354f104.mp3",
+   "d": 18.83
+  },
+  "Her er et eksempel: 7 gange 8 er lig med x plus x minus 10. Regn først det, du kan. 7 gange 8 er 56.": {
+   "f": "4f1ae8fb91b0.mp3",
+   "d": 10.09
+  },
+  "Husk: Resten skal altid være mindre end det tal, du deler med. Deler du med 4, kan resten kun være 0, 1, 2 eller 3. Er der 4 tilbage, kan du lave en gruppe mere.": {
+   "f": "4212b5c3a48d.mp3",
+   "d": 11.07
+  },
+  "Nogle gange går delingen ikke op. Det, der bliver til overs, hedder resten. Og resten – den får jeg!": {
+   "f": "f9628c9a1999.mp3",
+   "d": 7.87
+  },
+  "Nu står der: 56 er lig med x plus x minus 10. Der er trukket 10 fra. Så lægger vi 10 til igen, og så er x plus x lig med 66.": {
+   "f": "41d4ccad7b1a.mp3",
+   "d": 11.15
+  },
+  "Se på de to stænger. Den øverste er delt i 2, og 1 del er farvet. Det er en halv. Den nederste er delt i 6, og 3 dele er farvet. Det er tre sjettedele. De farvede stykker er lige lange. Så en halv er lige så meget som tre sjettedele.": {
+   "f": "c8096585c365.mp3",
+   "d": 19.02
+  },
+  "Se på tegningen. Vi deler 23 med 4. Hvor mange hele grupper med 4 kan vi lave? Vi kan lave 5 grupper, og det er 20. Så er der 3 tilbage. 23 delt med 4 giver altså 5, rest 3.": {
+   "f": "6613508c6b32.mp3",
+   "d": 17.13
+  },
+  "Tjek altid dit svar. 33 plus 33 minus 10 er 56. Begge sider er lige store. Så x er 33.": {
+   "f": "c2e8f198014b.mp3",
+   "d": 10.95
+  },
+  "To brøker kan se forskellige ud og alligevel være lige store.": {
+   "f": "fa93d387dd1c.mp3",
+   "d": 3.33
+  },
+  "x er et tal, vi ikke kender endnu. Vi skal finde det tal, der gør, at begge sider af lighedstegnet er lige store.": {
+   "f": "f672922b6f8b.mp3",
+   "d": 7.6
+  },
+  "x plus x er det samme som 2 gange x. Så er x lig med 66 delt med 2. Det er 33.": {
+   "f": "15ab4210ab61.mp3",
+   "d": 7.51
+  }
+ }
+}

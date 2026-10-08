@@ -942,6 +942,23 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .ex-tip .k { min-width: 7.2em; font: 600 .8rem var(--font-head); text-transform: uppercase; letter-spacing: .6px; color: var(--ink-2); }
 .ex-tip .op { padding: 0 9px; border-radius: 99px; background: var(--card); font: 600 .9rem/1.6 var(--font-head); color: var(--primary-ink); }
 .ex-help { display: grid; gap: 10px; margin-top: 14px; }
+/* Kaj læser forklaringen op (Jeppes stemme, speak.js): båndet øverst og det kort eller trin, han taler om */
+.speak-bar { display: flex; align-items: center; gap: 10px; width: fit-content; max-width: 100%; padding: 5px 6px 5px 5px; border-radius: 99px; background: var(--primary-soft); }
+.speak-bar .avatar { width: 38px; height: 38px; }
+.sb-txt { font-weight: 800; color: var(--primary-ink); }
+.sb-wave { display: inline-flex; align-items: center; gap: 3px; height: 18px; }
+.sb-wave i { width: 4px; height: 30%; border-radius: 2px; background: var(--primary); opacity: .45; }
+.speak-bar.playing .sb-wave i { opacity: 1; animation: sb-wave 1s ease-in-out infinite; }
+.sb-wave i:nth-child(2) { animation-delay: -.3s; }
+.sb-wave i:nth-child(3) { animation-delay: -.6s; }
+.sb-wave i:nth-child(4) { animation-delay: -.15s; }
+@keyframes sb-wave { 50% { height: 100%; } }
+.sb-btn { display: inline-flex; align-items: center; gap: 6px; }
+.sb-btn svg { width: 16px; height: 16px; fill: currentColor; }
+.ex-card, .ex-tip, .walk li, .ex-lead { transition: box-shadow .25s, background-color .25s; }
+.ex-card.speaking, .ex-tip.speaking, .walk li.speaking { box-shadow: 0 0 0 3px var(--primary); }
+.ex-lead.speaking { border-radius: 10px; background: color-mix(in srgb, var(--primary) 12%, transparent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent); }
+@media (prefers-reduced-motion: reduce) { .speak-bar.playing .sb-wave i { animation: none; height: 70%; } }
 .ex-help .ex-cards { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
 /* Forklaringernes zoo-billeder (Batch 2): det konkrete billede mellem symbolet (indledningen) og reglen (kortene) */
 .ex-lead-row { display: flex; align-items: center; gap: 16px; }
@@ -1174,19 +1191,24 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 /* ---------- Ranger-skjorten: et mærke for hver disciplin på Øvebanen ---------- */
 /* Skærmen tegnes igen uden indgangsanimation, når et mærke flyttes (view(…, { calm: true })) */
 #app.calm > * { animation: none; }
-/* Et syet mærke: rund stofbund, disciplinens tegning, en kant i bronze-, sølv- eller guldtråd og stikkesting.
+/* Et syet mærke i disciplinens egen form (rund, oval, skjold, sekskant, firkant eller takket – Z.PATCH_SHAPES):
+   en kant i bronze-, sølv- eller guldtråd, stofbund, stikkesting og disciplinens tegning (SVG i patchArt).
    Mærket er en ting af stof – det ser ens ud i lyst og mørkt tema */
-.patch { --s: 76px; --t: calc(var(--s) * .07); position: relative; display: inline-grid; place-items: center; flex: none; width: var(--s); height: var(--s); border-radius: 50%;
-  background: radial-gradient(circle at 50% 42%, #fffdf6 0 54%, color-mix(in srgb, var(--ac, #8fbf7a) 24%, #fff8ea) 56% 100%);
-  box-shadow: 0 0 0 var(--t) var(--thread), 0 0 0 calc(var(--t) * 1.35) var(--thread-dk), 0 calc(var(--t) * .9) calc(var(--t) * 1.8) rgba(30, 40, 30, .3); }
-.patch::before { content: ''; position: absolute; inset: calc(var(--t) * .55); border-radius: 50%; border: max(1.5px, calc(var(--t) * .28)) dashed var(--thread-hi); pointer-events: none; }
-.patch img { width: 84%; height: 84%; object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.patch { --s: 76px; position: relative; display: inline-grid; place-items: center; flex: none; width: var(--s); height: var(--s); border-radius: 50%;
+  filter: drop-shadow(0 calc(var(--s) * .045) calc(var(--s) * .05) rgba(30, 40, 30, .32)); }
+.patch .pt { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.pt-thread { fill: var(--thread); stroke: var(--thread-dk); stroke-width: 3; stroke-linejoin: round; }
+.pt-fabric { fill: color-mix(in srgb, var(--ac, #8fbf7a) 24%, #fff8ea); }
+.pt-core { fill: #fffdf6; }
+.pt-stitch { fill: none; stroke: var(--thread-hi); stroke-width: 2.4; stroke-dasharray: 4.5 3.6; stroke-linecap: round; }
+.patch img { position: relative; width: var(--iw, 82%); height: var(--iw, 82%); transform: translateY(var(--iy, 0%)); object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none; }
 .patch-star { position: absolute; right: -6%; top: -6%; width: 32%; height: 32%; fill: #ffd34d; stroke: #a07406; stroke-width: 1.4; }
 .t-bronze { --thread: #bd7a3f; --thread-dk: #8a5226; --thread-hi: #f1c193; }
 .t-silver { --thread: #a7b2bb; --thread-dk: #6f7b85; --thread-hi: #f7fafc; }
 .t-gold { --thread: #e0a915; --thread-dk: #a07406; --thread-hi: #fff2b0; }
-.patch.ghost { background: transparent; box-shadow: none; border: 2px dashed var(--ink-3); }
-.patch.ghost::before { display: none; }
+.patch.ghost { filter: none; }
+.patch.ghost .pt-thread { fill: none; stroke: var(--ink-3); stroke-width: 2.5; stroke-dasharray: 7 5; }
+.patch.ghost .pt-fabric, .patch.ghost .pt-core, .patch.ghost .pt-stitch { display: none; }
 .patch.ghost img { filter: grayscale(1); opacity: .35; }
 .patch.sm { --s: 52px; }
 .patch.lg { --s: 112px; }
@@ -1194,17 +1216,17 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .patch.fresh { animation: patch-glint 1.4s ease-out 2; }
 @keyframes patch-glint { 40% { filter: brightness(1.2) drop-shadow(0 0 12px #ffe39a); } }
 
-/* Skjorten: billedet og mærkerne ovenpå i % af billedet; et mærke er 10 % af skjortens bredde (SHIRT_PATCH i app.js), så alle 18 kan sidde på én side */
+/* Skjorten: billedet og mærkerne ovenpå i % af billedet; et mærke er 11 % af skjortens bredde (Z.PATCH_SIZE), så alle 18 kan sidde på én side */
 .shirt-stage { position: relative; width: 100%; aspect-ratio: 1000 / 915; container-type: inline-size; }
 .shirt-img { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; -webkit-user-drag: none; }
-.shirt-stage .on-shirt { --s: 10cqw; position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); touch-action: none; cursor: grab; }
+.shirt-stage .on-shirt { --s: 11cqw; position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); touch-action: none; cursor: grab; }
 .shirt-stage.mini .on-shirt { cursor: default; }
 .shirt-stage .on-shirt.selected, .basket-item.selected .patch { outline: 3px solid var(--primary); outline-offset: 6px; }
 .shirt-stage.drop-ready::after { content: ''; position: absolute; inset: 1%; border-radius: 30px; border: 3px dashed color-mix(in srgb, var(--primary) 50%, transparent); pointer-events: none; }
 .shirt-stage.drop-ok::after { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 7%, transparent); }
 .on-shirt.lifting, .basket-item.lifting { opacity: .3; }
 .patch-ghost { position: fixed; z-index: 60; left: -200px; top: -200px; transform: translate(-50%, -50%) rotate(-6deg) scale(1.06); pointer-events: none;
-  box-shadow: 0 0 0 var(--t) var(--thread), 0 0 0 calc(var(--t) * 1.35) var(--thread-dk), 0 16px 24px rgba(30, 40, 30, .35); }
+  filter: drop-shadow(0 14px 12px rgba(30, 40, 30, .35)); }
 
 /* Skærmen "Min ranger-skjorte": skjorten til venstre (står fast, mens man ruller), sykurven og alle mærker til højre */
 .shirt-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin: 6px 2px 14px; }

@@ -1,13 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008171320';
-import * as E from './engine.js?v=20261008171320';
-import * as Z from './zoo.js?v=20261008171320';
-import { zooGate } from './scene.js?v=20261008171320';
-import { zooMap } from './map.js?v=20261008171320';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008171320';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008171320';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261008171320';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008172931';
+import * as E from './engine.js?v=20261008172931';
+import * as Z from './zoo.js?v=20261008172931';
+import { zooGate } from './scene.js?v=20261008172931';
+import { zooMap } from './map.js?v=20261008172931';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008172931';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008172931';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008172931';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261008172931';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -24,6 +25,7 @@ document.addEventListener('keydown', (e) => {
 
 // calm: tegn skærmen igen uden indgangsanimation og uden at rulle til toppen (fx når et mærke flyttes på skjorten)
 function view(html, onKey = null, { calm = false } = {}) {
+  stopSpeech(); // Kaj tier, når skærmen skifter
   app.classList.toggle('calm', calm);
   app.innerHTML = html;
   keyHandler = onKey;
@@ -910,7 +912,6 @@ const PATCH_NAME = {
   'd-maal': 'Måling', 'd-tid': 'Tid', 'd-diagrammer': 'Diagrammer', 'd-beskriv': 'Beskriv data', 'd-chance': 'Chance',
 };
 const PATCH_STAR = '<svg class="patch-star" viewBox="-12 -12 24 24" aria-hidden="true"><path d="M0-10l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L0 4.9-5.9 8.2l1.3-6.6L-9.5-3l6.6-.8z"/></svg>';
-const SHIRT_PATCH = 10; // et mærke på skjorten er 10 % af skjortens bredde (samme som --s: 10cqw i CSS) – så er der plads til alle 18 på én side
 const discById = (id) => DISCIPLINES.find((d) => d.id === id);
 const patchName = (d) => PATCH_NAME[d.id] || d.name;
 const patchList = (st) => DISCIPLINES.filter((d) => d.skills.length).map((d) => ({ d, p: E.patchOf(st, d.id) }));
@@ -920,15 +921,20 @@ const mixedLabel = (d) => (d.skills.length > 1 ? 'Start den blandede runde' : 'S
 const daysTxt = (n) => `${n} ${n === 1 ? 'dag' : 'dage'}`;
 
 // Ét mærke: disciplinens tegning på rund stofbund med en syet kant i bronze-, sølv- eller guldtråd (tier 0 = mangler endnu)
+// Et mærke af stof i disciplinens egen form (Z.PATCH_SHAPES): kant i bronze-, sølv- eller guldtråd, stikkesting og tegningen
 function patchArt(id, tier, { cls = '', attrs = '', style = '' } = {}) {
-  return `<span class="patch ${tier ? TIER[tier].cls : 'ghost'} ${cls}" style="--ac:${discById(id).color};${style}" ${attrs}>`
+  const sh = Z.patchShape(id), [iw, iy] = sh.img;
+  return `<span class="patch ${tier ? TIER[tier].cls : 'ghost'} ${cls}" style="--ac:${discById(id).color};--iw:${iw}%;--iy:${iy}%;${style}" ${attrs}>`
+    + `<svg class="pt" viewBox="-52 -52 104 104" aria-hidden="true"><path class="pt-thread" d="${sh.d}"/><path class="pt-fabric" d="${sh.d}" transform="scale(.84)"/>`
+    + `<circle class="pt-core" r="27" cy="${iy - 3}"/><path class="pt-stitch" d="${sh.d}" transform="scale(.76)"/></svg>`
     + `<img src="${Z.DISC_ART[id]}" alt="" draggable="false" decoding="async">${tier === 3 ? PATCH_STAR : ''}</span>`;
 }
 
 // Nye mærker deles ud, så snart alle øvelser i en disciplin er sikre – også når de er øvet i zoo'en
 function checkPatches() {
   const fresh = E.awardBronze(S.state, DISCIPLINES);
-  if (fresh.length) save();
+  const moved = Z.fixPatches(S.state); // syet på kraven eller ud over kanten før reglerne: ind på stoffet
+  if (fresh.length || moved) save();
   return fresh;
 }
 
@@ -1082,11 +1088,16 @@ function bindShirtDrag(side, redraw) {
   const hint = (t) => { hintEl.textContent = t; };
   const at = (cx, cy) => { const r = stage.getBoundingClientRect(); return { x: ((cx - r.left) / r.width) * 100, y: ((cy - r.top) / r.height) * 100 }; };
   const inBasket = (cx, cy) => { const r = basket.getBoundingClientRect(); return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom; };
-  const place = (id, x, y) => {
-    if (!onShirt(img, x, y)) return false;
+  // Hele mærket skal sidde på selve stoffet (ikke kraven eller ud over kanten): slippes det lidt for tæt på,
+  // glider det ind på skjorten (Z.nearestFit). Et nyt mærke bliver drejet lidt, så det ser syet ud
+  const turn = (id) => E.patchOf(st, id).pos?.r ?? Math.round(Math.random() * 24 - 12);
+  const fitAt = (id, x, y, r) => Z.nearestFit(side, id, x, y, r, Z.PATCH_SIZE * 1.5);
+  const noRoom = (x, y) => (onShirt(img, x, y) ? 'Der kan ikke sys et mærke dér – prøv lidt længere inde på skjorten.' : null);
+  const place = (id, x, y, r = turn(id)) => {
+    const fit = fitAt(id, x, y, r);
+    if (!fit) return false;
     const p = E.patchOf(st, id), was = p.pos;
-    const clamp = (v, lo, hi) => Math.round(Math.min(hi, Math.max(lo, v)) * 10) / 10;
-    p.pos = { side, x: clamp(x, 7, 93), y: clamp(y, 6, 95), r: was?.r ?? Math.round(Math.random() * 24 - 12), z: Date.now() };
+    p.pos = { side, x: Math.round(fit.x * 10) / 10, y: Math.round(fit.y * 10) / 10, r, z: Date.now() };
     p.seen = true;
     save();
     sfx(was ? 'tap' : 'grow');
@@ -1111,7 +1122,7 @@ function bindShirtDrag(side, redraw) {
   for (const el of $$('[data-patch]')) {
     el.addEventListener('pointerdown', (e) => {
       if (e.button > 0 || drag) return;
-      drag = { el, id: el.dataset.patch, from: el.dataset.from, x0: e.clientX, y0: e.clientY, moved: false };
+      drag = { el, id: el.dataset.patch, from: el.dataset.from, x0: e.clientX, y0: e.clientY, moved: false, r: turn(el.dataset.patch) };
       el.setPointerCapture?.(e.pointerId);
     });
     el.addEventListener('pointermove', (e) => {
@@ -1124,7 +1135,7 @@ function bindShirtDrag(side, redraw) {
         ghost.classList.remove('on-shirt', 'fresh', 'selected');
         ghost.classList.add('patch-ghost');
         ['data-patch', 'data-from', 'role', 'tabindex', 'aria-label'].forEach((a) => ghost.removeAttribute(a));
-        ghost.style.setProperty('--s', `${(stage.clientWidth * SHIRT_PATCH) / 100}px`);
+        ghost.style.setProperty('--s', `${(stage.clientWidth * Z.PATCH_SIZE) / 100}px`);
         document.body.appendChild(ghost);
         el.classList.add('lifting');
         stage.classList.add('drop-ready');
@@ -1132,7 +1143,7 @@ function bindShirtDrag(side, redraw) {
       ghost.style.left = `${e.clientX}px`;
       ghost.style.top = `${e.clientY}px`;
       const { x, y } = at(e.clientX, e.clientY);
-      stage.classList.toggle('drop-ok', onShirt(img, x, y));
+      stage.classList.toggle('drop-ok', !!fitAt(drag.id, x, y, drag.r));
     });
     el.addEventListener('pointerup', (e) => {
       if (drag?.el !== el) return;
@@ -1140,9 +1151,9 @@ function bindShirtDrag(side, redraw) {
       stop();
       if (!d.moved) return select(d.id);
       const { x, y } = at(e.clientX, e.clientY);
-      if (place(d.id, x, y)) return redraw();
+      if (place(d.id, x, y, d.r)) return redraw();
       if (d.from === 'shirt' && inBasket(e.clientX, e.clientY)) { unsew(d.id); return redraw(); }
-      hint(d.from === 'shirt' ? 'Mærket blev siddende. Træk det ned i sykurven, hvis det skal af.' : 'Slip mærket på selve skjorten.');
+      hint(noRoom(x, y) || (d.from === 'shirt' ? 'Mærket blev siddende. Træk det ned i sykurven, hvis det skal af.' : 'Slip mærket på selve skjorten.'));
     });
     el.addEventListener('pointercancel', () => { if (drag?.el === el) stop(); });
     el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(el.dataset.patch); } });
@@ -1150,7 +1161,7 @@ function bindShirtDrag(side, redraw) {
   stage.addEventListener('click', (e) => {
     if (!sel || e.target.closest('[data-patch]')) return;
     const { x, y } = at(e.clientX, e.clientY);
-    if (place(sel, x, y)) redraw(); else hint('Tryk på selve skjorten.');
+    if (place(sel, x, y)) redraw(); else hint(noRoom(x, y) || 'Tryk på selve skjorten.');
   });
   basket.addEventListener('click', (e) => {
     if (!sel || e.target.closest('[data-patch]') || !E.patchOf(st, sel).pos) return;
@@ -1217,25 +1228,105 @@ function showIntro(skillId, next, { btn = 'Jeg er klar', back = 'Tilbage til opg
     save();
     next();
   };
-  const render = () => {
-    const more = steps && shown < steps.length;
-    view(`
-      <button class="back-link" id="back"><span class="icon-btn" aria-hidden="true">←</span>${back}</button>
-      <div class="card sheet intro-card stack">
-        <div class="kicker with-ic">${placeIc(a)} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
-        <h1>${Z.ACTIVITIES[skillId]?.name || s.name}</h1>${Z.ACTIVITIES[skillId] ? `<div class="muted" style="font-weight:700;margin-top:-8px">${s.name}</div>` : ''}
-        ${steps ? `${explainTop(s.intro, false)}${stepsBlock(steps, shown)}` : s.intro.cards ? explainCards(s.intro) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
-        <div class="center">${more
-          ? `<button class="btn big" id="more">Næste trin (${shown}/${steps.length})</button>`
-          : `<button class="btn big" id="go">${btn}</button>`}</div>
-      </div>`, (e) => { if (e.key === 'Enter') (more ? step() : go()); else if (e.key === 'Escape') go(); });
-    on('#go', 'click', go);
-    on('#back', 'click', go);
-    on('#more', 'click', step);
+  const buttons = () => (steps && shown < steps.length
+    ? `<button class="btn big" id="more">Næste trin (${shown}/${steps.length})</button>`
+    : `<button class="btn big" id="go">${btn}</button>`);
+  const bind = () => { on('#go', 'click', go); on('#more', 'click', () => { step(); if (kaj?.state === 'playing') kaj.play(shown - 1); }); };
+  // Næste trin vises på stedet (siden tegnes ikke om), så Kajs oplæsning kan fortsætte
+  const showSteps = () => {
+    $('.walk').outerHTML = stepsBlock(steps, shown);
+    $('#intro-btns').innerHTML = buttons();
+    bind();
     if (shown > 1) $$('.walk li').pop()?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
-  const step = () => { sfx('tap'); shown++; render(); };
-  render();
+  const step = () => { sfx('tap'); shown++; showSteps(); };
+  view(`
+    <button class="back-link" id="back"><span class="icon-btn" aria-hidden="true">←</span>${back}</button>
+    <div class="card sheet intro-card stack">
+      <div class="kicker with-ic">${placeIc(a)} ${a.place} · ${steps ? 'Sådan gør du' : 'Nyt emne'}</div>
+      <h1>${Z.ACTIVITIES[skillId]?.name || s.name}</h1>${Z.ACTIVITIES[skillId] ? `<div class="muted" style="font-weight:700;margin-top:-8px">${s.name}</div>` : ''}
+      ${speakBar(s.intro)}
+      ${steps ? `${explainTop(s.intro, false)}${stepsBlock(steps, shown)}` : s.intro.cards ? explainCards(s.intro) : `<div class="body">${s.intro.text}</div>${s.intro.visual ? `<div class="visual">${s.intro.visual()}</div>` : ''}`}
+      <div class="center" id="intro-btns">${buttons()}</div>
+    </div>`, (e) => { if (e.key === 'Enter') (steps && shown < steps.length ? step() : go()); else if (e.key === 'Escape') go(); });
+  on('#back', 'click', go);
+  bind();
+  // Trinene læses ét ad gangen, og det næste trin kommer frem, når Kaj når til det
+  const kaj = kajExplains(steps
+    ? steps.map((st, i) => ({ text: st.say, el: () => $$('.walk li')[i] }))
+    : sayItems(s.intro), {
+    gap: steps ? 1 : 0.6,
+    onItem: (i) => { if (steps && i >= shown) { shown = i + 1; showSteps(); } },
+  });
+}
+
+// ================= Kaj læser forklaringen op =================
+
+// Oplæsningen er Microsofts danske stemme Jeppe (Azure), lavet på forhånd som lydfiler (speak.js, tools/lyd/tts.py).
+// Forklaringen har say-tekster ved siden af det, der står på skærmen: sayLead, kortenes say og tip.say – eller say
+// på hvert trin. De skrives til øret ("23 delt med 4", "tre fjerdedele"), ikke som skærmens tegn.
+const sayItems = (intro) => [
+  intro.sayLead && { text: intro.sayLead, el: () => $('.ex-lead') },
+  ...(intro.cards || []).map((c, i) => c.say && { text: c.say, el: () => $$('.ex-card')[i] }),
+  intro.tip?.say && { text: intro.tip.say, el: () => $('.ex-tip') },
+].filter(Boolean);
+const hasSay = (intro) => !!(intro.sayLead || intro.tip?.say || intro.cards?.some((c) => c.say) || intro.steps?.some((st) => st.say));
+
+const PLAY_IC = {
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z"/></svg>',
+  again: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6.5 12 11V7.5a5.5 5.5 0 1 1-5.5 5.5H4a8 8 0 1 0 8-8z"/></svg>',
+};
+const speakBar = (intro) => (hasSay(intro) ? `
+  <div class="speak-bar" id="speak">${avatar('kaj', 'sm')}<span class="sb-txt">Kaj forklarer</span>
+    <span class="sb-wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <button class="btn sm ghost sb-btn" id="sb-btn">${PLAY_IC.play}Hør Kaj</button></div>` : '');
+
+// items: [{ text, el() }] i skærmens rækkefølge. Kaj begynder selv, medmindre lyden er slået fra (så starter ▶ ham).
+// Det stykke, han læser, lyser op, og et tryk på et kort eller trin læser netop det.
+function kajExplains(items, { gap, onItem = () => {} } = {}) {
+  const bar = $('#speak');
+  if (!bar) return null;
+  const card = bar.closest('.card');
+  const ctl = { state: 'idle', play: () => {} };
+  let voice = null;
+  const mark = (el) => {
+    $$('.speaking').forEach((x) => x.classList.remove('speaking'));
+    if (!el) return;
+    el.classList.add('speaking');
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+  const paint = (st) => {
+    ctl.state = st;
+    if (!bar.isConnected) return;
+    bar.classList.toggle('playing', st === 'playing');
+    const [ic, txt] = st === 'playing' ? ['pause', 'Pause'] : st === 'ended' ? ['again', 'Hør igen'] : voice?.started ? ['play', 'Fortsæt'] : ['play', 'Hør Kaj'];
+    $('#sb-btn').innerHTML = `${PLAY_IC[ic]}${txt}`;
+    if (st === 'ended') mark(null);
+  };
+  loadSpeech().then(() => {
+    if (!bar.isConnected) return;
+    if (!items.some((it) => hasClip(it.text))) { bar.remove(); return; }
+    preload(items.map((it) => it.text));
+    voice = narrate(items.map((it) => it.text), {
+      gap,
+      onItem: (i) => { onItem(i); mark(items[i].el()); },
+      onState: paint,
+    });
+    ctl.play = (i = 0) => voice.play(i);
+    $('#sb-btn').addEventListener('click', () => {
+      if (voice.state === 'playing') voice.pause();
+      else if (voice.state === 'paused') voice.resume();
+      else voice.play(0);
+    });
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('button, a')) return;
+      const i = items.findIndex((it) => hasClip(it.text) && it.el()?.contains(e.target));
+      if (i >= 0) voice.play(i);
+    });
+    if (S.state.settings.sound && speech.auto) voice.play(0);
+  });
+  return ctl;
 }
 
 // Forklaringernes zoo-billede (Z.EXPLAIN_PICS): det konkrete billede mellem symbolet og reglen
@@ -2521,4 +2612,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, speech, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

@@ -1,8 +1,8 @@
 // Matematik-Zoo som webapp: appens filer gemmes på enheden, så den starter med det samme
 // og virker uden internet. VERSION og FILES (sti → indholdshash) skrives af tools/deploy.sh.
-const VERSION = '20261008171320';
+const VERSION = '20261008172931';
 const FILES = {
-"css/style.css": "4d6fd7a8a3",
+"css/style.css": "46f6ec45eb",
 "icon-192.png": "8f205bffb7",
 "icon-512.png": "3f4e2cf3bb",
 "icon.png": "cd7043bac8",
@@ -245,17 +245,33 @@ const FILES = {
 "img/zoo/klinik.webp": "ee5453bdea",
 "img/zoo/observation.webp": "a5af1f5f9a",
 "img/zoo/polar.webp": "ced82aaafb",
-"index.html": "20b3d165fa",
-"js/app.js": "f40be1e6b4",
-"js/curriculum.js": "d5aee028b4",
-"js/engine.js": "260651c5f1",
-"js/fx.js": "7c4cfb06fe",
-"js/map.js": "5fbce1a26f",
-"js/scene.js": "0f7603386f",
+"index.html": "5b76926418",
+"js/app.js": "c338b46fed",
+"js/curriculum.js": "ec223c30df",
+"js/engine.js": "42e67c3001",
+"js/fx.js": "7332367aac",
+"js/map.js": "5083c4f15c",
+"js/scene.js": "9c1a480e20",
+"js/sewmask.js": "a0cbc0f4d8",
+"js/speak.js": "ee615c61eb",
 "js/store.js": "e60eddfa18",
 "js/util.js": "183e6761c8",
 "js/visuals.js": "7cc79c1040",
-"js/zoo.js": "88a8eb3c1d",
+"js/zoo.js": "5788ee2909",
+"lyd/15ab4210ab61.mp3": "acc46f9dd6",
+"lyd/17422354f104.mp3": "050691a8a4",
+"lyd/41d4ccad7b1a.mp3": "ae31022131",
+"lyd/4212b5c3a48d.mp3": "a429a99d21",
+"lyd/4dd4fb67fc43.mp3": "99a511817c",
+"lyd/4f1ae8fb91b0.mp3": "06160aaa41",
+"lyd/6613508c6b32.mp3": "fbc5406058",
+"lyd/c2e8f198014b.mp3": "20c6f3a22b",
+"lyd/c8096585c365.mp3": "c2721ca8dd",
+"lyd/d6cf4296ec65.mp3": "08ef6a9c8e",
+"lyd/f672922b6f8b.mp3": "41dc7dc442",
+"lyd/f9628c9a1999.mp3": "3de0d82c48",
+"lyd/fa93d387dd1c.mp3": "935054e15d",
+"lyd/manifest.json": "14bbc12e8d",
 "manifest.webmanifest": "58cc6e90f1"
 };
 

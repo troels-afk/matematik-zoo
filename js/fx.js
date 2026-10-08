@@ -18,6 +18,9 @@ export function unlockAudio() {
 }
 ['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, unlockAudio, { passive: true }));
 
+// Kajs oplæsning (speak.js) spiller i samme AudioContext, så iPad'en også tillader den langt fra et tryk
+export function audioCtx() { unlockAudio(); return ctx; }
+
 function tone(t0, freq, start, dur, { type = 'sine', gain = 0.08 } = {}) {
   const o = ctx.createOscillator(), g = ctx.createGain();
   o.type = type;

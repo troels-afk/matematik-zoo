@@ -1,9 +1,10 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261008171320';
-import * as E from './engine.js?v=20261008171320';
-import { today } from './util.js?v=20261008171320';
+import { AREAS, FACTS } from './curriculum.js?v=20261008172931';
+import * as E from './engine.js?v=20261008172931';
+import { today } from './util.js?v=20261008172931';
+import { SEW } from './sewmask.js?v=20261008172931';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -111,6 +112,90 @@ export const PLACE_ART = Object.fromEntries(['tal', 'gange', 'division', 'brok',
 // Ranger-skjorten (Batch 6, img/shirt/): for- og bagside i samme udsnit (1000×915), så et mærkes plads (x, y i % af
 // billedet) betyder det samme på begge sider. Mærkerne er Øvebanens tegninger (DISC_ART) i en syet kant
 export const SHIRT = { f: { src: 'img/shirt/forside.webp', name: 'Forside' }, b: { src: 'img/shirt/ryg.webp', name: 'Ryggen' } };
+
+// ---------- Mærkerne på skjorten: størrelse, former og hvor de må sys ----------
+export const PATCH_SIZE = 11; // et mærke er 11 % af skjortens bredde (--s: 11cqw i CSS) – alle 18 kan sidde på én side med luft imellem
+const SHIRT_ASPECT = 1000 / 915; // skjortebilledets bredde / højde
+
+// Mærkernes former i et felt på -50…50: d = omridset (SVG), pts = punkter på omridset (til at tjekke, at hele
+// mærket sidder på stoffet), img = tegningens bredde og lodrette forskydning i % af mærket, så motivet holder sig inde
+const ring = (n, rx, ry = rx) => Array.from({ length: n }, (_, i) => {
+  const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+  return [Math.round(rx * Math.cos(a) * 10) / 10, Math.round(ry * Math.sin(a) * 10) / 10];
+});
+const poly = (pts) => `M${pts.map(([x, y]) => `${x} ${y}`).join('L')}Z`;
+const scallop = (n, r, peak) => { // takket kant: n buer rundt om en cirkel
+  const pt = (a, rr) => [Math.round(rr * Math.cos(a) * 10) / 10, Math.round(rr * Math.sin(a) * 10) / 10];
+  const step = (2 * Math.PI) / n, c = 2 * peak - r * Math.cos(step / 2);
+  let d = `M${pt(-Math.PI / 2, r).join(' ')}`;
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + i * step;
+    d += `Q${pt(a + step / 2, c).join(' ')} ${pt(a + step, r).join(' ')}`;
+  }
+  return `${d}Z`;
+};
+const hex = ring(6, 50);
+export const PATCH_SHAPES = {
+  rund: { d: 'M0-49A49 49 0 1 1 0 49A49 49 0 1 1 0-49Z', pts: ring(24, 49), img: [82, 0] },
+  oval: { d: 'M0-40A50 40 0 1 1 0 40A50 40 0 1 1 0-40Z', pts: ring(24, 50, 40), img: [80, 0] },
+  skjold: { d: 'M-45-47Q0-39 45-47L45 2Q44 33 0 50Q-44 33-45 2Z', img: [72, -8],
+    pts: [[-45, -47], [-22, -42], [0, -41], [22, -42], [45, -47], [45, -22], [45, 2], [41, 22], [28, 38], [14, 45], [0, 50], [-14, 45], [-28, 38], [-41, 22], [-45, 2], [-45, -22]] },
+  sekskant: { d: poly(hex), pts: hex.flatMap((p, i) => { const q = hex[(i + 1) % 6]; return [p, [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2]]; }), img: [74, 0] },
+  firkant: { d: 'M-34-46H34A12 12 0 0 1 46-34V34A12 12 0 0 1 34 46H-34A12 12 0 0 1-46 34V-34A12 12 0 0 1-34-46Z', img: [82, 0],
+    pts: [[-46, -34], [-42, -42], [-34, -46], [0, -46], [34, -46], [42, -42], [46, -34], [46, 0], [46, 34], [42, 42], [34, 46], [0, 46], [-34, 46], [-42, 42], [-46, 34], [-46, 0]] },
+  takket: { d: scallop(14, 44, 49.5), pts: ring(28, 49.5), img: [76, 0] },
+};
+// Hver disciplin har sin faste form – naboerne i oversigten får forskellige former
+export const PATCH_SHAPE = {
+  'd-tal': 'rund', 'd-plusminus': 'takket', 'd-gange': 'sekskant', 'd-regneregler': 'skjold',
+  'd-division': 'firkant', 'd-brok': 'rund', 'd-decimal': 'oval', 'd-ligninger': 'takket',
+  'd-moenstre': 'sekskant', 'd-linjer': 'skjold', 'd-figurer': 'firkant', 'd-koordinater': 'rund',
+  'd-areal': 'takket', 'd-maal': 'oval', 'd-tid': 'rund', 'd-diagrammer': 'sekskant',
+  'd-beskriv': 'skjold', 'd-chance': 'firkant',
+};
+export const patchShape = (discId) => PATCH_SHAPES[PATCH_SHAPE[discId]] || PATCH_SHAPES.rund;
+
+const sewBits = {};
+// Må der sys her? x og y i % af skjortebilledet (sewmask.js, lavet af tools/skjorte_omraade.py)
+export function sewable(side, x, y) {
+  const i = Math.floor((x / 100) * SEW.w), j = Math.floor((y / 100) * SEW.h);
+  if (!(i >= 0 && j >= 0 && i < SEW.w && j < SEW.h) || !SEW[side]) return false;
+  const b = (sewBits[side] ??= Uint8Array.from(atob(SEW[side]), (c) => c.charCodeAt(0)));
+  const k = j * SEW.w + i;
+  return !!(b[k >> 3] & (128 >> (k & 7)));
+}
+// Sidder hele mærket på selve skjorten, når midten er i (x, y) og det er drejet r grader?
+export function patchFits(side, discId, x, y, r = 0) {
+  const a = (r * Math.PI) / 180, c = Math.cos(a), sn = Math.sin(a), k = PATCH_SIZE / 100;
+  return [[0, 0], ...patchShape(discId).pts].every(([px, py]) =>
+    sewable(side, x + (px * c - py * sn) * k, y + (px * sn + py * c) * k * SHIRT_ASPECT));
+}
+// Nærmeste sted, hvor mærket kan sidde – så et mærke, der slippes lidt for tæt på kanten eller på kraven,
+// glider ind på skjorten. null, hvis der ikke er plads inden for maxD (% af skjortens bredde)
+export function nearestFit(side, discId, x, y, r = 0, maxD = PATCH_SIZE * 1.2) {
+  if (patchFits(side, discId, x, y, r)) return { x, y };
+  for (let d = 0.5; d <= maxD; d += 0.5) {
+    const n = Math.max(12, Math.round(d * 6));
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * 2 * Math.PI, cx = x + d * Math.cos(a), cy = y + d * Math.sin(a) * SHIRT_ASPECT;
+      if (patchFits(side, discId, cx, cy, r)) return { x: cx, y: cy };
+    }
+  }
+  return null;
+}
+// Mærker, der blev syet på, før reglerne kom (fx på kraven eller ud over kanten), flyttes ind på stoffet –
+// eller tilbage i sykurven, hvis der slet ikke er plads. Svarer med antallet, der er flyttet
+export function fixPatches(st) {
+  let n = 0;
+  for (const [id, p] of Object.entries(st.patches || {})) {
+    const pos = p?.pos;
+    if (!pos || patchFits(pos.side, id, pos.x, pos.y, pos.r)) continue;
+    const fit = nearestFit(pos.side, id, pos.x, pos.y, pos.r, 40);
+    p.pos = fit ? { ...pos, x: Math.round(fit.x * 10) / 10, y: Math.round(fit.y * 10) / 10 } : null;
+    n++;
+  }
+  return n;
+}
 // Øvebanens tegninger (Batch 5, img/disc/): én pr. disciplin – på flisen på Øvebanen og øverst på disciplinens side
 export const DISC_ART = Object.fromEntries(['tal', 'plusminus', 'gange', 'regneregler', 'division', 'brok', 'decimal', 'ligninger', 'moenstre',
   'linjer', 'figurer', 'koordinater', 'areal', 'maal', 'tid', 'diagrammer', 'beskriv', 'chance'].map((k) => [`d-${k}`, `img/disc/${k}.webp`]));
