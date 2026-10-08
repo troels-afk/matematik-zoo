@@ -4,8 +4,9 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261008172931';
-import * as V from './visuals.js?v=20261008172931';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261008175700';
+import * as V from './visuals.js?v=20261008175700';
+import { attachSay } from './oplaesning.js?v=20261008175700';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
@@ -441,14 +442,10 @@ const divrest = {
     pic: 'fisk',
     text: 'Nogle gange går det ikke op. 23 : 4: Hvor mange hele 4-taller er der i 23? 4 × 5 = 20, og så er der <b>3 tilbage</b>. Svaret er <b>5 rest 3</b>.<br>Resten skal altid være mindre end det, man deler med.',
     lead: 'Nogle gange går delingen ikke op. Det, der bliver til overs, er resten – og den får Kaj!',
-    sayLead: 'Nogle gange går delingen ikke op. Det, der bliver til overs, hedder resten. Og resten – den får jeg!',
     cards: [
-      { title: 'Det, der er tilbage', visual: () => V.miniGroups({ groups: 5, per: 4, rest: 3 }), rules: ['23 : 4 = 5 rest 3'], note: "Hvor mange hele 4'ere er der i 23? Der er 5 (det er 20), og 3 er tilbage.",
-        say: 'Se på tegningen. Vi deler 23 med 4. Hvor mange hele grupper med 4 kan vi lave? Vi kan lave 5 grupper, og det er 20. Så er der 3 tilbage. 23 delt med 4 giver altså 5, rest 3.' },
-      { title: 'Hop med 4', visual: () => V.miniLine({ min: 0, max: 24, div: 6, label: (i, v) => (v <= 20 ? String(v) : null), marks: [{ v: 23, text: '23', below: true }], jumps: [0, 4, 8, 12, 16].map((a) => ({ from: a, to: a + 4, text: '', lift: 18 })).concat([{ from: 20, to: 23, text: '3', c: 'v-muted', lift: 16 }]) }), rules: ['5 hop = 20', '23 − 20 = 3'], note: 'Hop 4 ad gangen, så langt du kan. Det, der mangler op til 23, er resten.',
-        say: 'Du kan også hoppe på tallinjen. Hop 4 ad gangen: 4, 8, 12, 16, 20. Det er 5 hop. Et hop mere ville lande på 24, og det er for langt. Fra 20 op til 23 mangler der 3. Det er resten.' },
-      { title: 'Resten er altid mindst', rules: ['rest < det, man deler med'], note: 'Deler du med 4, kan resten kun være 0, 1, 2 eller 3. Er der 4 tilbage, kan der laves en gruppe mere.',
-        say: 'Husk: Resten skal altid være mindre end det tal, du deler med. Deler du med 4, kan resten kun være 0, 1, 2 eller 3. Er der 4 tilbage, kan du lave en gruppe mere.' },
+      { title: 'Det, der er tilbage', visual: () => V.miniGroups({ groups: 5, per: 4, rest: 3 }), rules: ['23 : 4 = 5 rest 3'], note: "Hvor mange hele 4'ere er der i 23? Der er 5 (det er 20), og 3 er tilbage." },
+      { title: 'Hop med 4', visual: () => V.miniLine({ min: 0, max: 24, div: 6, label: (i, v) => (v <= 20 ? String(v) : null), marks: [{ v: 23, text: '23', below: true }], jumps: [0, 4, 8, 12, 16].map((a) => ({ from: a, to: a + 4, text: '', lift: 18 })).concat([{ from: 20, to: 23, text: '3', c: 'v-muted', lift: 16 }]) }), rules: ['5 hop = 20', '23 − 20 = 3'], note: 'Hop 4 ad gangen, så langt du kan. Det, der mangler op til 23, er resten.' },
+      { title: 'Resten er altid mindst', rules: ['rest < det, man deler med'], note: 'Deler du med 4, kan resten kun være 0, 1, 2 eller 3. Er der 4 tilbage, kan der laves en gruppe mere.' },
     ],
   },
   gen(level) {
@@ -731,17 +728,13 @@ const ligevaerdig = {
     scene: 'polar',
     text: `${frac(1, 2)} og ${frac(3, 6)} er lige store! Gang (eller del) tæller og nævner med <b>det samme tal</b>, så får du en brøk med samme værdi: ${frac(1, 2)} = ${frac('1×3', '2×3')} = ${frac(3, 6)}.`,
     lead: 'To brøker kan se forskellige ud og alligevel være lige store.',
-    sayLead: 'To brøker kan se forskellige ud og alligevel være lige store.',
     cards: [
-      { title: 'Samme portion', visual: () => V.miniFracBars([{ n: 2, k: 1 }, { n: 6, k: 3 }]), rules: [`${frac(1, 2)} = ${frac(3, 6)}`], note: 'Halvdelen af spanden er det samme som 3 af 6 dele.',
-        say: 'Se på de to stænger. Den øverste er delt i 2, og 1 del er farvet. Det er en halv. Den nederste er delt i 6, og 3 dele er farvet. Det er tre sjettedele. De farvede stykker er lige lange. Så en halv er lige så meget som tre sjettedele.' },
-      { title: 'Gang oppe og nede', visual: () => V.miniFracScale(1, 2, 3), rules: [`${frac(1, 2)} = ${frac(2, 4)} = ${frac(3, 6)}`], note: 'Gang tæller og nævner med det samme tal – så er brøken lige så stor.',
-        say: 'Gang tælleren og nævneren med det samme tal, så får du en brøk, der er lige så stor. På tegningen ganger vi med 3 både oppe og nede. 1 gange 3 er 3, og 2 gange 3 er 6. Så en halv er lig med tre sjettedele. Ganger du med 2 i stedet, får du to fjerdedele.' },
+      { title: 'Samme portion', visual: () => V.miniFracBars([{ n: 2, k: 1 }, { n: 6, k: 3 }]), rules: [`${frac(1, 2)} = ${frac(3, 6)}`], note: 'Halvdelen af spanden er det samme som 3 af 6 dele.' },
+      { title: 'Gang oppe og nede', visual: () => V.miniFracScale(1, 2, 3), rules: [`${frac(1, 2)} = ${frac(2, 4)} = ${frac(3, 6)}`], note: 'Gang tæller og nævner med det samme tal – så er brøken lige så stor.' },
     ],
     tip: {
       title: 'Det virker også baglæns',
       rows: [['Del', '', `${frac(6, 8)} = ${frac(3, 4)} (del begge med 2)`]],
-      say: 'Det virker også baglæns. Du kan dele tælleren og nævneren med det samme tal. Seks ottendedele er det samme som tre fjerdedele. Der har vi delt begge med 2.',
     },
   },
   gen(level) {
@@ -1728,16 +1721,11 @@ const findX = {
     pic: 'kodelaas',
     text: `${X} er et tal, vi ikke kender endnu.`,
     steps: [
-      { text: `${X} er et tal, vi ikke kender endnu. Vi skal finde det tal, der gør, at <b>begge sider af = er lige store</b>.`,
-        say: 'x er et tal, vi ikke kender endnu. Vi skal finde det tal, der gør, at begge sider af lighedstegnet er lige store.' },
-      { text: `Eksempel: <b>7 · 8 = ${X} + ${X} − 10</b>. Regn først det, du kan: 7 · 8 = <b>56</b>.`,
-        say: 'Her er et eksempel: 7 gange 8 er lig med x plus x minus 10. Regn først det, du kan. 7 gange 8 er 56.' },
-      { text: `Nu står der 56 = ${X} + ${X} − 10. Der er trukket 10 fra – så læg 10 til igen: ${X} + ${X} = <b>66</b>.`,
-        say: 'Nu står der: 56 er lig med x plus x minus 10. Der er trukket 10 fra. Så lægger vi 10 til igen, og så er x plus x lig med 66.' },
-      { text: `To ${X}'er er 66. Så er ét ${X}: 66 : 2 = <b>33</b>.`,
-        say: 'x plus x er det samme som 2 gange x. Så er x lig med 66 delt med 2. Det er 33.' },
-      { text: `Tjek altid dit svar: 33 + 33 − 10 = 56 ✓. Begge sider er lige store!`,
-        say: 'Tjek altid dit svar. 33 plus 33 minus 10 er 56. Begge sider er lige store. Så x er 33.' },
+      { text: `${X} er et tal, vi ikke kender endnu. Vi skal finde det tal, der gør, at <b>begge sider af = er lige store</b>.` },
+      { text: `Eksempel: <b>7 · 8 = ${X} + ${X} − 10</b>. Regn først det, du kan: 7 · 8 = <b>56</b>.` },
+      { text: `Nu står der 56 = ${X} + ${X} − 10. Der er trukket 10 fra – så læg 10 til igen: ${X} + ${X} = <b>66</b>.` },
+      { text: `To ${X}'er er 66. Så er ét ${X}: 66 : 2 = <b>33</b>.` },
+      { text: `Tjek altid dit svar: 33 + 33 − 10 = 56 ✓. Begge sider er lige store!` },
     ],
   },
   gen(level) {
@@ -2612,6 +2600,8 @@ export const DISCIPLINES = [
 // Alle færdigheder (zoo + Øvebanens egne) – til opslag ved øvning. Zoo-færdighederne beholder deres område.
 export const ALL_SKILLS = { ...SKILLS };
 for (const d of DISCIPLINES) for (const s of d.skills) if (!SKILLS[s.id]) ALL_SKILLS[s.id] = { ...s, area: d.id, practice: true };
+// Kajs oplæsning af forklaringerne (oplaesning.js) – det, Jeppe siger til hvert kort og trin
+attachSay(ALL_SKILLS);
 
 // ---------- Gangetabellen (spaced repetition pr. fakta) ----------
 

@@ -1,14 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008172931';
-import * as E from './engine.js?v=20261008172931';
-import * as Z from './zoo.js?v=20261008172931';
-import { zooGate } from './scene.js?v=20261008172931';
-import { zooMap } from './map.js?v=20261008172931';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008172931';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008172931';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008172931';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261008172931';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008175700';
+import * as E from './engine.js?v=20261008175700';
+import * as Z from './zoo.js?v=20261008175700';
+import { zooGate } from './scene.js?v=20261008175700';
+import { zooMap } from './map.js?v=20261008175700';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008175700';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008175700';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008175700';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261008175700';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1265,8 +1265,8 @@ function showIntro(skillId, next, { btn = 'Jeg er klar', back = 'Tilbage til opg
 // Oplæsningen er Microsofts danske stemme Jeppe (Azure), lavet på forhånd som lydfiler (speak.js, tools/lyd/tts.py).
 // Forklaringen har say-tekster ved siden af det, der står på skærmen: sayLead, kortenes say og tip.say – eller say
 // på hvert trin. De skrives til øret ("23 delt med 4", "tre fjerdedele"), ikke som skærmens tegn.
-const sayItems = (intro) => [
-  intro.sayLead && { text: intro.sayLead, el: () => $('.ex-lead') },
+const sayItems = (intro, { lead = true } = {}) => [
+  lead && intro.sayLead && { text: intro.sayLead, el: () => $('.ex-lead') },
   ...(intro.cards || []).map((c, i) => c.say && { text: c.say, el: () => $$('.ex-card')[i] }),
   intro.tip?.say && { text: intro.tip.say, el: () => $('.ex-tip') },
 ].filter(Boolean);
@@ -1549,11 +1549,13 @@ function renderTask(block, task) {
   on('#help', 'click', () => {
     const s = ALL_SKILLS[task.skill];
     $('#helpbox').innerHTML = s.intro.steps
-      ? `<div class="feedback retry" style="margin-top:14px">${explainTop(s.intro, false)}${stepsBlock(s.intro.steps)}</div>`
+      ? `<div class="feedback retry" style="margin-top:14px">${speakBar(s.intro)}${explainTop(s.intro, false)}${stepsBlock(s.intro.steps)}</div>`
       : s.intro.cards
-        ? `<div class="ex-help">${explainCards(s.intro, { lead: false })}</div>`
+        ? `<div class="ex-help">${speakBar(s.intro)}${explainCards(s.intro, { lead: false })}</div>`
         : `<div class="feedback retry" style="margin-top:14px"><div>${s.intro.text}</div>${s.intro.visual ? `<div class="explain-visual">${s.intro.visual()}</div>` : ''}</div>`;
     $('#help').remove();
+    // Kaj læser hjælpen op (trinene står der alle sammen her)
+    kajExplains(s.intro.steps ? s.intro.steps.map((st, i) => ({ text: st.say, el: () => $$('#helpbox .walk li')[i] })) : sayItems(s.intro, { lead: false }));
   });
   mountInput(p, answer);
   // Opgaven er vigtigere end scenen: kan kortet med opgaven (tekst, tegning, tastatur og "Tjek") ikke ses helt
@@ -1689,6 +1691,7 @@ function factHint(key) {
 const NUDGE = ['Næsten – prøv igen!', 'Ikke helt – prøv en gang til!', 'Tæt på – giv den et forsøg mere!'];
 
 function answer(given, choiceIdx) {
+  stopSpeech(); // Kaj tier, når hun svarer
   const run = S.run, block = run.sess.blocks[run.bi], task = run.task, p = task.p;
   run.answered = true;
   const ms = Date.now() - run.shownAt;

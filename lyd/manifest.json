@@ -3,57 +3,753 @@
  "rate": "default",
  "genereret": "2026-10-08",
  "clips": {
+  "15 bananer skal deles ligeligt mellem 3 aber. Se på tegningen. Hver abe får sin egen gruppe, og der kommer 5 bananer i hver. Så 15 delt med 3 er 5, og hver abe får 5 bananer.": {
+   "f": "c2bec04715fe.mp3",
+   "d": 14.16
+  },
+  "24 børn skal stå i grupper med 4 i hver. Hvor mange grupper bliver der? Se på tegningen. Der er 4 børn i hver gruppe, og det bliver til 6 grupper. 24 delt med 4 er 6, for 4 går 6 gange op i 24.": {
+   "f": "c3def217f239.mp3",
+   "d": 16.47
+  },
+  "25 gæster skal med toget, og der er 4 pladser i hver vogn. 25 delt med 4 er 6, rest 1. Denne gang får jeg ikke resten, for den sidste gæst skal også med. Så der skal bruges en vogn mere, altså 7 vogne.": {
+   "f": "c48b32e1a77e.mp3",
+   "d": 13.43
+  },
+  "45 ligger præcis midt mellem 40 og 50. Der er 5 ned til 40 og 5 op til 50. Når tallet ligger lige i midten, runder vi altid op. Så 45 bliver afrundet til 50.": {
+   "f": "0020ed332014.mp3",
+   "d": 13.85
+  },
+  "6 gange minus 1 betyder minus 1 taget 6 gange, og det giver minus 6. Så bliver 6 gange minus 1 plus 2 gange 2 til minus 6 plus 4. Start ved minus 6, gå 4 skridt frem, og så lander du på minus 2.": {
+   "f": "67bac189a293.mp3",
+   "d": 15.36
+  },
+  "Areal måles i kvadrater. En kvadratmeter er et kvadrat, der er en meter på hver side. En kvadratcentimeter er et lille kvadrat, der er en centimeter på hver side.": {
+   "f": "c64f7f39cb3c.mp3",
+   "d": 11.46
+  },
+  "Bananerne skal deles helt lige mellem aberne. Division er gange baglæns.": {
+   "f": "c6193e17f9ab.mp3",
+   "d": 5.4
+  },
+  "Bodil skriver gæstetallet på tavlen som et rundt tal. Hun vælger det runde tal, der ligger tættest på.": {
+   "f": "022aaed11c7d.mp3",
+   "d": 6.56
+  },
+  "Broen fra 0 til 1 er delt i lige store stykker, ligesom en brøk.": {
+   "f": "67864c3d19c0.mp3",
+   "d": 3.91
+  },
+  "Dagens billetsalg skal lægges sammen. Læg hundreder, tiere og enere sammen hver for sig.": {
+   "f": "e4d95d9db4a9.mp3",
+   "d": 6.02
+  },
+  "Den farve, der er flest af, har størst chance. I posen er der flest blå kugler, så blå har størst chance.": {
+   "f": "9bcecf2d1f83.mp3",
+   "d": 7.36
+  },
+  "Den første plads efter kommaet er tiendedele, og den anden plads er hundrededele. 0,3 er 3 tiendedele, og 0,07 er 7 hundrededele. 0,37 er 3 tiendedele og 7 hundrededele.": {
+   "f": "6ac1bb8a0117.mp3",
+   "d": 14.55
+  },
+  "Den lille viser er lige kommet forbi 3, så klokken er lidt over tre. Den store viser står på 3. Hvert tal på uret er 5 minutter, og 3 gange 5 er 15. Så er klokken 15 minutter over tre, og det kalder vi kvart over tre.": {
+   "f": "f4646c41e319.mp3",
+   "d": 15.82
+  },
+  "Denne figur er ikke et rektangel. Del den i to rektangler ved den stiplede linje. Det øverste har 4 kvadrater, og det nederste har 8. Læg dem sammen, 4 plus 8 er 12, så arealet er 12 kvadratmeter.": {
+   "f": "71ab04c1cc22.mp3",
+   "d": 15.22
+  },
+  "Der skal være lige mange i hver gruppe. Hvor mange grupper bliver der?": {
+   "f": "4387c48b9ca9.mp3",
+   "d": 4.27
+  },
+  "Der står, at et ukendt tal plus 7 giver 15. Regn baglæns med det modsatte regnestykke, ligesom den nederste pil på tegningen. Plus bliver til minus, så du regner 15 minus 7. Det giver 8, så det ukendte tal er 8.": {
+   "f": "023c8edb6f24.mp3",
+   "d": 16.37
+  },
+  "Det andet tal fortæller, hvor langt du skal gå op. Det er 4 op, og der ligger punkt A. Så A er punktet 6, 4.": {
+   "f": "6351b860b65e.mp3",
+   "d": 8.36
+  },
   "Det virker også baglæns. Du kan dele tælleren og nævneren med det samme tal. Seks ottendedele er det samme som tre fjerdedele. Der har vi delt begge med 2.": {
    "f": "4dd4fb67fc43.mp3",
-   "d": 11.19
+   "d": 11.24
+  },
+  "Det virker også med hundreder. 236 gange 4 deler vi op i 200, 30 og 6. 200 gange 4 er 800, 30 gange 4 er 120, og 6 gange 4 er 24. Til sidst lægger vi det hele sammen. 800 plus 120 plus 24 er 944.": {
+   "f": "38a02da07d50.mp3",
+   "d": 20.32
+  },
+  "Det virker også med større tal. 156 delt med 3 deler vi op i 120 og 36. 120 delt med 3 er 40, og 36 delt med 3 er 12. 40 plus 12 er 52, så 156 delt med 3 er 52.": {
+   "f": "3f93fe42e1c6.mp3",
+   "d": 15.69
+  },
+  "Det virker på samme måde med hundreder. 362 ligger mellem 300 og 400. Der er 62 ned til 300, men kun 38 op til 400, så 362 bliver til 400. Med tusinder bliver 1350 til 1000, for det ligger tættere på 1000 end på 2000.": {
+   "f": "39d5457daa24.mp3",
+   "d": 20.18
+  },
+  "Det virker på samme måde mellem 2 og 3. Igen er der 10 små stykker, og hvert stykke er 0,1. Prikken står 4 stykker efter 2. Så er tallet 2 hele og 4 tiendedele, og det skrives 2,4.": {
+   "f": "923e4f49070d.mp3",
+   "d": 14.59
+  },
+  "Division bruges, når noget skal deles ligeligt, eller når noget skal deles i grupper.": {
+   "f": "996f02baf2ed.mp3",
+   "d": 4.46
+  },
+  "Division er gange baglæns. Spørg dig selv, 6 gange hvad giver 24? Det ved du godt, for 6 gange 4 er 24. Den nederste pil på tegningen går baglæns, så 24 delt med 6 er 4.": {
+   "f": "e9b4f78aeab5.mp3",
+   "d": 14.99
   },
   "Du kan også hoppe på tallinjen. Hop 4 ad gangen: 4, 8, 12, 16, 20. Det er 5 hop. Et hop mere ville lande på 24, og det er for langt. Fra 20 op til 23 mangler der 3. Det er resten.": {
    "f": "d6cf4296ec65.mp3",
-   "d": 18.77
+   "d": 18.82
+  },
+  "Du kan også regne det i to trin. Først deler du med nævneren, og 20 delt med 4 er 5. Så ganger du med tælleren, og 5 gange 3 er 15. Tre fjerdedele af 20 er altså 15.": {
+   "f": "0e19a1a61979.mp3",
+   "d": 13.9
+  },
+  "Du kan skille et tal ad og skrive det som et plusstykke. 4732 er 4000 plus 700 plus 30 plus 2. Står pladserne blandet, som 3 tiere og 2 tusinder, så er det 2000 plus 30, altså 2030.": {
+   "f": "76b3b44bc0c0.mp3",
+   "d": 16.16
+  },
+  "Du må gerne bytte om, for 3 gange 7 er det samme som 7 gange 3. Ganger du med 10, sætter du bare et 0 på, så 10 gange 7 er 70. Og 5 gange 7 er halvdelen af 70, altså 35.": {
+   "f": "3b228bc2b3a2.mp3",
+   "d": 14.07
+  },
+  "En brøk fortæller, hvor meget af en helhed vi taler om.": {
+   "f": "ad1523cbcb23.mp3",
+   "d": 3.13
+  },
+  "En firkant, der ikke har to par parallelle sider, er ikke et parallelogram. I denne firkant er det kun bunden og toppen, der er parallelle.": {
+   "f": "85168b828c34.mp3",
+   "d": 8.4
+  },
+  "En ligebenet trekant har to lige lange sider, og dem kalder vi benene. Her er de to ben 5 centimeter, og den tredje side er kun 3 centimeter.": {
+   "f": "b37f8a92ee00.mp3",
+   "d": 9.31
+  },
+  "En ligesidet trekant har tre lige lange sider. Her er alle tre sider 4 centimeter.": {
+   "f": "d8d2643ad6d5.mp3",
+   "d": 6.06
+  },
+  "En rombe er et parallelogram med fire lige lange sider. Derfor har alle fire sider en streg hver.": {
+   "f": "9d9a3527deb4.mp3",
+   "d": 6.46
+  },
+  "En time er 60 minutter. En halv time er 30 minutter, og en kvart time er 15 minutter. Varer noget en time og 10 minutter, så læg 60 og 10 sammen. Det giver 70 minutter.": {
+   "f": "78befb79fbd4.mp3",
+   "d": 13.14
+  },
+  "En trekant har tre vinkler. Find den største vinkel, for den bestemmer, hvad trekanten hedder. Her er vinklerne 60, 80 og 40 grader, så den største er 80 grader.": {
+   "f": "4c1db37e476e.mp3",
+   "d": 11.79
+  },
+  "Er alle tre vinkler spidse, altså mindre end 90 grader, er trekanten spidsvinklet. Her har alle tre vinkler en bue, og de er alle mindre end en ret vinkel.": {
+   "f": "91a429168401.mp3",
+   "d": 10.06
+  },
+  "Er du i tvivl, så hold hjørnet af et stykke papir ind i den største vinkel. Den stiplede linje viser en ret vinkel at sammenligne med. Her er vinklen lidt større, så trekanten er stumpvinklet.": {
+   "f": "caf13fe81764.mp3",
+   "d": 12.59
+  },
+  "Er du i tvivl, så tag et stykke papir, og hold hjørnet ind mellem linjerne. Passer hjørnet præcis, står linjerne vinkelret.": {
+   "f": "ddfb27252ddb.mp3",
+   "d": 7.94
+  },
+  "Er en af vinklerne ret, altså 90 grader, er trekanten retvinklet. Det lille firkantede mærke viser den rette vinkel.": {
+   "f": "5874a32d6041.mp3",
+   "d": 8.14
+  },
+  "Er en af vinklerne stump, altså større end 90 grader, er trekanten stumpvinklet. Se den store vinkel med buen på tegningen.": {
+   "f": "c024240e8501.mp3",
+   "d": 8.35
+  },
+  "Er vinklen mindre eller større end 90 grader, står linjerne ikke vinkelret. Den stiplede linje viser, hvor en vinkelret linje skulle have gået. Her hælder linje b, så vinklen er for lille.": {
+   "f": "7d6bb3471e02.mp3",
+   "d": 12.58
+  },
+  "Er vinklen mindre end en ret vinkel, hedder den spids. Den er under 90 grader, ligesom den første vinkel på tegningen. Er vinklen større end en ret vinkel, hedder den stump. Den er over 90 grader, ligesom den anden.": {
+   "f": "8741dc9bb38e.mp3",
+   "d": 15.27
+  },
+  "Et koordinatsystem har to akser. Den vandrette akse hedder x-aksen, og den lodrette hedder y-aksen. De mødes i punktet 0, 0.": {
+   "f": "db7d40b844cc.mp3",
+   "d": 10.01
+  },
+  "Et kvadrat har både fire rette vinkler og fire lige lange sider. Så er et kvadrat også et rektangel og en rombe. Men kvadrat er det mest præcise navn.": {
+   "f": "c259f81eb18a.mp3",
+   "d": 10.23
+  },
+  "Et parallelogram har to par parallelle sider. Siderne over for hinanden er lige lange, og det kan du se på, at de har lige mange streger.": {
+   "f": "4eee8aea0b65.mp3",
+   "d": 8.17
+  },
+  "Et rektangel er et parallelogram med fire rette vinkler. Se de små firkantede mærker i alle fire hjørner.": {
+   "f": "51d8efdd2a47.mp3",
+   "d": 6.88
+  },
+  "Et rektangel har to lange og to korte sider. Så kan du lægge en lang og en kort side sammen og gange med 2. 5 plus 3 er 8, og 8 gange 2 er 16.": {
+   "f": "f70e5443f463.mp3",
+   "d": 9.94
+  },
+  "Et tal med komma har faste pladser. Foran kommaet står de hele, og efter kommaet kommer først tiendedelene og så hundrededelene. I tabellen står der 5 hele, 2 tiendedele og 6 hundrededele.": {
+   "f": "9f96e863a779.mp3",
+   "d": 13.02
+  },
+  "Find punktet 6, 4. Det første tal fortæller, hvor langt du skal gå hen ad x-aksen. Det er 6 hen.": {
+   "f": "12bf3cbac5cf.mp3",
+   "d": 8.33
+  },
+  "Foderet pakkes i kasser med 10 og 100. Når man ganger med 10 eller 100, flytter cifrene plads.": {
+   "f": "c57f2195ea52.mp3",
+   "d": 6.95
+  },
+  "Foderet til rovdyrene skal måles, vejes og hældes op. Til det bruger man tre slags enheder.": {
+   "f": "25553d3ad531.mp3",
+   "d": 6.63
+  },
+  "Fra en stor enhed til en lille ganger du, så 4 kilogram er 4 gange 1000, altså 4000 gram. Fra en lille enhed til en stor deler du, så 3000 gram er 3000 delt med 1000, altså 3 kilogram. Et halvt kilogram er 500 gram.": {
+   "f": "8e1975ec323b.mp3",
+   "d": 16.53
+  },
+  "Fra en stor enhed til en lille ganger du, så 4 liter er 4 gange 10, altså 40 deciliter. Fra en lille enhed til en stor deler du, så 300 centiliter er 300 delt med 100, altså 3 liter. En halv liter er 5 deciliter, og det er 50 centiliter.": {
+   "f": "252d86674e0e.mp3",
+   "d": 17.12
+  },
+  "Fra en stor enhed til en lille ganger du, så 4 meter er 4 gange 100, altså 400 centimeter. Fra en lille enhed til en stor deler du, så 3000 gram er 3000 delt med 1000, altså 3 kilogram. En halv meter er 50 centimeter, et halvt kilogram er 500 gram, og en halv liter er 5 deciliter.": {
+   "f": "efdec96e3eea.mp3",
+   "d": 20.47
+  },
+  "Fra en stor enhed til en lille ganger du, så 4 meter er 4 gange 100, altså 400 centimeter. Fra en lille enhed til en stor deler du, så 3000 meter er 3000 delt med 1000, altså 3 kilometer. En halv meter er 50 centimeter, og en halv kilometer er 500 meter.": {
+   "f": "2e0238c3c028.mp3",
+   "d": 19.22
+  },
+  "Først skal tallene stå i rækkefølge fra det mindste til det største. Det gør de her, 2, 4, 5, 9 og 9. Medianen er det tal, der står i midten. Der står 2 tal på hver side af 5, så medianen er 5.": {
+   "f": "07072bdcfdf4.mp3",
+   "d": 15.3
   },
   "Gang tælleren og nævneren med det samme tal, så får du en brøk, der er lige så stor. På tegningen ganger vi med 3 både oppe og nede. 1 gange 3 er 3, og 2 gange 3 er 6. Så en halv er lig med tre sjettedele. Ganger du med 2 i stedet, får du to fjerdedele.": {
    "f": "17422354f104.mp3",
-   "d": 18.83
+   "d": 18.88
+  },
+  "Giraferne og elefanterne spiser meget. Store gangestykker bliver lette, når du deler tallet op.": {
+   "f": "ffe7ecdc3829.mp3",
+   "d": 6.48
+  },
+  "Giraffen spiser 4 kilogram. Elefanten spiser 3 gange så meget. Det er 3 grupper med 4 i hver, ligesom på tegningen. 3 gange 4 er 12, så elefanten spiser 12 kilogram.": {
+   "f": "64a5bf15235d.mp3",
+   "d": 14.31
+  },
+  "Gå så lige op til P. Det er 2 op, så P er punktet 4, 2. Tallet for hen skrives altid først.": {
+   "f": "c5935f1bdc11.mp3",
+   "d": 8.49
+  },
+  "Gæsterne har stemt på deres yndlingsdyr. Søjlediagrammet viser stemmerne.": {
+   "f": "b930fde1676b.mp3",
+   "d": 5.23
+  },
+  "Gæsterne har svaret 2, 4, 5, 9 og 9. Tre ord beskriver sådan en række tal.": {
+   "f": "c979bfe1509d.mp3",
+   "d": 6.72
+  },
+  "Hegnet skal hele vejen rundt om anlægget. Den længde kaldes omkredsen.": {
+   "f": "5962e80749c9.mp3",
+   "d": 5.08
+  },
+  "Hele vejen rundt er 20 meter, men vi kender kun de to korte sider på 4 meter. Træk dem fra. 20 minus 4 minus 4 er 12. De 12 meter er de to lange sider tilsammen, så del med 2. Hver lang side er 6 meter.": {
+   "f": "27993e825d5b.mp3",
+   "d": 16.98
+  },
+  "Her er en vigtig regel. Gange og division skal altid regnes før plus og minus, også selvom gangestykket står til sidst.": {
+   "f": "aada14fc24a2.mp3",
+   "d": 7.68
   },
   "Her er et eksempel: 7 gange 8 er lig med x plus x minus 10. Regn først det, du kan. 7 gange 8 er 56.": {
    "f": "4f1ae8fb91b0.mp3",
-   "d": 10.09
+   "d": 10.14
+  },
+  "Her er siderne 7, 4 og 5 centimeter. Ingen af siderne er lige lange, så trekanten er hverken ligesidet eller ligebenet.": {
+   "f": "555701a7e72d.mp3",
+   "d": 8.0
+  },
+  "Her går linje a 2 tern hen og et tern op, men linje b går 3 tern hen og et tern op. De hælder forskelligt, så de ville mødes, hvis man tegnede dem længere. De er ikke parallelle.": {
+   "f": "98dc447faa19.mp3",
+   "d": 11.77
+  },
+  "Her skal du sammenligne 985 og 1012. 985 har ingen tusinder, så den plads er tom. Men 1012 har et tusind. Et tal med tusinder er større end et tal uden, selvom 985 har store cifre. Så 985 er mindre end 1012.": {
+   "f": "0444093f076c.mp3",
+   "d": 19.55
+  },
+  "Her står der, at 4 gange et ukendt tal giver 28. Når du regner baglæns, bliver gange til division. 28 delt med 4 er 7. Så det ukendte tal er 7, for 4 gange 7 er 28.": {
+   "f": "8abff8cd7c0f.mp3",
+   "d": 15.12
+  },
+  "Historien gemmer på et gangestykke. Find de lige store grupper.": {
+   "f": "3eaabb07c936.mp3",
+   "d": 4.37
+  },
+  "Hjørnerne i anlæggene har forskellige vinkler.": {
+   "f": "db24ca09048d.mp3",
+   "d": 2.69
+  },
+  "Husk tegnene for større end og mindre end. Den åbne side af tegnet vender altid mod det største tal, og spidsen peger mod det mindste. Så 7 er større end 2, og 2 er mindre end 7.": {
+   "f": "3a764d4314e4.mp3",
+   "d": 12.17
   },
   "Husk: Resten skal altid være mindre end det tal, du deler med. Deler du med 4, kan resten kun være 0, 1, 2 eller 3. Er der 4 tilbage, kan du lave en gruppe mere.": {
    "f": "4212b5c3a48d.mp3",
-   "d": 11.07
+   "d": 11.12
+  },
+  "Hvad er 30 gange 7? 30 er det samme som 3 tiere. 3 gange 7 er 21, så 3 tiere gange 7 er 21 tiere. Og 21 tiere er 210. Du regner altså 3 gange 7 og sætter et 0 på til sidst.": {
+   "f": "1329944e83e1.mp3",
+   "d": 17.35
+  },
+  "Hvem fik mest fisk? Sådan sammenligner du to brøker.": {
+   "f": "c5be7a57ad97.mp3",
+   "d": 4.18
+  },
+  "Hvert ciffer i et billetnummer står på en plads. Og pladsen bestemmer, hvor meget cifferet er værd.": {
+   "f": "9bec90c8be56.mp3",
+   "d": 6.36
+  },
+  "Hvilken dag kom der flest gæster? Sammenlign tallene ciffer for ciffer.": {
+   "f": "a1c7aa5a71e7.mp3",
+   "d": 4.9
+  },
+  "Hvilken unge vejer mest? Pas på, for flere cifre betyder ikke, at tallet er større.": {
+   "f": "bcc817d8f433.mp3",
+   "d": 6.31
+  },
+  "Hvilket svar kom flest gange? Det tal kaldes typetallet.": {
+   "f": "bb36af3d7bd3.mp3",
+   "d": 4.34
+  },
+  "Hvor lang tid er der til næste fodring? Tæl op i to spring.": {
+   "f": "83976d4b9c9c.mp3",
+   "d": 4.45
+  },
+  "Hvor langt er der fra det mindste til det største tal? Det er variationsbredden.": {
+   "f": "15e2fdeb2672.mp3",
+   "d": 4.96
+  },
+  "Hvor langt, højt eller bredt er noget? Længder måles i kilometer, meter, centimeter og millimeter.": {
+   "f": "f0864cd55ef2.mp3",
+   "d": 7.43
+  },
+  "Hvor ligger punktet P? Start i 0, 0, og gå hen ad x-aksen, til du er lige under P. Det er 4 hen.": {
+   "f": "b91305106a76.mp3",
+   "d": 8.5
+  },
+  "Hvor mange er der tilbage? Træk tallet fra i bidder, først hundreder, så tiere og til sidst enere.": {
+   "f": "b3f00a793f3c.mp3",
+   "d": 6.79
+  },
+  "Hvor mange fisk er tre fjerdedele af spanden? Del først, og gang så.": {
+   "f": "74168be70177.mp3",
+   "d": 4.91
+  },
+  "Hvor meget kan der være i noget? Rumfang måles i liter, deciliter og centiliter.": {
+   "f": "16bb6e316121.mp3",
+   "d": 5.76
+  },
+  "Hvor stor er chancen for at spotte pandaen? Chancen kan siges med ord, og den kan skrives som en brøk.": {
+   "f": "265ec85bc21c.mp3",
+   "d": 6.35
+  },
+  "Hvor stor er indhegningen? Arealet er, hvor mange kvadrater der er plads til.": {
+   "f": "172c4fbdf91d.mp3",
+   "d": 5.46
+  },
+  "Hvor tungt er noget? Vægt måles i kilogram og gram.": {
+   "f": "2db4a0bb87bd.mp3",
+   "d": 3.9
+  },
+  "I nogle talfølger ganger man hver gang. I 2, 4, 8, 16 ganges der med 2, og i 1, 3, 9, 27 ganges der med 3. I andre bliver springet 1 større hver gang, som i 1, 2, 4, 7, 11.": {
+   "f": "f0876cc8b612.mp3",
+   "d": 16.5
+  },
+  "I tallet 4032 er der ingen hundreder. Derfor står der et 0 på hundredernes plads. Tallet er 4000 plus 30 plus 2. Nullet skal stå der, for ellers ville tallet blive til 432.": {
+   "f": "9ca8b0bc0170.mp3",
+   "d": 14.79
+  },
+  "Jeg tjekker altid mit svar ved at gange tilbage. 18 gange 4 er 72, så svaret passer.": {
+   "f": "da0fbf83e208.mp3",
+   "d": 6.9
+  },
+  "Kan du ikke huske 6 gange 7? Så start med et gangestykke, du kender, som 5 gange 7, der er 35. 6 gange 7 er bare en gruppe mere med 7, ligesom på tegningen. Så er 6 gange 7 lig med 35 plus 7, og det er 42.": {
+   "f": "53ce3c5452b8.mp3",
+   "d": 16.05
+  },
+  "Kassen skal gøres op. Dagens billetsalg skal lægges sammen og trækkes fra.": {
+   "f": "539899c94630.mp3",
+   "d": 5.11
+  },
+  "Kig altid efter, hvad hver streg er værd. Her går tallene i spring på 5. Søjlen for mandag når op til 15, så der blev solgt 15 is om mandagen. Det er ikke 3, selvom søjlen kun er 3 streger høj.": {
+   "f": "8ad1b672c08f.mp3",
+   "d": 14.78
+  },
+  "Kig først på de hele. 2,1 er større end 1,95, fordi 2 hele er mere end en hel. Er de hele ens, så kig på tiendedelene og derefter på hundrededelene.": {
+   "f": "cae1241e67ff.mp3",
+   "d": 12.31
+  },
+  "Klinikkens tal har komma. Det kan være kilo, liter og kroner.": {
+   "f": "922239c997ae.mp3",
+   "d": 4.8
+  },
+  "Koden mangler et tal. Regn baglæns med det modsatte regnestykke.": {
+   "f": "eca186cdf3af.mp3",
+   "d": 4.76
+  },
+  "Kvart over tre er 15 minutter over tre. Halv fire er 30 minutter over tre. Kvart i fire er 45 minutter over tre, og så mangler der kun et kvarter, før klokken er fire.": {
+   "f": "ad173a553d03.mp3",
+   "d": 12.57
+  },
+  "Lav et overslag, så du kan se, om svaret passer. 47 er lidt under 50, og 50 gange 6 er 300. Så svaret skal være lidt under 300, og 282 passer fint.": {
+   "f": "f7c154c047e1.mp3",
+   "d": 13.4
+  },
+  "Linjer, der krydser hinanden, er aldrig parallelle. Her går linje a opad og linje b nedad, og de mødes på midten.": {
+   "f": "0d82b992af3d.mp3",
+   "d": 7.78
+  },
+  "Linjerne kan godt være drejet. Linje a går 2 tern hen og et tern op, og linje b går et tern hen og 2 tern ned. Tallene har byttet plads, og op er blevet til ned, så står linjerne vinkelret.": {
+   "f": "443a40cb3bec.mp3",
+   "d": 11.21
+  },
+  "Læg mærke til ord som hver, i hver og gange så mange. De fortæller, at der er lige store grupper. Spørg så dig selv, hvor mange grupper der er, og hvor mange der er i hver.": {
+   "f": "54d8f99a2c7f.mp3",
+   "d": 10.96
+  },
+  "Med penge regner du kroner for sig og øre for sig. 12 kroner plus 7 kroner er 19 kroner. 50 øre plus 25 øre er 75 øre. Tilsammen bliver det 19 kroner og 75 øre, og det skrives 19,75.": {
+   "f": "077d806ac2e6.mp3",
+   "d": 16.64
+  },
+  "Medicinen skal måles helt præcist, i tiendedele og hundrededele.": {
+   "f": "39d915e9f9e6.mp3",
+   "d": 3.85
+  },
+  "Minus virker på samme måde. 2,4 er 24 tiendedele, og 0,7 er 7 tiendedele. 24 minus 7 er 17 tiendedele, og det er 1,7.": {
+   "f": "61cea03ae2b9.mp3",
+   "d": 12.53
+  },
+  "Minustal er tal under nul. Minus 3 ligger 3 skridt til venstre for 0 på tallinjen. Det er ligesom minus 3 grader på et termometer, når det fryser.": {
+   "f": "3ee989e8703d.mp3",
+   "d": 10.74
+  },
+  "Noget skal deles helt lige mellem nogle stykker. Hvor mange får hver?": {
+   "f": "3fd18a1de448.mp3",
+   "d": 4.64
+  },
+  "Nogle gange er der små streger på siderne. Sider med lige mange streger er lige lange. Her har to sider en streg hver, så trekanten er ligebenet.": {
+   "f": "ea4df851b592.mp3",
+   "d": 10.31
   },
   "Nogle gange går delingen ikke op. Det, der bliver til overs, hedder resten. Og resten – den får jeg!": {
    "f": "f9628c9a1999.mp3",
-   "d": 7.87
+   "d": 7.92
+  },
+  "Nu er en hel delt i 100 små felter. Hvert felt er en hundrededel, og det skriver vi som 0,01. Her er 7 felter farvet. Det er 7 hundrededele, og det skrives 0,07.": {
+   "f": "7996d2dbb1b1.mp3",
+   "d": 13.75
+  },
+  "Nu er tælleren den samme, nemlig 1. Den øverste stang er delt i 3, og den nederste er delt i 6. Jo flere stykker fisken deles i, jo mindre bliver hvert stykke. Så er en tredjedel større end en sjettedel.": {
+   "f": "a58167e8b27b.mp3",
+   "d": 14.31
+  },
+  "Nu lægger vi det hele sammen. Seks hundrededele plus 5 plus to tiendedele er det samme som 5 plus 0,2 plus 0,06, og det giver 5,26. Rækkefølgen er ligegyldig, for hvert tal har sin egen plads.": {
+   "f": "09a573450ca6.mp3",
+   "d": 14.96
+  },
+  "Nu skal vi regne minus 3 plus 3 gange 2. Gangestykket kommer først, og 3 gange 2 er 6, så vi får minus 3 plus 6. Start ved minus 3 på tallinjen, gå 6 skridt frem, og så lander du på 3.": {
+   "f": "16893f20316b.mp3",
+   "d": 13.97
+  },
+  "Nu står den store viser på 6. Det er 6 gange 5, altså 30 minutter, og det er en halv time. Den lille viser står midt mellem 3 og 4. Pas på, for vi siger halv fire, fordi der er en halv time, til klokken bliver fire.": {
+   "f": "1092af86f661.mp3",
+   "d": 15.75
   },
   "Nu står der: 56 er lig med x plus x minus 10. Der er trukket 10 fra. Så lægger vi 10 til igen, og så er x plus x lig med 66.": {
    "f": "41d4ccad7b1a.mp3",
-   "d": 11.15
+   "d": 11.2
+  },
+  "Nu zoomer vi ind mellem 2,3 og 2,4. Her er der igen 10 små stykker, men nu er hvert stykke kun 0,01. Prikken står 6 stykker efter 2,3. Så står den på 2,36.": {
+   "f": "849b9f87bf3f.mp3",
+   "d": 14.99
+  },
+  "Når der står 5 poser med 8 i hver, er det 5 lige store grupper. Se på tegningen. Der er 5 grupper, og der er 8 prikker i hver gruppe. Så regner du 5 gange 8, og det giver 40.": {
+   "f": "b9c6015f4119.mp3",
+   "d": 13.49
+  },
+  "Når vi ganger med 100, rykker cifrene to pladser til venstre. 3 tiere bliver til 3 tusinder, og 4 enere bliver til 4 hundreder. Så kommer der to nuller bagpå, og 34 gange 100 er 3400.": {
+   "f": "c3773514b17f.mp3",
+   "d": 14.62
+  },
+  "Når vinklens to ben danner en helt lige linje, hedder det en lige vinkel. En lige vinkel er 180 grader. Den stiplede streg på tegningen deler den i to rette vinkler, og 90 plus 90 er 180.": {
+   "f": "2c92d44b7d06.mp3",
+   "d": 13.32
+  },
+  "Parallelle linjer er ligesom skinnerne på et togspor. Afstanden mellem dem er den samme hele vejen, og de mødes aldrig.": {
+   "f": "88a69cea02bf.mp3",
+   "d": 7.33
+  },
+  "Pas på enhederne. 4 centimeter er det samme som 40 millimeter. Så har en trekant med siderne 4 centimeter, 40 millimeter og 3 centimeter to lige lange sider, og den er ligebenet.": {
+   "f": "90566cc96389.mp3",
+   "d": 12.85
+  },
+  "Pas på fælden. Punkt B ligger 4 hen og 6 op, så det er punktet 4, 6. Tallene er byttet om, og så er det et helt andet punkt.": {
+   "f": "8a172881fbb2.mp3",
+   "d": 9.45
+  },
+  "Pas på nullet. 3 plus tre hundrededele har ingen tiendedele, så der skal stå et 0 lige efter kommaet. Tallet er 3,03 og ikke 3,3.": {
+   "f": "c6d5c9918477.mp3",
+   "d": 10.82
+  },
+  "Potesporet følger et mønster. Find springet, så kender du det næste tal.": {
+   "f": "fcf2176e9d2d.mp3",
+   "d": 5.31
+  },
+  "På billedet bliver foderet vejet på en vægt. Vægt måler vi i kilogram og gram, og et kilogram er 1000 gram. Pingvinungen vejer 3 kilogram. 3 gange 1000 er 3000, så den vejer 3000 gram.": {
+   "f": "fa16fbc7025b.mp3",
+   "d": 13.31
+  },
+  "På billedet er der en stor målekande og et lille målebæger. En liter er 10 deciliter, og det er det samme som 100 centiliter. Sælungen drikker 2 liter mælk. 2 gange 10 er 20, så det er 20 deciliter.": {
+   "f": "94235351e993.mp3",
+   "d": 14.45
+  },
+  "På ternet papir kan du tælle, hvor meget en linje hælder. Linje a går 2 tern hen og et tern op, og det gør linje b også. De hælder lige meget, så de er parallelle.": {
+   "f": "9a73172d7e3e.mp3",
+   "d": 10.9
+  },
+  "Regn parentesen først. 5 gange 1 er 5. Så regner vi resten, og 5 minus 5 er 0.": {
+   "f": "cb6c2d1c7b45.mp3",
+   "d": 7.86
+  },
+  "Runder du til tiere, så kig på cifferet på enernes plads. Er det 0, 1, 2, 3 eller 4, runder du ned, så 43 bliver til 40. Er det 5, 6, 7, 8 eller 9, runder du op, så 45 og 47 bliver til 50.": {
+   "f": "73d19ea703f2.mp3",
+   "d": 17.23
+  },
+  "Rækkefølgen betyder noget. Punktet 4, 2 og punktet 2, 4 er to forskellige punkter. Husk, først hen og så op.": {
+   "f": "efb55a7b1f78.mp3",
+   "d": 8.97
+  },
+  "Se målebåndet på hegnet. En meter er 100 centimeter, en kilometer er 1000 meter, og en centimeter er 10 millimeter. Girafungen er 2 meter høj. 2 gange 100 er 200, så den er 200 centimeter høj.": {
+   "f": "a6147818f21d.mp3",
+   "d": 16.01
+  },
+  "Se på broen fra 0 til 1. Den er delt i 4 lige store stykker, så hvert stykke er en fjerdedel. Ved stregerne står der en fjerdedel, to fjerdedele og tre fjerdedele. Når du er helt henne ved 1, har du gået alle fire fjerdedele.": {
+   "f": "5ed723b60e07.mp3",
+   "d": 15.38
+  },
+  "Se på de to stænger. Begge er delt i 4 dele. I den første er delene lige store, så den farvede del er en fjerdedel. I den anden er delene ikke lige store, og så er det ikke fjerdedele. Delene skal altid være lige store.": {
+   "f": "7482730c75ba.mp3",
+   "d": 16.34
+  },
+  "Se på de to stænger. Begge er delt i 5, så stykkerne er lige store. Den øverste har 3 farvede stykker, og den nederste har 2. Så er tre femtedele større end to femtedele.": {
+   "f": "b59b20b338d4.mp3",
+   "d": 12.92
   },
   "Se på de to stænger. Den øverste er delt i 2, og 1 del er farvet. Det er en halv. Den nederste er delt i 6, og 3 dele er farvet. Det er tre sjettedele. De farvede stykker er lige lange. Så en halv er lige så meget som tre sjettedele.": {
    "f": "c8096585c365.mp3",
-   "d": 19.02
+   "d": 19.07
+  },
+  "Se på de to stænger. Hver stang er en hel. 0,5 er 5 tiendedele, så den første stang er farvet halvvejs. 0,45 er kun 4 tiendedele og lidt mere. Derfor er 0,5 størst, selvom 0,45 har flere cifre.": {
+   "f": "234e0397b1c6.mp3",
+   "d": 18.45
+  },
+  "Se på de to tal, 4712 og 4298. Start fra venstre. Tusinderne er ens, for begge har 4. Ved hundrederne har det øverste tal 7, og det nederste har 2. 7 er mere end 2, så 4712 er størst.": {
+   "f": "e68fa6211532.mp3",
+   "d": 18.43
+  },
+  "Se på isflagen. Den er delt i 4 lige store dele, og 3 af dem er farvet. Det er tre fjerdedele. Tallet nederst i brøken hedder nævneren, og det viser, hvor mange dele der er i alt. Tallet øverst hedder tælleren, og det viser, hvor mange dele der er farvet.": {
+   "f": "593bfb6e73b5.mp3",
+   "d": 17.89
+  },
+  "Se på linjen. Helt til venstre står umulig, for det sker aldrig. Helt til højre står sikker, for det sker altid. Lige i midten står lige chance. Usandsynlig betyder, at det sker sjældent, og sandsynlig betyder, at det sker tit.": {
+   "f": "0c9971048880.mp3",
+   "d": 18.04
+  },
+  "Se på posen. Der er 4 kugler i alt, og en af dem er rød. Chancen for at trække den røde kugle er derfor 1 ud af 4. Som brøk skriver vi det som en fjerdedel.": {
+   "f": "f22c6db98656.mp3",
+   "d": 11.96
+  },
+  "Se på regnestykket 5 minus 5 gange 1. Gangestykket skal regnes først, så vi sætter en parentes om 5 gange 1.": {
+   "f": "0b18cdcdc277.mp3",
+   "d": 7.97
+  },
+  "Se på rektanglet. Det er 5 centimeter langt og 3 centimeter højt. Omkredsen er hele vejen rundt, så læg alle fire sider sammen. 5 plus 3 plus 5 plus 3 er 16, så omkredsen er 16 centimeter.": {
+   "f": "a19635e508f5.mp3",
+   "d": 15.35
+  },
+  "Se på springene i 7-tabellen. Hvert spring lægger 7 til, så du kan tælle 7, 14, 21, 28. Det næste spring lander på 28 plus 7, og det er 35. Sådan kan du altid finde det næste tal i tabellen.": {
+   "f": "385d976ff360.mp3",
+   "d": 16.79
+  },
+  "Se på stangen. En hel er delt i 10 lige store dele, og hver del er en tiendedel. En tiendedel skriver vi som 0,1. Her er 3 af de 10 dele farvet, og det er 0,3.": {
+   "f": "0c4d8f273343.mp3",
+   "d": 13.11
+  },
+  "Se på søjlen for koala. Følg toppen af søjlen lige hen til tallene ude til venstre. Tallene går i spring på 2, og toppen står midt mellem 8 og 10. Så har koalaen fået 9 stemmer.": {
+   "f": "48af3e5700be.mp3",
+   "d": 13.23
+  },
+  "Se på tallene 2, 4, 5, 9 og 9. Typetallet er det tal, der er flest af. 9 står der to gange, og alle de andre tal står der kun en gang. Så er typetallet 9.": {
+   "f": "d304a0dc0a6e.mp3",
+   "d": 13.45
+  },
+  "Se på tallene 3, 7, 11 og 15. Hvad sker der fra det ene tal til det næste? Fra 3 til 7 lægges der 4 til, og sådan er det hver gang. Så er det næste tal 15 plus 4, og det er 19.": {
+   "f": "879108808025.mp3",
+   "d": 14.69
+  },
+  "Se på tallet 4732. Over hvert ciffer står der, hvad pladsen er værd. Cifferet 7 står på hundredernes plads. Derfor er det ikke bare 7 værd, men 7 hundreder. Det er 700.": {
+   "f": "7f4189200d72.mp3",
+   "d": 15.69
+  },
+  "Se på tallinjen. 47 ligger mellem 40 og 50. Buerne viser, at der er 7 ned til 40, men kun 3 op til 50. Så ligger 47 tættest på 50, og derfor runder vi 47 op til 50.": {
+   "f": "010d6ee285c4.mp3",
+   "d": 15.56
+  },
+  "Se på tallinjen. Fra 0 til 1 er der 10 små stykker, og hvert stykke er 0,1. Tæl stykkerne fra 0 hen til prikken. Der er 7 stykker, så prikken står på 0,7.": {
+   "f": "e84446af00b0.mp3",
+   "d": 11.81
+  },
+  "Se på tegningen. 24 bananer skal deles lige mellem 6 aber. Hver abe får sin egen gruppe, og der er 4 bananer i hver. 6 grupper med 4 i hver er 24 i alt. Så 24 delt med 6 er 4.": {
+   "f": "72ee96cebcab.mp3",
+   "d": 16.78
+  },
+  "Se på tegningen. De to streger mødes i en ret vinkel, og det lille firkantede mærke viser det. En ret vinkel er 90 grader. Den ser ud ligesom hjørnet på et stykke papir.": {
+   "f": "ff4f4ddab97a.mp3",
+   "d": 12.42
+  },
+  "Se på tegningen. Rektanglet er fyldt med små kvadrater. Der er 3 rækker med 5 kvadrater i hver. Så er der 5 gange 3, altså 15 kvadrater. Hvert kvadrat er en kvadratmeter, så arealet er 15 kvadratmeter.": {
+   "f": "3bf23fc4ce94.mp3",
+   "d": 16.93
   },
   "Se på tegningen. Vi deler 23 med 4. Hvor mange hele grupper med 4 kan vi lave? Vi kan lave 5 grupper, og det er 20. Så er der 3 tilbage. 23 delt med 4 giver altså 5, rest 3.": {
    "f": "6613508c6b32.mp3",
-   "d": 17.13
+   "d": 17.18
+  },
+  "Se på tegningen. Vi ganger 34 med 10. Hvert ciffer rykker en plads til venstre og bliver 10 gange mere værd. 3 tiere bliver til 3 hundreder, og 4 enere bliver til 4 tiere. På enernes plads skriver vi et 0, så 34 gange 10 er 340.": {
+   "f": "59157d01b2a2.mp3",
+   "d": 19.11
+  },
+  "Se på tidslinjen. Vi skal fra klokken tretten femogfyrre, altså kvart i to, til klokken fjorten tyve. Tæl først op til den hele time. Fra kvart i to til klokken to er der 15 minutter, og derfra til 20 minutter over to er der 20 minutter mere. 15 plus 20 er 35, så der går 35 minutter.": {
+   "f": "d1068d4f2abf.mp3",
+   "d": 21.59
+  },
+  "Seks hundrededele betyder 6 ud af 100. Det skrives 0,06, med 6 på hundrededelenes plads.": {
+   "f": "2ae86d85e229.mp3",
+   "d": 7.33
+  },
+  "Sporet kan også blive mindre for hvert skridt. Her går det 50, 45, 40 og 35. Der trækkes 5 fra hver gang. Så er det næste tal 35 minus 5, og det er 30.": {
+   "f": "eeb4e6e690a5.mp3",
+   "d": 13.43
+  },
+  "Spørger opgaven, hvor mange flere, så træk fra. 25 minus 15 er 10. Spørger den, hvor mange i alt, så læg sammen, og 15 plus 25 plus 10 er 50.": {
+   "f": "f812ad40091a.mp3",
+   "d": 12.79
+  },
+  "Spørger opgaven, hvor mange grupper der bliver, så skal du dele i grupper. Tjek bagefter med gange. 6 gange 4 er 24, så det passer.": {
+   "f": "c7bdae694072.mp3",
+   "d": 10.25
+  },
+  "Spørger opgaven, hvor mange hver får, så del ligeligt. Spørger den, hvor mange grupper der bliver, så del i grupper. Skal alle med, skal du bruge en ekstra til resten, men spørger opgaven, hvor mange der er tilbage, er svaret resten.": {
+   "f": "cfd0a6d61d43.mp3",
+   "d": 15.16
+  },
+  "Spørger opgaven, hvor mange hver får, så skal du dele ligeligt. Tjek bagefter med gange. 3 gange 5 er 15, så det passer.": {
+   "f": "0b4a5e87cbce.mp3",
+   "d": 9.59
+  },
+  "Start ved 0, og tæl stykkerne med buerne på tegningen. 1, 2, 3. Pingvinen står efter 3 stykker, og hvert stykke er en fjerdedel. Så står den tre fjerdedele ude på broen.": {
+   "f": "e54d4e3d7ee0.mp3",
+   "d": 13.67
+  },
+  "Stil tallene op, så kommaerne står lige under hinanden. 0,7 er 7 tiendedele, og 0,6 er 6 tiendedele. Tilsammen er det 13 tiendedele. 10 tiendedele er en hel, så 13 tiendedele er 1,3.": {
+   "f": "9c655a66c2aa.mp3",
+   "d": 16.52
+  },
+  "Store tal deles lettest i bidder, som er nemme at dele.": {
+   "f": "7c3a5272f2dc.mp3",
+   "d": 3.46
+  },
+  "Sæt et 0 bag på 0,5, så den bliver til 0,50. Det ændrer ikke tallet, men nu har begge tal lige mange cifre efter kommaet. Så kan du sammenligne dem som 50 og 45, og 50 er størst. Derfor er 0,50 større end 0,45.": {
+   "f": "4feb173a047a.mp3",
+   "d": 18.66
+  },
+  "Sæt tallene i rækkefølge. Det tal, der står i midten, er medianen.": {
+   "f": "a72439e3512f.mp3",
+   "d": 5.2
   },
   "Tjek altid dit svar. 33 plus 33 minus 10 er 56. Begge sider er lige store. Så x er 33.": {
    "f": "c2e8f198014b.mp3",
-   "d": 10.95
+   "d": 11.0
+  },
+  "Tjek dit svar med minus. 632 minus 285 er 347, så det passer.": {
+   "f": "910a7a85279a.mp3",
+   "d": 7.82
+  },
+  "Tjek dit svar med plus. 347 plus 285 er 632, så det passer.": {
+   "f": "f050d179451f.mp3",
+   "d": 7.56
+  },
+  "Tjek koden ved at sætte dit tal ind. 8 plus 7 er 15, så koden passer.": {
+   "f": "94b1004f8166.mp3",
+   "d": 4.56
   },
   "To brøker kan se forskellige ud og alligevel være lige store.": {
    "f": "fa93d387dd1c.mp3",
-   "d": 3.33
+   "d": 3.38
+  },
+  "To linjer står vinkelret på hinanden, når de mødes i en ret vinkel på 90 grader. Det lille firkantede mærke viser, hvor den rette vinkel er.": {
+   "f": "73cc04476c7c.mp3",
+   "d": 8.68
+  },
+  "To tiendedele betyder 2 ud af 10. Det skrives 0,2, med 2 på tiendedelenes plads.": {
+   "f": "be59ff179e11.mp3",
+   "d": 6.71
+  },
+  "Uret har to visere. Den lille viser timerne, og den store viser minutterne.": {
+   "f": "563ee25f679e.mp3",
+   "d": 5.47
+  },
+  "Variationsbredden er det største tal minus det mindste tal. I tallene 2, 4, 5, 9 og 9 er det største tal 9, og det mindste er 2. 9 minus 2 er 7, så variationsbredden er 7.": {
+   "f": "2bbbc9f538c8.mp3",
+   "d": 12.53
+  },
+  "Vi lægger 347 og 285 sammen. Se på tabellen. Hundrederne giver 300 plus 200, og det er 500. Tierne giver 40 plus 80, altså 120, og enerne giver 7 plus 5, altså 12. Til sidst lægger vi det hele sammen, og 500 plus 120 plus 12 er 632.": {
+   "f": "1db1339d7afd.mp3",
+   "d": 22.78
+  },
+  "Vi skal dele 72 med 4. Del først 72 op i 40 og 32, for de er lette at dele med 4. 40 delt med 4 er 10, og 32 delt med 4 er 8. Tilsammen giver det 18, så 72 delt med 4 er 18.": {
+   "f": "9560c5050421.mp3",
+   "d": 16.08
+  },
+  "Vi skal finde tre fjerdedele af 20 fisk. Nævneren er 4, så del de 20 fisk i 4 lige store grupper med 5 i hver. Tælleren er 3, så tag 3 af grupperne, ligesom de farvede på tegningen. 3 grupper med 5 i hver er 15 fisk.": {
+   "f": "41d279f0ff7d.mp3",
+   "d": 15.27
+  },
+  "Vi skal regne 47 gange 6. Del 47 op i 40 og 7, ligesom på tegningen. 40 gange 6 er 240, og 7 gange 6 er 42. Læg så de to dele sammen. 240 plus 42 er 282.": {
+   "f": "ecc649643802.mp3",
+   "d": 18.33
+  },
+  "Vi skal regne 632 minus 285. Del 285 op i 200, 80 og 5, og træk en bid fra ad gangen. 632 minus 200 er 432. 432 minus 80 er 352, og 352 minus 5 er 347.": {
+   "f": "fc12b8b7a597.mp3",
+   "d": 21.09
+  },
+  "Vægten er en tallinje. Mellem to hele tal er der 10 små stykker.": {
+   "f": "1554bc2f3e4f.mp3",
+   "d": 5.04
   },
   "x er et tal, vi ikke kender endnu. Vi skal finde det tal, der gør, at begge sider af lighedstegnet er lige store.": {
    "f": "f672922b6f8b.mp3",
-   "d": 7.6
+   "d": 7.65
   },
   "x plus x er det samme som 2 gange x. Så er x lig med 66 delt med 2. Det er 33.": {
    "f": "15ab4210ab61.mp3",
-   "d": 7.51
+   "d": 7.56
+  },
+  "Øv en tabel ad gangen. Du kan altid regne dig frem fra et gangestykke, du kender.": {
+   "f": "e98a0e85d27d.mp3",
+   "d": 5.59
   }
  }
 }
