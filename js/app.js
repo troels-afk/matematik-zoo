@@ -1,14 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008194551';
-import * as E from './engine.js?v=20261008194551';
-import * as Z from './zoo.js?v=20261008194551';
-import { zooGate } from './scene.js?v=20261008194551';
-import { zooMap } from './map.js?v=20261008194551';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008194551';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008194551';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008194551';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261008194551';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008201522';
+import * as E from './engine.js?v=20261008201522';
+import * as Z from './zoo.js?v=20261008201522';
+import { zooGate } from './scene.js?v=20261008201522';
+import { zooMap } from './map.js?v=20261008201522';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008201522';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008201522';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008201522';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261008201522';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -581,7 +581,7 @@ function missionScene(t, state = 'intro', size = 'hero', opts = {}) {
     </div>`;
 }
 
-// "Giraferne har spist alle bladene. <b>Nora</b> skal regne ud …"
+// "Girafferne har spist alle bladene. <b>Nora</b> skal regne ud …"
 function missionIntroHtml(t) {
   const name = Z.CAST[t.who]?.name || '';
   return esc(Z.missionIntroText(t.area, t.title, t.who)).replace(new RegExp(`\\b${name}\\b`), `<b>${name}</b>`);

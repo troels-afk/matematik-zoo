@@ -1006,6 +1006,29 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .vis.vis-geo { max-width: 360px; max-height: 260px; }
 .walk .visual .vis.vis-geo { max-width: 300px; }
 .v-grid { stroke: var(--line); stroke-width: 1; }
+/* Prisskiltet ved indgangen (Tabeller og diagrammer): et skilt af træ – ser ens ud i lyst og mørkt tema */
+.price-board { margin: 0 auto; min-width: min(100%, 300px); border-collapse: separate; border-spacing: 0; border: 4px solid #8a5a2b; border-radius: 14px; background: #fff7e6; color: #3b2f1a; font-variant-numeric: tabular-nums; box-shadow: 0 3px 0 #6d4420; }
+.price-board caption { padding: 4px 12px; font: 600 1.05rem var(--font-head); color: var(--ink); }
+.price-board th, .price-board td { padding: 7px 14px; border-top: 1px dashed #d9bf8f; font-size: 1.02rem; }
+.price-board tr:first-child th, .price-board tr:first-child td { border-top: 0; }
+.price-board th { text-align: left; font: 700 1.02rem var(--font-body); text-transform: none; letter-spacing: 0; color: #3b2f1a; }
+.price-board th small { display: block; font-weight: 600; color: #7a6544; font-size: .8rem; }
+.price-board td { text-align: right; font-weight: 800; white-space: nowrap; }
+.ex-vis .price-board { min-width: 0; font-size: .9rem; }
+.ex-vis .price-board th, .ex-vis .price-board td { padding: 4px 9px; font-size: .9rem; }
+/* En flok dyreunger (brøkdel af en flok) */
+.herd { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; max-width: 380px; margin: 0 auto; padding: 8px; border-radius: 16px; background: color-mix(in srgb, #9fd27f 30%, var(--card)); }
+.herd img { width: 62px; height: 62px; object-fit: contain; }
+.herd.many img { width: 52px; height: 52px; }
+/* Kortet over zoo'en (koordinatsystemet): græs, sti, dam, tern og hvide nåle med dyrene */
+.vis.vis-map { max-width: 440px; max-height: 380px; }
+.walk .visual .vis.vis-map { max-width: 340px; }
+.zm-grass { fill: color-mix(in srgb, #9fd27f 42%, var(--card)); }
+.zm-path { fill: none; stroke: color-mix(in srgb, #f2d79e 75%, var(--card)); stroke-linecap: round; }
+.zm-pond { fill: color-mix(in srgb, #8ccfe8 60%, var(--card)); }
+.zm-grid { stroke: color-mix(in srgb, var(--ink) 20%, transparent); stroke-width: 1; }
+.zm-pin { fill: #fff; stroke: var(--primary); stroke-width: 2.5; stroke-linejoin: round; }
+.zm-pin.hi { stroke: var(--coral); stroke-width: 3.5; }
 .v-ink { fill: var(--ink); }
 .v-soft-a { fill: var(--primary-soft); fill-opacity: .6; }
 @media (max-width: 560px) {

@@ -4,9 +4,10 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261008194551';
-import * as V from './visuals.js?v=20261008194551';
-import { attachSay } from './oplaesning.js?v=20261008194551';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261008201522';
+import * as V from './visuals.js?v=20261008201522';
+import { attachSay } from './oplaesning.js?v=20261008201522';
+import { ANIMALS, HEAVY, LIGHT, cap } from './animals.js?v=20261008201522';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
@@ -27,14 +28,14 @@ const timesLine = (a, b) => {
   const [n, per] = a <= b ? [a, b] : [b, a];
   return pick([
     `Zoo-toget har ${n} vogne med ${per} pladser i hver. Hvor mange pladser er der i alt?`,
-    `Giraferne spiser ${per} kg blade om dagen. Hvor meget spiser de på ${n} dage?`,
+    `Hver pingvin får ${per} fisk om dagen. Hvor mange fisk får den på ${n} dage?`,
     `En familiebillet koster ${per} kr. Hvad koster ${n} familiebilletter?`,
     `Zoo'en køber ${n} kasser bananer med ${per} bananer i hver. Hvor mange bananer er det?`,
   ]);
 };
 // Store tal × et lille tal
 const bigTimesLine = (per, n) => pick([
-  `Elefanterne spiser ${per} kg hø om ugen. Hvor meget spiser de på ${n} uger?`,
+  ...(per >= 200 && per <= 600 ? [`Elefanterne spiser ${per} kg hø om dagen. Hvor meget spiser de på ${n} dage?`] : []),
   `Der kommer ${per} gæster til sæl-showet hver dag. Hvor mange kommer der på ${n} dage?`,
   `En palle fiskefoder vejer ${per} kg. Hvad vejer ${n} paller?`,
   `Zoo-butikken sælger ${per} postkort om måneden. Hvor mange sælger den på ${n} måneder?`,
@@ -217,7 +218,7 @@ const sammenlign = {
     const target = big ? Math.max(...nums) : Math.min(...nums);
     const sorted = [...nums].sort((a, b) => b - a).map(fmt).join(' &gt; ');
     return {
-      prompt: `Billetlugen har talt gæster på forskellige dage. Hvilket besøgstal er <b>${big ? 'størst' : 'mindst'}</b>?`,
+      prompt: `Billetlugen har talt gæster ${Math.max(...nums) >= 10000 ? 'i forskellige måneder' : 'på forskellige dage'}. Hvilket besøgstal er <b>${big ? 'størst' : 'mindst'}</b>?`,
       input: 'choice',
       choices: shuffle(nums).map(fmt),
       answer: fmt(target),
@@ -330,7 +331,7 @@ const gangeflercifret = {
   intro: {
     scene: 'giraffer',
     text: 'Del det store tal op i tiere og enere, og gang hver del for sig:<br>47 × 6 = 40×6 + 7×6 = 240 + 42 = <b>282</b>.',
-    lead: 'Giraferne og elefanterne spiser meget. Store gangestykker bliver lette, når du deler tallet op.',
+    lead: 'Girafferne og elefanterne spiser meget. Store gangestykker bliver lette, når du deler tallet op.',
     cards: [
       { title: 'Del tallet op', visual: () => V.miniSplit([40, 7], 6), rules: ['47 × 6 = 282'], note: 'Gang tierne og enerne hver for sig, og læg dem sammen bagefter.' },
       { title: 'Også med hundreder', visual: () => V.miniSplit([200, 30, 6], 4), rules: ['236 × 4 = 944'], note: 'Hundreder, tiere og enere – hver for sig, og så det hele.' },
@@ -367,7 +368,7 @@ const gangetekst = {
     lead: 'Historien gemmer på et gangestykke. Find de lige store grupper.',
     cards: [
       { title: 'Lige store grupper', visual: () => V.miniGroups({ groups: 5, per: 8 }), rules: ['5 poser med 8 i hver = 5 × 8 = 40'], note: 'Der er 5 grupper, og der er 8 i hver gruppe.' },
-      { title: 'Gange så mange', visual: () => V.miniGroups({ groups: 3, per: 4, label: '3 × 4 = 12' }), rules: ['3 gange så mange som 4 = 12'], note: 'Giraffen spiser 4 kg. Elefanten spiser 3 gange så meget: 12 kg.' },
+      { title: 'Gange så mange', visual: () => V.miniGroups({ groups: 3, per: 4, label: '3 × 4 = 12' }), rules: ['3 gange så mange som 4 = 12'], note: 'Pingvinen får 4 fisk. Sælen får 3 gange så mange: 12 fisk.' },
     ],
     tip: {
       title: 'Sådan finder du gangestykket',
@@ -393,7 +394,7 @@ const gangetekst = {
       };
     }
     const stories = [
-      [`Hver af de ${b} giraffer spiser ${a} kg blade om dagen. Hvor mange kg blade skal der bestilles?`, 'kg'],
+      ...(a >= 25 && a <= 35 ? [[`Hver af de ${b} giraffer spiser ${a} kg blade om dagen. Hvor mange kg blade skal der bestilles?`, 'kg']] : []),
       [`En børnebillet til zoo'en koster ${a} kr. Hvad koster ${b} børnebilletter?`, 'kr.'],
       [`Der er ${b} pingviner, og hver får ${a} fisk. Hvor mange fisk skal der bruges?`, 'fisk'],
       [`Aberne spiser ${a} bananer om dagen. Hvor mange bananer spiser de på ${b} dage?`, 'bananer'],
@@ -593,16 +594,36 @@ const brokfigur = {
     ],
   },
   gen(level) {
+    // En flok dyreunger fra Babyhuset: hvor stor en brøkdel er pingviner?
+    if (chance(0.35)) {
+      const n = pick([[3, 4, 5], [5, 6, 8], [8, 9, 10, 12]][level - 1]), k = ri(1, n - 1);
+      const [A, B] = shuffle(HERD).slice(0, 2).map((x) => ANIMALS[x]);
+      const herd = shuffle([...Array(k).fill(A), ...Array(n - k).fill(B)]);
+      return {
+        prompt: `Der er ${n} unger i flokken. Hvor stor en brøkdel af ungerne er <b>${A.pl}</b>? Skriv som brøk.`,
+        visual: `<div class="herd${n > 8 ? ' many' : ''}">${herd.map((a) => `<img src="${a.img}" alt="" draggable="false">`).join('')}</div>`,
+        input: 'fraction', answer: [k, n],
+        explain: `Der er ${n} unger i alt – det er nævneren. ${k} af dem er ${A.pl} – det er tælleren. Altså <b>${frac(k, n)}</b>.`,
+      };
+    }
     const n = pick([[2, 3, 4], [5, 6, 8], [6, 8, 10, 12]][level - 1]);
     const k = ri(1, n - 1);
-    const vis = level === 3 || chance(0.5) ? V.fractionBar(n, k) : V.fractionCircle(n, k);
+    const bar = level === 3 || chance(0.5);
+    // Figuren er noget fra zoo'en: kagen til sælernes fødselsdag eller pingvinernes isflage
+    const zoo = chance(0.7) && (bar
+      ? pick([`Pingvinernes isflage er delt i ${n} lige store felter. Pingvinerne står på de farvede felter. Hvor stor en del af isflagen står de på?`,
+        `Hegnet om zebraerne har ${n} lige store brædder. De farvede brædder er malet. Hvor stor en del af hegnet er malet?`])
+      : `Kagen til sælernes fødselsdag er skåret i ${n} lige store stykker. De farvede stykker er spist. Hvor stor en del af kagen er spist?`);
     return {
-      prompt: 'Hvor stor en del af figuren er farvet? Skriv som brøk.',
-      visual: vis, input: 'fraction', answer: [k, n],
-      explain: `Figuren er delt i ${n} lige store dele, og ${k} er farvet. Det er <b>${frac(k, n)}</b>.`,
+      prompt: `${zoo || 'Hvor stor en del af figuren er farvet?'} Skriv som brøk.`,
+      visual: bar ? V.fractionBar(n, k) : V.fractionCircle(n, k), input: 'fraction', answer: [k, n],
+      explain: `${zoo ? (bar ? 'Den er' : 'Kagen er') : 'Figuren er'} delt i ${n} lige store dele, og ${k} er farvet. Det er <b>${frac(k, n)}</b>.`,
     };
   },
 };
+
+// Dyreungerne i flokkene (brøkdel af en flok)
+const HERD = ['pingvin', 'sael', 'flamingo', 'zebra', 'giraf', 'panda', 'koala', 'loeve', 'elefant', 'abe'];
 
 const broktallinje = {
   id: 'broktallinje',
@@ -829,10 +850,12 @@ const dectallinje = {
     ],
   },
   gen(level) {
+    // Tallinjen er vægten i klinikken: ungen bliver vejet (vægtene passer til dyret)
+    const weigh = (who) => (chance(0.7) ? `${who} bliver vejet i klinikken. Hvor mange kg viser vægten?` : 'Hvilket decimaltal peger pilen på?');
     if (level === 1) {
       const k = ri(1, 9);
       return {
-        prompt: 'Hvilket decimaltal peger pilen på?',
+        prompt: weigh(pick(['Pindsvineungen', 'Flamingoungen'])),
         visual: V.numberLine({ min: 0, max: 1, div: 10, labels: (i) => (i === 0 ? '0' : i === 10 ? '1' : i === 5 ? '0,5' : null), mark: k / 10 }),
         input: 'number', answer: k / 10,
         explain: `Hvert lille stykke er 0,1. Pilen står ${k} stykker fra 0: <b>${fmtDec(k / 10, 1)}</b>.`,
@@ -841,7 +864,7 @@ const dectallinje = {
     if (level === 2) {
       let k; do k = ri(1, 29); while (k % 10 === 0);
       return {
-        prompt: 'Hvilket decimaltal peger pilen på?',
+        prompt: weigh('Pingvinungen'),
         visual: V.numberLine({ min: 0, max: 3, div: 30, minorEvery: 10, labels: (i) => (i % 10 === 0 ? String(i / 10) : null), mark: k / 10 }),
         input: 'number', answer: k / 10,
         explain: `Mellem hvert helt tal er der 10 stykker på 0,1. Pilen står ved ${Math.floor(k / 10)} og ${k % 10} tiendedele: <b>${fmtDec(k / 10, 1)}</b>.`,
@@ -852,7 +875,7 @@ const dectallinje = {
     const lo = base / 10;
     const val = (base * 10 + h) / 100;
     return {
-      prompt: 'Hvilket decimaltal peger pilen på?',
+      prompt: weigh('Kaninen fra børnezoo\'en'),
       visual: V.numberLine({ min: lo, max: lo + 0.1, div: 10, labels: (i) => (i === 0 ? fmtDec(lo, 1) : i === 10 ? fmtDec(lo + 0.1, 1) : null), mark: val }),
       input: 'number', answer: val,
       explain: `Stykket fra ${fmtDec(lo, 1)} til ${fmtDec(lo + 0.1, 1)} er delt i 10 hundrededele (0,01). Pilen står ${h} stykker efter ${fmtDec(lo, 1)}: <b>${fmtDec(val, 2)}</b>.`,
@@ -940,7 +963,7 @@ const decplusminus = {
       const d = (x) => fmtDec(x / 10, 1);
       const zl = chance(ZOO_P) && (add
         ? `Pingvinungen vejede ${d(a)} kg og har taget ${d(b)} kg på. Hvad vejer den nu?`
-        : `Sælungen skal have ${d(a)} liter mælk i dag. Den har drukket ${d(b)} liter. Hvor meget mangler den?`);
+        : `Elefantungen skal have ${d(a)} liter mælk i dag. Den har drukket ${d(b)} liter. Hvor meget mangler den?`);
       return {
         prompt: withZoo(zl, `${d(a)} ${add ? '+' : '−'} ${d(b)}`),
         input: 'number', answer: ans / 10, unit: zl ? (add ? 'kg' : 'liter') : undefined,
@@ -1057,8 +1080,69 @@ const areal = {
 };
 
 // Det konkrete zoo-billede og reglen til hver enhed (bruges i hintet og forklaringen efter et forkert svar)
-const UNIT_PIC = { m: 'laengde', km: 'laengde', cm: 'laengde', kg: 'vaegt', l: 'rumfang' };
-const UNIT_RULE = { m: '1 m = 100 cm', km: '1 km = 1.000 m', cm: '1 cm = 10 mm', kg: '1 kg = 1.000 g', l: '1 l = 10 dl = 100 cl' };
+const UNIT_PIC = { m: 'laengde', km: 'laengde', cm: 'laengde', kg: 'vaegt', t: 'vaegt', l: 'rumfang' };
+const UNIT_RULE = { m: '1 m = 100 cm', km: '1 km = 1.000 m', cm: '1 cm = 10 mm', kg: '1 kg = 1.000 g', t: '1 t = 1.000 kg', l: '1 l = 10 dl = 100 cl' };
+
+// Et dyrs vægt (animals.js) – et tilfældigt tal i dyrets rigtige område, rundet af
+const weighOf = (key, step = 1) => Math.round(ri(...ANIMALS[key].kg) / step) * step;
+// "Hvem vejer mest?" To dyr med rigtig vægt. Niveau 1: begge i kg. Niveau 2: små dyr i kg og g.
+// Niveau 3: store dyr i ton og kg – og nogle gange vejer de præcis lige meget
+function weightCompare(level) {
+  const [a, b] = shuffle(level === 3 ? HEAVY : level === 2 ? LIGHT : ['sael', 'abe', 'kaenguru', 'loeve', 'tiger', 'zebra', 'kamel', 'isbjoern', 'gorilla', 'panda']).slice(0, 2);
+  const A = ANIMALS[a], B = ANIMALS[b];
+  let wa, wb, sa, sb, ka, kb; // vægt i kg, vist som tekst
+  if (level === 1) {
+    do { wa = weighOf(a, 10); wb = weighOf(b, 10); } while (wa === wb);
+    [ka, kb, sa, sb] = [wa, wb, `${fmt(wa)} kg`, `${fmt(wb)} kg`];
+  } else if (level === 2) {
+    wa = weighOf(a); wb = chance(0.15) ? wa : weighOf(b) * 1000 + pick([0, 0, 500]);
+    if (wb === wa) wb = wa * 1000; // lige meget: samme vægt i gram
+    [ka, kb, sa, sb] = [wa * 1000, wb, `${fmt(wa)} kg`, `${fmt(wb)} g`];
+  } else {
+    // A i hele eller halve ton, der passer til dyret – B i kg (og nogle gange præcis det samme)
+    const tons = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].filter((t) => t * 1000 >= A.kg[0] && t * 1000 <= A.kg[1]);
+    wa = (tons.length ? pick(tons) : Math.round(A.kg[1] / 1000)) * 1000;
+    wb = chance(0.15) && wa >= B.kg[0] && wa <= B.kg[1] ? wa : weighOf(b, 50);
+    [ka, kb, sa, sb] = [wa, wb, `${fmtDec(wa / 1000, wa % 1000 ? 1 : 0)} t`, `${fmt(wb)} kg`];
+  }
+  const same = ka === kb, heavy = ka > kb ? A : B;
+  const unit = level === 2 ? 'g' : 'kg';
+  return {
+    prompt: `${cap(A.en)} vejer <b>${sa}</b>. ${cap(B.en)} vejer <b>${sb}</b>. Hvem vejer mest?`,
+    pic: 'vaegt', input: 'choice', choices: [cap(A.en), cap(B.en), 'De vejer lige meget'], cols: 3,
+    answer: same ? 'De vejer lige meget' : cap(heavy.en),
+    hint: level === 1 ? 'Sammenlign tallene – det største tal vejer mest.' : `<b>${UNIT_RULE[level === 2 ? 'kg' : 't']}</b> – regn først om, så begge står i samme enhed.`,
+    explain: level === 1
+      ? `${fmt(ka)} kg er ${ka > kb ? 'mere' : 'mindre'} end ${fmt(kb)} kg, så <b>${heavy.en}</b> vejer mest.`
+      : `Regn om til ${unit}: ${sa} = ${fmt(ka)} ${unit}. ${same ? `${fmt(ka)} ${unit} = ${fmt(kb)} ${unit}, så <b>de vejer lige meget</b>.` : `${fmt(ka)} ${unit} er ${ka > kb ? 'mere' : 'mindre'} end ${fmt(kb)} ${unit}, så <b>${heavy.en}</b> vejer mest.`}`,
+  };
+}
+// Ton med de store dyr: et rigtigt dyr, hvis vægt passer til opgaven (niveau 3)
+function tonTask(kind) {
+  if (kind === 0) { // n t og r kg = ? kg
+    const key = pick(HEAVY);
+    let w; do w = weighOf(key, 10); while (w % 1000 === 0);
+    const n = Math.floor(w / 1000), r = w % 1000, A = ANIMALS[key];
+    return {
+      prompt: withZoo(chance(ZOO_P) && `${cap(A.en)} vejer ${n} t og ${r} kg. Hvor mange kg er det?`, `${n} t og ${r} kg = ${box()} kg`),
+      input: 'number', pic: 'vaegt', hint: `<b>${UNIT_RULE.t}</b>`, answer: w, unit: 'kg',
+      explain: `${n} t = ${fmt(n * 1000)} kg. Læg ${r} til: <b>${fmt(w)} kg</b>.`,
+    };
+  }
+  const [key, n] = pick([['elefant', 3], ['elefant', 4], ['flodhest', 1]]), A = ANIMALS[key], w = n * 1000 + 500;
+  if (kind === 1) {
+    return {
+      prompt: withZoo(chance(ZOO_P) && `${cap(A.en)} vejer ${n},5 t. Hvor mange kg er det?`, `${n},5 t = ${box()} kg`),
+      input: 'number', pic: 'vaegt', hint: `<b>${UNIT_RULE.t}</b>`, answer: w, unit: 'kg',
+      explain: `${n} t = ${fmt(n * 1000)} kg, og et halvt ton = 500 kg. I alt <b>${fmt(w)} kg</b>.`,
+    };
+  }
+  return {
+    prompt: withZoo(chance(ZOO_P) && `${cap(A.en)} vejer ${fmt(w)} kg. Hvor mange ton er det?`, `${fmt(w)} kg = ${box()} t`),
+    input: 'number', pic: 'vaegt', hint: `<b>${UNIT_RULE.t}</b>`, answer: n + 0.5, unit: 't',
+    explain: `${fmt(n * 1000)} kg = ${n} t, og 500 kg er et halvt ton. Altså <b>${fmtDec(n + 0.5, 1)} t</b>.`,
+  };
+}
 
 const enheder = {
   id: 'enheder',
@@ -1082,20 +1166,24 @@ const enheder = {
     },
   },
   gen(level, { mode } = {}) {
+    // Øvebanens vægt: også "Hvem vejer mest?" med rigtige dyr
+    if (mode === 'vaegt' && chance(0.35)) return weightCompare(level);
     const conv = [
-      // [fra, til, faktor] – faktor: 1 fra = faktor til
-      ['m', 'cm', 100], ['kg', 'g', 1000], ['l', 'dl', 10], ['km', 'm', 1000], ['cm', 'mm', 10], ['l', 'cl', 100],
+      // [fra, til, faktor] – faktor: 1 fra = faktor til. Ton kun på niveau 3 (de store dyr)
+      ['m', 'cm', 100], ['kg', 'g', 1000], ['l', 'dl', 10], ['km', 'm', 1000], ['cm', 'mm', 10], ['l', 'cl', 100], ['t', 'kg', 1000],
     ];
-    const units = conv.filter(([b]) => !mode || UNIT_PIC[b] === mode); // Øvebanen: kun længde, vægt eller rumfang
+    const units = conv.filter(([b]) => (!mode || UNIT_PIC[b] === mode) && (b !== 't' || level === 3)); // Øvebanen: kun længde, vægt eller rumfang
     const pool = level === 1 ? units.slice(0, mode ? 1 : 3) : units;
     const [big, small, f] = pick(pool);
+    if (big === 't') return tonTask(ri(0, 2));
     if (level < 3) {
       const n = ri(2, 9);
       const fwdLine = chance(ZOO_P) && {
-        m: `Girafungen er ${n} m høj. Hvor mange centimeter er det?`,
-        kg: `Pingvinungen vejer ${n} kg. Hvor mange gram er det?`,
-        l: `Sælungen drikker ${n} liter mælk om dagen. Hvor mange ${small} er det?`,
-        km: `Zoo-toget kører ${n} km rundt om zoo'en. Hvor mange meter er det?`,
+        m: n <= 3 ? `Krokodillen er ${n} m lang. Hvor mange centimeter er det?` : n <= 5 ? `Giraffen er ${n} m høj. Hvor mange centimeter er det?`
+          : `Abernes klatrestativ er ${n} m højt. Hvor mange centimeter er det?`,
+        kg: n <= 3 ? `Pingvinungen vejer ${n} kg. Hvor mange gram er det?` : n <= 5 ? `Pingvinen vejer ${n} kg. Hvor mange gram er det?` : `Koalaen vejer ${n} kg. Hvor mange gram er det?`,
+        l: `Dyrepasseren hælder ${n} liter vand i zebraernes drikketrug. Hvor mange ${small} er det?`,
+        km: `Zoo-toget kører ${n} km i løbet af en dag. Hvor mange meter er det?`,
         cm: `Haletudsen er ${n} cm lang. Hvor mange millimeter er det?`,
       }[big];
       if (chance(0.5)) {
@@ -1208,18 +1296,25 @@ const tidsforskel = {
   gen(level) {
     let h1, m1, h2, m2;
     if (level === 1) {
-      h1 = h2 = ri(8, 20); m1 = ri(0, 7) * 5; m2 = ri(m1 / 5 + 2, 11) * 5;
+      h1 = h2 = ri(9, 17); m1 = ri(0, 7) * 5; m2 = ri(m1 / 5 + 2, 11) * 5;
     } else if (level === 2) {
-      h1 = ri(8, 20); h2 = h1 + 1; m1 = ri(6, 11) * 5; m2 = ri(1, 8) * 5;
+      h1 = ri(9, 16); h2 = h1 + 1; m1 = ri(6, 11) * 5; m2 = ri(1, 8) * 5;
     } else {
-      h1 = ri(8, 18); m1 = ri(1, 11) * 5; h2 = h1 + ri(1, 3); m2 = ri(0, 11) * 5;
+      h1 = ri(9, 14); m1 = ri(1, 11) * 5; h2 = h1 + ri(1, 3); m2 = ri(0, 11) * 5;
     }
     const mins = (h2 * 60 + m2) - (h1 * 60 + m1);
     const t1 = `${pad2(h1)}:${pad2(m1)}`, t2 = `${pad2(h2)}:${pad2(m2)}`;
-    const ctx = pick([
+    // Det, der sker, skal passe til tiden: en fodring varer ikke tre timer
+    const ctx = pick(mins <= 45 ? [
       `Sæl-showet starter kl. ${t1} og slutter kl. ${t2}.`,
       `Løvefodringen begynder kl. ${t1} og slutter kl. ${t2}.`,
       `Zoo-toget kører fra indgangen kl. ${t1} og er ved elefanterne kl. ${t2}.`,
+    ] : mins <= 100 ? [
+      `Rundvisningen hos elefanterne starter kl. ${t1} og slutter kl. ${t2}.`,
+      `Dyrlægen begynder at undersøge girafferne kl. ${t1} og er færdig kl. ${t2}.`,
+    ] : [
+      `Familien kommer ind i zoo'en kl. ${t1} og går hjem kl. ${t2}.`,
+      `Pandahuset er åbent for gæster fra kl. ${t1} til kl. ${t2}.`,
     ]);
     let explain;
     if (h1 === h2) explain = `Fra ${m1} til ${m2} minutter: ${m2} − ${m1} = <b>${mins} minutter</b>.`;
@@ -1333,6 +1428,79 @@ const soejle = {
   },
 };
 
+// ---------- Prisskiltet: aflæs en tabel og regn i flere trin (Tabeller og diagrammer) ----------
+// Billetpriserne ligner en rigtig dansk zoo (voksen omkring 200 kr., barn omkring 120 kr.); familiebilletten er billigst
+const ticketPrices = () => {
+  const voksen = pick([190, 200, 210, 220, 230, 240]), barn = pick([100, 110, 115, 120, 125, 130]);
+  return { voksen, barn, pensionist: voksen - pick([30, 40, 50]), familie: Math.round((2 * voksen + 2 * barn - pick([60, 70, 80, 90])) / 10) * 10 };
+};
+const EX_PRICES = { voksen: 210, barn: 125, pensionist: 170, familie: 600 };
+const priceBoard = (pr) => `<table class="price-board"><caption>Billetpriser</caption><tbody>${[
+  ['Voksen', pr.voksen], ['Barn <small>3–11 år</small>', pr.barn], ['Pensionist', pr.pensionist], ['Familiebillet <small>2 voksne og 2 børn</small>', pr.familie],
+].map(([k, v]) => `<tr><th>${k}</th><td>${v} kr.</td></tr>`).join('')}</tbody></table>`;
+const kr = (n) => `${fmt(n)} kr.`;
+
+const prisskilt = {
+  id: 'prisskilt',
+  name: 'Prisskiltet',
+  desc: 'Find priserne i tabellen, og regn i flere trin',
+  intro: {
+    scene: 'indgang',
+    text: 'Find de priser, du skal bruge, i tabellen. Regn hver slags billet for sig, og læg sammen til sidst.',
+    lead: 'Ved indgangen hænger et prisskilt. Find de priser, du skal bruge, og regn i trin.',
+    cards: [
+      { title: 'Find prisen', visual: () => priceBoard(EX_PRICES), rules: ['Barn: 125 kr.'], note: 'Find rækken, og følg den hen til prisen.' },
+      { title: 'Regn i trin', rules: ['2 voksne: 2 × 210 = 420 kr.', '3 børn: 3 × 125 = 375 kr.', 'I alt: 420 + 375 = 795 kr.'], note: 'Regn hver slags billet for sig – og læg dem sammen til sidst.' },
+      { title: 'Hvad er billigst?', rules: ['4 billetter: 420 + 250 = 670 kr.', 'Familiebillet: 600 kr.', 'Sparet: 670 − 600 = 70 kr.'], note: 'En familie med 2 voksne og 2 børn sparer penge med en familiebillet.' },
+    ],
+    tip: { title: 'Sådan gør du', rows: [['1. Find', '', 'de priser, du skal bruge'], ['2. Regn', '', 'hver slags billet for sig'], ['3. Til sidst', '', 'læg sammen – eller træk fra for at finde forskellen']] },
+  },
+  gen(level) {
+    const pr = ticketPrices(), { voksen: V, barn: B, pensionist: P, familie: F } = pr;
+    const task = (prompt, answer, steps) => ({ prompt, visual: priceBoard(pr), input: 'number', answer, unit: 'kr.', explain: stepsHTML(steps) });
+    if (level === 1) {
+      const n = ri(2, 4);
+      return pick([
+        () => task(`Hvad koster ${n} børnebilletter?`, n * B, [`En børnebillet koster ${kr(B)}`, `${n} × ${B} = <b>${kr(n * B)}</b>`]),
+        () => task(`Hvad koster det for ${n} pensionister?`, n * P, [`En pensionistbillet koster ${kr(P)}`, `${n} × ${P} = <b>${kr(n * P)}</b>`]),
+        () => task('Hvor mange kroner dyrere er en voksenbillet end en børnebillet?', V - B, [`Voksen: ${kr(V)} · barn: ${kr(B)}`, `Forskellen: ${V} − ${B} = <b>${kr(V - B)}</b>`]),
+      ])();
+    }
+    if (level === 2) {
+      const a = ri(1, 2), b = ri(1, 4);
+      return pick([
+        () => task(`Hvad koster det for ${a === 1 ? 'en voksen' : `${a} voksne`} og ${b === 1 ? 'et barn' : `${b} børn`}?`, a * V + b * B,
+          [`${a === 1 ? 'En voksen' : `${a} voksne`}: ${a} × ${V} = ${kr(a * V)}`, `${b === 1 ? 'Et barn' : `${b} børn`}: ${b} × ${B} = ${kr(b * B)}`, `I alt: ${a * V} + ${b * B} = <b>${kr(a * V + b * B)}</b>`]),
+        () => task(`Mormor er pensionist. Hun tager sine ${b + 1} børnebørn med i zoo. Hvad koster det?`, P + (b + 1) * B,
+          [`Mormor: ${kr(P)}`, `${b + 1} børn: ${b + 1} × ${B} = ${kr((b + 1) * B)}`, `I alt: ${P} + ${(b + 1) * B} = <b>${kr(P + (b + 1) * B)}</b>`]),
+      ])();
+    }
+    const four = 2 * V + 2 * B, e = ri(18, 26), l = ri(2, 3);
+    return pick([
+      () => task('En familie med 2 voksne og 2 børn køber en familiebillet i stedet for 4 enkeltbilletter. Hvor mange kroner sparer de?', four - F,
+        [`4 billetter: 2 × ${V} + 2 × ${B} = ${2 * V} + ${2 * B} = ${kr(four)}`, `Familiebillet: ${kr(F)}`, `De sparer ${four} − ${F} = <b>${kr(four - F)}</b>`]),
+      () => task(`En skoleklasse med ${e} elever og ${l} lærere skal i zoo. Eleverne betaler børnepris og lærerne voksenpris. Hvad koster det i alt?`, e * B + l * V,
+        [`Eleverne: ${e} × ${B} = ${kr(e * B)}`, `Lærerne: ${l} × ${V} = ${kr(l * V)}`, `I alt: ${e * B} + ${l * V} = <b>${kr(e * B + l * V)}</b>`]),
+      () => task('En familie køber 2 voksenbilletter og 2 børnebilletter og betaler med to 500-kr.-sedler. Hvor mange penge får de tilbage?', 1000 - four,
+        [`Billetterne: 2 × ${V} + 2 × ${B} = ${kr(four)}`, `De betaler 1.000 kr.`, `Tilbage: 1.000 − ${four} = <b>${kr(1000 - four)}</b>`]),
+    ])();
+  },
+};
+
+// Dataserier fra zoo'en med rigtige størrelser (animals.js): løver sover 16–20 timer i døgnet, koalaer 18–22,
+// svaner lægger 4–7 æg, og en giraf spiser 25–35 kg blade – med lidt forskel fra dyr til dyr
+const DATA_CTX = [
+  { t: 'Antal bananer hver abe fik', r: [1, 10] },
+  { t: 'Antal fisk hver pingvin fik til fodringen', r: [2, 15] },
+  { t: 'Antal æg i hver af svanernes reder', r: [3, 8] },
+  { t: 'Antal timer løverne sov i døgnet', r: [ANIMALS.loeve.soevn[0] - 3, ANIMALS.loeve.soevn[1] + 1] },
+  { t: 'Antal timer koalaerne sov i døgnet', r: [ANIMALS.koala.soevn[0] - 2, ANIMALS.koala.soevn[1]] },
+  { t: 'Kg blade hver giraf spiste i går', r: [ANIMALS.giraf.mad[0] - 3, ANIMALS.giraf.mad[1] + 3] },
+];
+// Et emne med plads til mindst need forskellige tal, hvor det største tal højst er top
+const dataCtx = (need, top) => pick(DATA_CTX.filter(({ r }) => r[1] - r[0] + 1 >= need && r[1] <= top));
+const span = ([lo, hi]) => Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+
 const typetal = {
   id: 'typetal',
   name: 'Typetal, variationsbredde og median',
@@ -1348,62 +1516,62 @@ const typetal = {
     ],
   },
   gen(level, { mode } = {}) {
-    const ctx = pick(['Antal fisk hver pingvin spiste', 'Antal bananer hver abe fik', 'Antal timer løverne sov hver dag', 'Antal æg i hver af svanernes reder']);
     // Øvebanen: ét mål ad gangen – flere og større tal for hvert niveau
     if (mode) {
-      const len = [5, 7, 9][level - 1], top = [10, 20, 30][level - 1];
+      const len = [5, 7, 9][level - 1], top = [15, 22, 40][level - 1];
       if (mode === 'typetal') {
-        const m = ri(1, top), c = level + 2; // typetallet optræder 3, 4 eller 5 gange – alle andre kun én gang
-        const others = shuffle(Array.from({ length: top }, (_, i) => i + 1).filter((x) => x !== m)).slice(0, len + level - c);
+        const c = level + 2, k = len + level - c; // typetallet optræder 3, 4 eller 5 gange – k andre tal kun én gang
+        const ctx = dataCtx(k + 1, top), m = ri(...ctx.r);
+        const others = shuffle(span(ctx.r).filter((x) => x !== m)).slice(0, k);
         const nums = shuffle([...Array(c).fill(m), ...others]);
         return {
-          prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>typetallet</b>?`,
+          prompt: `${ctx.t}: <b>${nums.join(', ')}</b><br>Hvad er <b>typetallet</b>?`,
           input: 'number', answer: m,
           explain: `Typetallet er det tal, der optræder flest gange. ${m} optræder ${c} gange: <b>${m}</b>.`,
         };
       }
-      const nums = Array.from({ length: len }, () => ri(1, top));
+      const ctx = dataCtx(4, top), nums = Array.from({ length: len }, () => ri(...ctx.r));
       if (mode === 'variationsbredde') {
         const mx = Math.max(...nums), mn = Math.min(...nums);
         return {
-          prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>variationsbredden</b>?`,
+          prompt: `${ctx.t}: <b>${nums.join(', ')}</b><br>Hvad er <b>variationsbredden</b>?`,
           input: 'number', answer: mx - mn,
           explain: `Største tal er ${mx}, mindste er ${mn}. Variationsbredden er ${mx} − ${mn} = <b>${mx - mn}</b>.`,
         };
       }
-      const sorted = [...nums].sort((a, b) => a - b), mid = sorted[(len - 1) / 2];
+      const sorted = [...nums].sort((x, y) => x - y), mid = sorted[(len - 1) / 2];
       return {
-        prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>medianen</b>?`,
+        prompt: `${ctx.t}: <b>${nums.join(', ')}</b><br>Hvad er <b>medianen</b>?`,
         input: 'number', answer: mid,
         explain: `Sæt i rækkefølge: ${sorted.map((x, i) => (i === (len - 1) / 2 ? `<b><u>${x}</u></b>` : x)).join(', ')}. Det midterste tal er <b>${mid}</b>.`,
       };
     }
     if (level === 1) {
-      const mode = ri(1, 9);
+      const ctx = dataCtx(6, 15), mode = ri(...ctx.r);
       const list = [mode, mode, mode];
-      const others = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter((x) => x !== mode)).slice(0, ri(2, 3));
+      const others = shuffle(span(ctx.r).filter((x) => x !== mode)).slice(0, ri(2, 3));
       others.forEach((o) => { list.push(o); if (chance(0.5)) list.push(o); });
       const nums = shuffle(list);
       return {
-        prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>typetallet</b>?`,
+        prompt: `${ctx.t}: <b>${nums.join(', ')}</b><br>Hvad er <b>typetallet</b>?`,
         input: 'number', answer: mode,
         explain: `Typetallet er det tal, der optræder flest gange. ${mode} optræder 3 gange: <b>${mode}</b>.`,
       };
     }
     const len = level === 2 ? ri(6, 8) : pick([5, 7, 9]);
-    const nums = Array.from({ length: len }, () => ri(1, 20));
+    const ctx = dataCtx(4, level === 2 ? 22 : 40), nums = Array.from({ length: len }, () => ri(...ctx.r));
     if (level === 2) {
       const mx = Math.max(...nums), mn = Math.min(...nums);
       return {
-        prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>variationsbredden</b>?`,
+        prompt: `${ctx.t}: <b>${nums.join(', ')}</b><br>Hvad er <b>variationsbredden</b>?`,
         input: 'number', answer: mx - mn,
         explain: `Største tal er ${mx}, mindste er ${mn}. Variationsbredden er ${mx} − ${mn} = <b>${mx - mn}</b>.`,
       };
     }
-    const sorted = [...nums].sort((a, b) => a - b);
+    const sorted = [...nums].sort((x, y) => x - y);
     const mid = sorted[(len - 1) / 2];
     return {
-      prompt: `${ctx}: <b>${nums.join(', ')}</b><br>Hvad er <b>medianen</b>?`,
+      prompt: `${ctx.t}: <b>${nums.join(', ')}</b><br>Hvad er <b>medianen</b>?`,
       input: 'number', answer: mid,
       explain: `Sæt i rækkefølge: ${sorted.map((x, i) => (i === (len - 1) / 2 ? `<b><u>${x}</u></b>` : x)).join(', ')}. Det midterste tal er <b>${mid}</b>.`,
     };
@@ -2382,11 +2550,15 @@ function quadShapeFixed(kind) {
 
 // Punkter i koordinatsystemet, der ikke står oven i hinanden (navneskiltene skal kunne læses)
 const apart = (p, list) => list.every((q) => Math.max(Math.abs(p[0] - q[0]), Math.abs(p[1] - q[1])) >= 2);
-const coordHow = (x, y, name) => stepsHTML([
-  'Start i (0, 0) nederst til venstre.',
-  x ? `Gå hen ad x-aksen, til du er lige under ${name}: <b>${x} hen</b>.` : `${name} ligger på y-aksen, så du skal <b>0 hen</b>.`,
-  y ? `Gå så lige op til ${name}: <b>${y} op</b>.` : `${name} ligger på x-aksen, så du skal <b>0 op</b>.`,
-  `${name} = (${x}, ${y}) – først hen, så op.`,
+// Kortet over zoo'en: dyrene, der kan bo på kortet (en nål med ungen fra Babyhuset)
+const MAP_ANIMALS = ['pingvin', 'giraf', 'loeve', 'zebra', 'elefant', 'isbjoern', 'panda', 'flamingo', 'sael', 'kamel', 'koala',
+  'krokodille', 'naesehorn', 'flodhest', 'gorilla', 'tiger', 'abe', 'kaenguru'];
+const mapAnimals = (n) => shuffle(MAP_ANIMALS).slice(0, n).map((k) => ANIMALS[k]);
+const coordHow = (x, y, de) => stepsHTML([
+  'Start ved indgangen i (0, 0) nederst til venstre.',
+  x ? `Gå hen ad x-aksen, til du er lige under ${de}: <b>${x} hen</b>.` : `${cap(de)} bor på y-aksen, så du skal <b>0 hen</b>.`,
+  y ? `Gå så lige op til ${de}: <b>${y} op</b>.` : `${cap(de)} bor på x-aksen, så du skal <b>0 op</b>.`,
+  `${cap(de)} bor i (${x}, ${y}) – først hen, så op.`,
 ]);
 
 // VI) Aflæs et punkt
@@ -2395,40 +2567,34 @@ const koordAflaes = {
   name: 'Aflæs et punkt',
   desc: 'Hvor ligger punktet? Skriv (x, y)',
   intro: {
-    text: 'Et punkt skrives (x, y): først hvor langt <b>hen</b> ad x-aksen, så hvor langt <b>op</b>.',
+    text: 'Et sted på kortet skrives (x, y): først hvor langt <b>hen</b> ad x-aksen, så hvor langt <b>op</b>.',
     steps: [
-      { text: 'Et koordinatsystem har to akser: <b>x-aksen</b> går vandret, og <b>y-aksen</b> går lodret. De mødes i (0, 0).', visual: () => V.coordGrid({ max: 5 }) },
-      { text: 'Hvor ligger punktet P? Start i (0, 0), og gå hen ad x-aksen, til du er lige under P: <b>4 hen</b>.', visual: () => V.coordGrid({ max: 5, points: [{ x: 4, y: 2, name: 'P' }], path: { x: 4, y: 2, part: 1 } }) },
-      { text: 'Gå så lige op til P: <b>2 op</b>. P = <b>(4, 2)</b>. Tallet for "hen" skrives først.', visual: () => V.coordGrid({ max: 5, points: [{ x: 4, y: 2, name: 'P', hi: true }], path: { x: 4, y: 2 } }) },
-      { text: 'Rækkefølgen betyder noget: (4, 2) og (2, 4) er to forskellige punkter. Husk: <b>først hen, så op</b>.', visual: () => V.coordGrid({ max: 5, points: [{ x: 4, y: 2, name: 'P', note: '(4, 2)' }, { x: 2, y: 4, name: 'Q', note: '(2, 4)' }] }) },
+      { text: 'Kortet over zoo\'en er et koordinatsystem. <b>x-aksen</b> går vandret, og <b>y-aksen</b> går lodret. De mødes ved indgangen i (0, 0).', visual: () => V.zooMap({ max: 5 }) },
+      { text: 'Hvor bor girafferne? Start ved indgangen i (0, 0), og gå hen ad x-aksen, til du er lige under giraffen: <b>4 hen</b>.', visual: () => V.zooMap({ max: 5, points: [{ x: 4, y: 2, img: ANIMALS.giraf.img }], path: { x: 4, y: 2, part: 1 } }) },
+      { text: 'Gå så lige op til giraffen: <b>2 op</b>. Girafferne bor i <b>(4, 2)</b>. Tallet for "hen" skrives først.', visual: () => V.zooMap({ max: 5, points: [{ x: 4, y: 2, img: ANIMALS.giraf.img, hi: true }], path: { x: 4, y: 2 } }) },
+      { text: 'Rækkefølgen betyder noget: (4, 2) og (2, 4) er to forskellige steder. I (2, 4) bor løverne. Husk: <b>først hen, så op</b>.', visual: () => V.zooMap({ max: 5, points: [{ x: 4, y: 2, img: ANIMALS.giraf.img, note: '(4, 2)' }, { x: 2, y: 4, img: ANIMALS.loeve.img, note: '(2, 4)' }] }) },
     ],
   },
   gen(level) {
-    const max = level === 1 ? 5 : 10;
-    const points = [];
-    if (level < 3) {
-      let x, y;
-      do { x = ri(1, max); y = ri(1, max); } while (level === 2 && x === y);
-      points.push({ x, y, name: 'P' });
-    } else {
-      for (const name of ['A', 'B', 'C']) {
-        let p;
-        do {
-          p = [ri(1, max), ri(1, max)];
-          if (chance(0.3)) p[ri(0, 1)] = 0;
-        } while ((p[0] === 0 && p[1] === 0) || !apart(p, points.map((q) => [q.x, q.y])));
-        points.push({ x: p[0], y: p[1], name });
-      }
+    const max = level === 1 ? 5 : 10, n = level < 3 ? 1 : 3, pts = [];
+    while (pts.length < n) {
+      let p;
+      do {
+        p = [ri(1, max), ri(1, max)];
+        if (level === 3 && chance(0.3)) p[ri(0, 1)] = 0;
+      } while ((p[0] === 0 && p[1] === 0) || (level === 2 && p[0] === p[1]) || !apart(p, pts));
+      pts.push(p);
     }
-    const t = pick(points), { x, y, name } = t;
+    const points = mapAnimals(n).map((a, i) => ({ x: pts[i][0], y: pts[i][1], img: a.img, name: cap(a.de), de: a.de }));
+    const t = pick(points), { x, y, name, de } = t;
     return {
-      prompt: `Hvad er koordinaterne til punktet <b>${name}</b>?`,
-      visual: V.coordGrid({ max, points }),
-      input: 'parts', layout: [`${name} = (`, { slot: 0, label: 'x' }, ',', { slot: 1, label: 'y' }, ')'],
-      answer: [x, y], answerText: `${name} = (${x}, ${y})`,
-      hint: 'Start i (0, 0). Tæl først, hvor langt <b>hen</b> punktet er – og så hvor langt <b>op</b>.',
-      explain: coordHow(x, y, name),
-      explainVisual: V.coordGrid({ max, points: points.map((q) => ({ ...q, hi: q === t })), path: { x, y } }),
+      prompt: `Hvor bor <b>${de}</b> på kortet? Skriv koordinaterne.`,
+      visual: V.zooMap({ max, points }),
+      input: 'parts', layout: ['(', { slot: 0, label: 'x' }, ',', { slot: 1, label: 'y' }, ')'],
+      answer: [x, y], answerText: `${name} bor i (${x}, ${y})`,
+      hint: 'Start ved indgangen i (0, 0). Tæl først, hvor langt <b>hen</b> dyret er – og så hvor langt <b>op</b>.',
+      explain: coordHow(x, y, de),
+      explainVisual: V.zooMap({ max, points: points.map((q) => ({ ...q, hi: q === t })), path: { x, y } }),
       geo: { points, target: name },
     };
   },
@@ -2440,11 +2606,11 @@ const koordFind = {
   name: 'Find punktet',
   desc: 'Hvilket punkt er (6, 4)? Pas på – ikke (4, 6)',
   intro: {
-    text: '(6, 4) betyder <b>6 hen</b> og <b>4 op</b>. Pas på: (4, 6) er et helt andet punkt!',
+    text: '(6, 4) betyder <b>6 hen</b> og <b>4 op</b>. Pas på: (4, 6) er et helt andet sted på kortet!',
     steps: [
-      { text: 'Find punktet (6, 4). Det første tal fortæller, hvor langt du skal <b>hen</b> ad x-aksen: <b>6 hen</b>.', visual: () => V.coordGrid({ max: 7, points: [{ x: 6, y: 4, name: 'A' }, { x: 4, y: 6, name: 'B' }, { x: 2, y: 3, name: 'C' }], path: { x: 6, y: 4, part: 1 } }) },
-      { text: 'Det andet tal fortæller, hvor langt du skal <b>op</b>: <b>4 op</b>. Der ligger punkt <b>A</b>. A = (6, 4).', visual: () => V.coordGrid({ max: 7, points: [{ x: 6, y: 4, name: 'A', hi: true }, { x: 4, y: 6, name: 'B' }, { x: 2, y: 3, name: 'C' }], path: { x: 6, y: 4 } }) },
-      { text: 'Pas på fælden: punkt B er 4 hen og 6 op – det er (4, 6). Tallene er byttet om, og så er det et helt andet punkt.', visual: () => V.coordGrid({ max: 7, points: [{ x: 6, y: 4, name: 'A', note: '(6, 4)' }, { x: 4, y: 6, name: 'B', note: '(4, 6)' }] }) },
+      { text: 'Hvem bor i (6, 4)? Det første tal fortæller, hvor langt du skal <b>hen</b> ad x-aksen: <b>6 hen</b>.', visual: () => V.zooMap({ max: 7, points: [{ x: 6, y: 4, img: ANIMALS.pingvin.img }, { x: 4, y: 6, img: ANIMALS.zebra.img }, { x: 2, y: 3, img: ANIMALS.elefant.img }], path: { x: 6, y: 4, part: 1 } }) },
+      { text: 'Det andet tal fortæller, hvor langt du skal <b>op</b>: <b>4 op</b>. Der bor <b>pingvinerne</b>. Pingvinerne bor i (6, 4).', visual: () => V.zooMap({ max: 7, points: [{ x: 6, y: 4, img: ANIMALS.pingvin.img, hi: true }, { x: 4, y: 6, img: ANIMALS.zebra.img }, { x: 2, y: 3, img: ANIMALS.elefant.img }], path: { x: 6, y: 4 } }) },
+      { text: 'Pas på fælden: zebraerne bor 4 hen og 6 op – det er (4, 6). Tallene er byttet om, og så er det et helt andet dyr.', visual: () => V.zooMap({ max: 7, points: [{ x: 6, y: 4, img: ANIMALS.pingvin.img, note: '(6, 4)' }, { x: 4, y: 6, img: ANIMALS.zebra.img, note: '(4, 6)' }] }) },
     ],
   },
   gen(level) {
@@ -2460,19 +2626,18 @@ const koordFind = {
       const p = [ri(1, max), ri(1, max)];
       if (apart(p, pts)) pts.push(p);
     }
-    const names = shuffle('ABCD'.slice(0, n).split(''));
-    const points = pts.map(([a, b], i) => ({ x: a, y: b, name: names[i] }));
+    const points = mapAnimals(n).map((a, i) => ({ x: pts[i][0], y: pts[i][1], img: a.img, name: cap(a.de), de: a.de }));
     const [T, S] = points;
     return {
-      prompt: `Hvilket punkt har koordinaterne <b style="white-space:nowrap">(${x}, ${y})</b>?`,
-      visual: V.coordGrid({ max, points }),
-      input: 'choice', choices: names.slice().sort(), answer: T.name,
+      prompt: `Hvem bor i <b style="white-space:nowrap">(${x}, ${y})</b> på kortet?`,
+      visual: V.zooMap({ max, points }),
+      input: 'choice', choices: points.map((q) => q.name).sort(), answer: T.name, cols: 2,
       explain: stepsHTML([
         `(${x}, ${y}) betyder <b>${x} hen</b> ad x-aksen og <b>${y} op</b>.`,
-        `Start i (0, 0), ${!x ? `bliv på y-aksen, og gå ${y} op` : !y ? `og gå ${x} hen ad x-aksen – 0 op, så punktet ligger på x-aksen` : `gå ${x} hen og så ${y} op`}. Der ligger punkt <b>${T.name}</b>.`,
-        `Pas på: punkt ${S.name} er (${y}, ${x}) – der er tallene byttet om.`,
+        `Start ved indgangen i (0, 0), ${!x ? `bliv på y-aksen, og gå ${y} op` : !y ? `og gå ${x} hen ad x-aksen – 0 op, så de bor på x-aksen` : `gå ${x} hen og så ${y} op`}. Der bor <b>${T.de}</b>.`,
+        `Pas på: ${S.de} bor i (${y}, ${x}) – der er tallene byttet om.`,
       ]),
-      explainVisual: V.coordGrid({ max, points: points.map((q) => ({ ...q, hi: q === T, note: q === S ? `(${y}, ${x})` : '' })), path: { x, y } }),
+      explainVisual: V.zooMap({ max, points: points.map((q) => ({ ...q, hi: q === T, note: q === S ? `(${y}, ${x})` : '' })), path: { x, y } }),
       geo: { points, target: [x, y] },
     };
   },
@@ -2485,9 +2650,9 @@ const koordFind = {
 
 // En målrettet udgave af en zoo-færdighed: samme opgaver, men kun én type (generatoren får en tilstand) og kun
 // det forklaringskort, der passer
-const variant = (base, { id, name, desc, mode, card, lead, text, tip }) => ({
+const variant = (base, { id, name, desc, mode, card, lead, text, tip, extra = [] }) => ({
   id, name, desc, base: base.id,
-  intro: { ...base.intro, lead, text, cards: base.intro.cards.filter((c) => c.title === card), tip },
+  intro: { ...base.intro, lead, text, cards: [...base.intro.cards.filter((c) => c.title === card), ...extra], tip },
   gen: (level) => base.gen(level, { mode }),
 });
 const pmPlus = variant(plusminus, {
@@ -2509,10 +2674,11 @@ const enhLaengde = variant(enheder, {
   tip: { title: 'Sådan regner du om', rows: [['Stor → lille', 'gang', '4 m = 4 × 100 = 400 cm'], ['Lille → stor', 'del', '3.000 m = 3.000 : 1.000 = 3 km'], ['En halv', '', '½ m = 50 cm · ½ km = 500 m']] },
 });
 const enhVaegt = variant(enheder, {
-  id: 'enh-vaegt', name: 'Vægt', desc: 'kg og g', mode: 'vaegt', card: 'Vægt',
-  lead: 'Hvor tungt? Vægt måles i kilogram (kg) og gram (g).',
-  text: '<b>1 kg = 1.000 g</b>',
-  tip: { title: 'Sådan regner du om', rows: [['Stor → lille', 'gang', '4 kg = 4 × 1.000 = 4.000 g'], ['Lille → stor', 'del', '3.000 g = 3.000 : 1.000 = 3 kg'], ['En halv', '', '½ kg = 500 g']] },
+  id: 'enh-vaegt', name: 'Vægt', desc: 'Gram, kilogram og ton – og hvem vejer mest?', mode: 'vaegt', card: 'Vægt',
+  lead: 'Hvor tungt? Vægt måles i gram (g), kilogram (kg) og ton (t). De store dyr vejer flere ton.',
+  text: '<b>1 t = 1.000 kg</b> · <b>1 kg = 1.000 g</b>',
+  extra: [{ title: 'Vægttrappen', visual: () => V.miniStairs(['t', 'kg', 'g'], '1.000'), rules: ['1 t = 1.000 kg', '1 kg = 1.000 g'], note: 'Elefanten vejer 4 t – det er 4.000 kg.' }],
+  tip: { title: 'Sådan regner du om', rows: [['Stor → lille', 'gang', '4 kg = 4 × 1.000 = 4.000 g'], ['Lille → stor', 'del', '3.000 g = 3.000 : 1.000 = 3 kg'], ['En halv', '', '½ kg = 500 g · ½ t = 500 kg'], ['Hvem vejer mest?', '', 'Regn om, så begge står i samme enhed']] },
 });
 const enhRumfang = variant(enheder, {
   id: 'enh-rumfang', name: 'Rumfang', desc: 'l, dl og cl', mode: 'rumfang', card: 'Rumfang',
@@ -2592,7 +2758,7 @@ export const DISCIPLINES = [
   disc('d-areal', 'geo', 'Areal og omkreds', '🟩', 'var(--c-geo)', 8, 'Hele vejen rundt – og hvor stor en flade er', [omkreds, areal]),
   disc('d-maal', 'geo', 'Længde, vægt og rumfang', '📏', 'var(--c-maal)', 7, 'Omregn mellem enhederne', [enhLaengde, enhVaegt, enhRumfang]),
   disc('d-tid', 'geo', 'Tid', '🕐', 'var(--c-maal)', 7, 'Aflæs uret, og regn med tid', [klokken, tidsforskel]),
-  disc('d-diagrammer', 'data', 'Tabeller og diagrammer', '📊', 'var(--c-data)', 5, 'Aflæs og regn med diagrammer', [soejle]),
+  disc('d-diagrammer', 'data', 'Tabeller og diagrammer', '📊', 'var(--c-data)', 5, 'Aflæs og regn med tabeller og diagrammer', [soejle, prisskilt]),
   disc('d-beskriv', 'data', 'Beskriv data', '🔍', 'var(--c-data)', null, 'Typetal, median og variationsbredde', [bdTypetal, bdMedian, bdVariation]),
   disc('d-chance', 'data', 'Chance og sandsynlighed', '🎲', 'var(--c-data)', 5, 'Hvor stor er chancen – i ord og som brøk?', [sandsynlighed]),
 ];

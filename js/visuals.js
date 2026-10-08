@@ -404,6 +404,24 @@ export function miniChain(items, ops, { hi = items.length - 1 } = {}) {
   return mini(b, VW, 92);
 }
 
+// Vægttrappen: ton, kg og g som trin. Ned ad trappen ganges med 1.000 for hvert trin, op ad trappen deles der
+export function miniStairs(units = ['t', 'kg', 'g'], f = '1.000') {
+  const x0 = 22, w = 66, y0 = 34, dy = 30;
+  let b = '';
+  units.forEach((u, i) => {
+    const x = x0 + i * w, y = y0 + i * dy;
+    b += `<line x1="${x}" y1="${y}" x2="${x + w}" y2="${y}" class="v-line" stroke-width="3" stroke-linecap="round"/>`;
+    if (i < units.length - 1) b += `<line x1="${x + w}" y1="${y}" x2="${x + w}" y2="${y + dy}" class="v-line" stroke-width="3" stroke-linecap="round"/>`;
+    b += tx(x + w / 2, y - 9, u, 'v-text v-strong');
+  });
+  // Ned (til en mindre enhed): gang – under trappen. Op (til en større enhed): del – over trappen
+  b += `<line x1="38" y1="70" x2="104" y2="112" class="v-mark-line" stroke-width="2.6"/>${head(112, 117, 38, 70)}`;
+  b += tx(40, 112, `× ${f}`, 'v-text v-small v-strong', 'start');
+  b += `<line x1="224" y1="60" x2="160" y2="20" class="v-mark-line" stroke-width="2.6"/>${head(152, 15, 224, 60)}`;
+  b += tx(226, 30, `: ${f}`, 'v-text v-small v-strong', 'end');
+  return mini(b, 240, 132);
+}
+
 // Ganges med 10 eller 100: cifrene rykker en eller to pladser til venstre, og der kommer 0 bagpå
 export function miniShift(from, to) {
   const n = to.length, k = to.length - from.length, cw = n > 3 ? 34 : 40, gap = 6;
@@ -798,18 +816,23 @@ export function paperPolygon(pts, { cols = 10, rows = 7, s = 28, ...o } = {}) {
   return geo(G.b + shapeBody(pts.map(([x, y]) => [G.X(x), G.Y(y)]), { fill: 'v-soft-a', ...o }, [G.w, G.h]), G.w, G.h);
 }
 
-// Koordinatsystem (1. kvadrant) fra 0 til max. points = [{ x, y, name, hi, note }].
-// path = { x, y, part } tegner vejen fra (0, 0): først hen ad x-aksen – og med part 2 også op.
-export function coordGrid({ max = 5, points = [], path = null } = {}) {
-  const s = max <= 5 ? 40 : max <= 7 ? 32 : 24, fs = max > 7 ? 'v-text v-tiny' : 'v-text v-small';
-  const pl = 30, pr = 30, pt = 26, pb = 30;
+// Kort over zoo'en (Øvebanens koordinatsystem): græs, en sti, tern og en nål for hvert dyr, hvor nålens spids står
+// præcis i punktet. Indgangen er i (0, 0). points = [{ x, y, img, hi, note }] (img = dyrets tegning).
+// path = { x, y, part } tegner vejen fra indgangen: først hen ad x-aksen – og med part 2 også op.
+export function zooMap({ max = 5, points = [], path = null } = {}) {
+  const s = max <= 5 ? 44 : max <= 7 ? 36 : 30, fs = max > 7 ? 'v-text v-tiny' : 'v-text v-small';
+  const r = s * (max > 7 ? 0.68 : 0.56); // nålens hoved – stort nok til at kende dyret
+  const pl = 34, pr = 30, pt = Math.round(14 + r * 2.7), pb = 46;
   const X = (x) => pl + x * s, Y = (y) => pt + (max - y) * s;
-  let b = '';
+  let b = `<rect x="${X(0)}" y="${Y(max)}" width="${max * s}" height="${max * s}" rx="${s * 0.3}" class="zm-grass"/>`;
+  // Stien fra indgangen ind i zoo'en og en dam – kun pynt (ligger mellem ternene)
+  b += `<path d="M${X(0)} ${Y(0)} C${X(max * 0.45)} ${Y(max * 0.05)} ${X(max * 0.05)} ${Y(max * 0.55)} ${X(max * 0.5)} ${Y(max * 0.7)} S${X(max * 0.97)} ${Y(max * 0.8)} ${X(max)} ${Y(max * 0.45)}" class="zm-path" style="stroke-width:${r1(s * 0.42)}"/>`;
+  b += `<ellipse cx="${X(max * 0.83)}" cy="${Y(max * 0.18)}" rx="${r1(s * 0.75)}" ry="${r1(s * 0.42)}" class="zm-pond"/>`;
   for (let i = 0; i <= max; i++) {
-    b += `<line x1="${X(i)}" y1="${Y(0)}" x2="${X(i)}" y2="${Y(max)}" class="v-grid"/><line x1="${X(0)}" y1="${Y(i)}" x2="${X(max)}" y2="${Y(i)}" class="v-grid"/>`;
+    b += `<line x1="${X(i)}" y1="${Y(0)}" x2="${X(i)}" y2="${Y(max)}" class="zm-grid"/><line x1="${X(0)}" y1="${Y(i)}" x2="${X(max)}" y2="${Y(i)}" class="zm-grid"/>`;
     if (i) b += tx(X(i), Y(0) + 20, i, fs) + tx(X(0) - 8, Y(i) + 5, i, fs, 'end');
   }
-  b += tx(X(0) - 7, Y(0) + 19, 0, fs, 'end');
+  b += tx(X(0) - 7, Y(0) + 19, 0, fs, 'end') + tx(X(0), Y(0) + 38, 'Indgang', 'v-text v-tiny v-muted', 'start');
   b += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(max) + 14}" y2="${Y(0)}" class="v-line" stroke-width="2.5"/>${head(X(max) + 22, Y(0), X(0), Y(0), 'v-ink')}`;
   b += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(max) - 12}" class="v-line" stroke-width="2.5"/>${head(X(0), Y(max) - 20, X(0), Y(0), 'v-ink')}`;
   b += tx(X(max) + 16, Y(0) - 9, 'x', 'v-text v-small v-strong') + tx(X(0) + 10, Y(max) - 9, 'y', 'v-text v-small v-strong', 'start');
@@ -818,14 +841,14 @@ export function coordGrid({ max = 5, points = [], path = null } = {}) {
     if (x) b += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(x) - 6}" y2="${Y(0)}" class="v-mark-line" stroke-width="5" stroke-linecap="round"/>${head(X(x), Y(0), X(0), Y(0))}`;
     if (part > 1 && y) b += `<line x1="${X(x)}" y1="${Y(0)}" x2="${X(x)}" y2="${Y(y) + 6}" class="v-mark-line" stroke-width="5" stroke-linecap="round" stroke-dasharray="${x ? '9 6' : 'none'}"/>${head(X(x), Y(y), X(x), Y(0))}`;
   }
-  for (const p of points) {
-    const cx = X(p.x), cy = Y(p.y);
-    b += p.hi ? `<circle cx="${cx}" cy="${cy}" r="9" class="v-mark"/>` : `<circle cx="${cx}" cy="${cy}" r="6.5" class="v-ink"/>`;
-    if (p.name) b += tag(cx + 14, cy - 14, p.name);
-    if (p.note) {
-      const ny = p.y <= 1 ? cy - (p.x > max / 2 ? 12 : 32) : cy + 22;
-      b += p.x > max / 2 ? tx(cx - 10, ny, p.note, 'v-text v-tiny v-muted', 'end') : tx(cx + 10, ny, p.note, 'v-text v-tiny v-muted', 'start');
-    }
+  // Nålene: de nederste tegnes først, så en nåls hoved aldrig skjuler spidsen på nålen over den
+  for (const p of [...points].sort((a, c) => a.y - c.y)) {
+    const cx = X(p.x), cy = Y(p.y), hy = cy - r * 1.6, dx = r * 0.6, dy = r * 0.8;
+    b += `<path d="M${r1(cx)} ${r1(cy)}L${r1(cx - dx)} ${r1(hy + dy)}A${r1(r)} ${r1(r)} 0 1 1 ${r1(cx + dx)} ${r1(hy + dy)}Z" class="zm-pin${p.hi ? ' hi' : ''}"/>`;
+    if (p.img) b += `<image href="${p.img}" x="${r1(cx - r * 0.86)}" y="${r1(hy - r * 0.86)}" width="${r1(r * 1.72)}" height="${r1(r * 1.72)}"/>`;
+    b += `<circle cx="${r1(cx)}" cy="${r1(cy)}" r="3.6" class="v-ink"/>`;
+    if (p.note) b += p.x > max / 2 ? tx(cx - r - 4, hy + 5, p.note, 'v-text v-tiny v-strong', 'end') : tx(cx + r + 4, hy + 5, p.note, 'v-text v-tiny v-strong', 'start');
   }
-  return geo(b, pl + max * s + pr, pt + max * s + pb);
+  return svg(Math.round(pl + max * s + pr), Math.round(pt + max * s + pb), b, 'vis-geo vis-map');
 }
+

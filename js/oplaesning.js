@@ -63,7 +63,7 @@ export const SAY = {
     ],
   },
   gangeflercifret: {
-    lead: 'Giraferne og elefanterne spiser meget. Store gangestykker bliver lette, når du deler tallet op.',
+    lead: 'Girafferne og elefanterne spiser meget. Store gangestykker bliver lette, når du deler tallet op.',
     cards: [
       ['Del tallet op', 'Vi skal regne 47 gange 6. Del 47 op i 40 og 7, ligesom på tegningen. 40 gange 6 er 240, og 7 gange 6 er 42. Læg så de to dele sammen. 240 plus 42 er 282.'],
       ['Også med hundreder', 'Det virker også med hundreder. 236 gange 4 deler vi op i 200, 30 og 6. 200 gange 4 er 800, 30 gange 4 er 120, og 6 gange 4 er 24. Til sidst lægger vi det hele sammen. 800 plus 120 plus 24 er 944.'],
@@ -74,7 +74,7 @@ export const SAY = {
     lead: 'Historien gemmer på et gangestykke. Find de lige store grupper.',
     cards: [
       ['Lige store grupper', 'Når der står 5 poser med 8 i hver, er det 5 lige store grupper. Se på tegningen. Der er 5 grupper, og der er 8 prikker i hver gruppe. Så regner du 5 gange 8, og det giver 40.'],
-      ['Gange så mange', 'Giraffen spiser 4 kilogram. Elefanten spiser 3 gange så meget. Det er 3 grupper med 4 i hver, ligesom på tegningen. 3 gange 4 er 12, så elefanten spiser 12 kilogram.'],
+      ['Gange så mange', 'Pingvinen får 4 fisk. Sælen får 3 gange så mange. Det er 3 grupper med 4 i hver, ligesom på tegningen. 3 gange 4 er 12, så sælen får 12 fisk.'],
     ],
     tip: 'Læg mærke til ord som hver, i hver og gange så mange. De fortæller, at der er lige store grupper. Spørg så dig selv, hvor mange grupper der er, og hvor mange der er i hver.',
   },
@@ -289,17 +289,17 @@ export const SAY = {
   // ---------- Koordinatsystemet ----------
   'koord-aflaes': {
     steps: [
-      'Et koordinatsystem har to akser. Den vandrette akse hedder x-aksen, og den lodrette hedder y-aksen. De mødes i punktet 0, 0.',
-      'Hvor ligger punktet P? Start i 0, 0, og gå hen ad x-aksen, til du er lige under P. Det er 4 hen.',
-      'Gå så lige op til P. Det er 2 op, så P er punktet 4, 2. Tallet for hen skrives altid først.',
-      'Rækkefølgen betyder noget. Punktet 4, 2 og punktet 2, 4 er to forskellige punkter. Husk, først hen og så op.',
+      'Kortet over zoo\'en er et koordinatsystem. Den vandrette akse hedder x-aksen, og den lodrette hedder y-aksen. De mødes ved indgangen i punktet 0, 0.',
+      'Hvor bor girafferne? Start ved indgangen i 0, 0, og gå hen ad x-aksen, til du er lige under giraffen. Det er 4 hen.',
+      'Gå så lige op til giraffen. Det er 2 op, så girafferne bor i 4, 2. Tallet for hen skrives altid først.',
+      'Rækkefølgen betyder noget. 4, 2 og 2, 4 er to forskellige steder på kortet. I 2, 4 bor løverne. Husk, først hen og så op.',
     ],
   },
   'koord-find': {
     steps: [
-      'Find punktet 6, 4. Det første tal fortæller, hvor langt du skal gå hen ad x-aksen. Det er 6 hen.',
-      'Det andet tal fortæller, hvor langt du skal gå op. Det er 4 op, og der ligger punkt A. Så A er punktet 6, 4.',
-      'Pas på fælden. Punkt B ligger 4 hen og 6 op, så det er punktet 4, 6. Tallene er byttet om, og så er det et helt andet punkt.',
+      'Hvem bor i 6, 4? Det første tal fortæller, hvor langt du skal gå hen ad x-aksen. Det er 6 hen.',
+      'Det andet tal fortæller, hvor langt du skal gå op. Det er 4 op. Der bor pingvinerne, så pingvinerne bor i 6, 4.',
+      'Pas på fælden. Zebraerne bor 4 hen og 6 op, og det er 4, 6. Tallene er byttet om, og så er det et helt andet dyr.',
     ],
   },
   // ---------- Areal og omkreds ----------
@@ -328,11 +328,12 @@ export const SAY = {
     tip: 'Fra en stor enhed til en lille ganger du, så 4 meter er 4 gange 100, altså 400 centimeter. Fra en lille enhed til en stor deler du, så 3000 meter er 3000 delt med 1000, altså 3 kilometer. En halv meter er 50 centimeter, og en halv kilometer er 500 meter.',
   },
   'enh-vaegt': {
-    lead: 'Hvor tungt er noget? Vægt måles i kilogram og gram.',
+    lead: 'Hvor tungt er noget? Vægt måles i gram, kilogram og ton. De store dyr vejer flere ton.',
     cards: [
       ['Vægt', 'På billedet bliver foderet vejet på en vægt. Vægt måler vi i kilogram og gram, og et kilogram er 1000 gram. Pingvinungen vejer 3 kilogram. 3 gange 1000 er 3000, så den vejer 3000 gram.'],
+      ['Vægttrappen', 'Se på vægttrappen. Øverst står ton, så kilogram, og nederst gram. Går du et trin ned ad trappen, ganger du med 1000. Går du et trin op, deler du med 1000. Elefanten vejer 4 ton, og det er 4000 kilogram.'],
     ],
-    tip: 'Fra en stor enhed til en lille ganger du, så 4 kilogram er 4 gange 1000, altså 4000 gram. Fra en lille enhed til en stor deler du, så 3000 gram er 3000 delt med 1000, altså 3 kilogram. Et halvt kilogram er 500 gram.',
+    tip: 'Fra en stor enhed til en lille ganger du, så 4 kilogram er 4 gange 1000, altså 4000 gram. Fra en lille enhed til en stor deler du, så 3000 gram er 3 kilogram. Et halvt kilogram er 500 gram, og et halvt ton er 500 kilogram. Skal du finde ud af, hvem der vejer mest, så regn først om, så begge vægte står i samme enhed.',
   },
   'enh-rumfang': {
     lead: 'Hvor meget kan der være i noget? Rumfang måles i liter, deciliter og centiliter.',
@@ -365,6 +366,15 @@ export const SAY = {
       ['Hvad er hver streg værd?', 'Kig altid efter, hvad hver streg er værd. Her går tallene i spring på 5. Søjlen for mandag når op til 15, så der blev solgt 15 is om mandagen. Det er ikke 3, selvom søjlen kun er 3 streger høj.'],
     ],
     tip: 'Spørger opgaven, hvor mange flere, så træk fra. 25 minus 15 er 10. Spørger den, hvor mange i alt, så læg sammen, og 15 plus 25 plus 10 er 50.',
+  },
+  prisskilt: {
+    lead: 'Ved indgangen hænger et prisskilt. Find de priser, du skal bruge, og regn i trin.',
+    cards: [
+      ['Find prisen', 'Se på prisskiltet. Hver række er en slags billet. Skal du finde prisen for et barn, så find rækken, hvor der står barn, og følg den hen til prisen. En børnebillet koster 125 kroner.'],
+      ['Regn i trin', 'Skal 2 voksne og 3 børn i zoo, så regn hver slags billet for sig. 2 voksne koster 2 gange 210, og det er 420 kroner. 3 børn koster 3 gange 125, og det er 375 kroner. Læg dem sammen til sidst. 420 plus 375 er 795 kroner.'],
+      ['Hvad er billigst?', 'En familie med 2 voksne og 2 børn kan købe 4 enkeltbilletter. De koster 420 plus 250, altså 670 kroner. En familiebillet koster kun 600 kroner. 670 minus 600 er 70, så de sparer 70 kroner.'],
+    ],
+    tip: 'Først finder du de priser, du skal bruge. Så regner du hver slags billet for sig. Til sidst lægger du sammen, eller trækker fra, hvis du skal finde forskellen.',
   },
   // ---------- Beskriv data ----------
   'bd-typetal': {

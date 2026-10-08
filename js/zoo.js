@@ -1,10 +1,10 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261008194551';
-import * as E from './engine.js?v=20261008194551';
-import { today } from './util.js?v=20261008194551';
-import { SEW } from './sewmask.js?v=20261008194551';
+import { AREAS, FACTS } from './curriculum.js?v=20261008201522';
+import * as E from './engine.js?v=20261008201522';
+import { today } from './util.js?v=20261008201522';
+import { SEW } from './sewmask.js?v=20261008201522';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -212,9 +212,9 @@ export const ZONES = {
   },
   gange: {
     animals: ['🦒', '🐘', '🦛'], who: 'nora', blurb: 'Her bestilles foder til de store dyr', step: 'regn foderet ud til de store dyr',
-    story: 'I Foderlageret bestiller {who} foder til de store dyr. Giraferne, elefanterne og flodhestene spiser rigtig meget – og alt skal regnes ud.',
-    tasks: ['Bestil blade til giraferne', 'Regn ugens foder ud til elefanterne', 'Hjælp Nora med den store foderbestilling'],
-    intro: ['Giraferne har spist alle bladene. {who} skal regne ud, hvor mange nye der skal bestilles.', 'Elefanterne spiser enormt meget. {who} skal regne foderet ud til hele ugen.', 'Giraferne, elefanterne og flodhestene skal alle have foder. Den store bestilling skal sendes i dag, og {who} har mange tal at holde styr på.'],
+    story: 'I Foderlageret bestiller {who} foder til de store dyr. Girafferne, elefanterne og flodhestene spiser rigtig meget – og alt skal regnes ud.',
+    tasks: ['Bestil blade til girafferne', 'Regn ugens foder ud til elefanterne', 'Hjælp Nora med den store foderbestilling'],
+    intro: ['Girafferne har spist alle bladene. {who} skal regne ud, hvor mange nye der skal bestilles.', 'Elefanterne spiser enormt meget. {who} skal regne foderet ud til hele ugen.', 'Girafferne, elefanterne og flodhestene skal alle have foder. Den store bestilling skal sendes i dag, og {who} har mange tal at holde styr på.'],
     done: ['Du hjalp {who} med giraffernes foder.', 'Du hjalp {who} med elefanternes foder til hele ugen.', 'Du hjalp {who} med den store foderbestilling.'],
   },
   division: {
@@ -455,7 +455,7 @@ export function sceneFor(areaId, title) {
   return { ...s, full: s.full && kind === s.fullFor ? s.full : null, face: b?.expr || { happy: b?.img, think: b?.img, cheer: b?.img } };
 }
 
-// Starten på en mission: "Giraferne har spist alle bladene. Nora skal regne ud …"
+// Starten på en mission: "Girafferne har spist alle bladene. Nora skal regne ud …"
 export function missionIntroText(areaId, title, who) {
   const z = ZONES[areaId], i = z.tasks.indexOf(title);
   const t = z.intro?.[i] || `{who} har brug for din hjælp i ${AREAS.find((a) => a.id === areaId).place}.`;
@@ -470,7 +470,7 @@ export const ACTIVITIES = {
   sammenlign: { name: 'Find den travleste dag', desc: 'Hvilken dag kom der flest gæster – og hvilken færrest?' },
   plusminus: { name: 'Gør kassen op', desc: 'Læg dagens billetsalg sammen, og træk fra.' },
   gange10: { name: 'Pak foderkasserne', desc: 'Kasser med 10 og 100 – hvor meget foder er der i alt?' },
-  gangeflercifret: { name: 'Beregn dagens foder', desc: 'Hvor mange kilo skal giraferne og elefanterne have?' },
+  gangeflercifret: { name: 'Beregn dagens foder', desc: 'Hvor mange kilo skal girafferne og elefanterne have?' },
   gangetekst: { name: 'Fyld giraffernes vogne', desc: 'Find gangestykket i historien om foderet.' },
   divtabel: { name: 'Fordel bananerne', desc: 'Del helt lige mellem aberne – gange baglæns.' },
   divrest: { name: 'Fordel de sidste bidder', desc: 'Del maden ud – resten går til Kaj.' },
