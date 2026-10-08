@@ -1,14 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008201522';
-import * as E from './engine.js?v=20261008201522';
-import * as Z from './zoo.js?v=20261008201522';
-import { zooGate } from './scene.js?v=20261008201522';
-import { zooMap } from './map.js?v=20261008201522';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008201522';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008201522';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008201522';
-import { esc, fmt, frac, pick, today } from './util.js?v=20261008201522';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008201729';
+import * as E from './engine.js?v=20261008201729';
+import * as Z from './zoo.js?v=20261008201729';
+import { zooGate } from './scene.js?v=20261008201729';
+import { zooMap } from './map.js?v=20261008201729';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008201729';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008201729';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008201729';
+import { esc, fmt, frac, pick, today } from './util.js?v=20261008201729';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };

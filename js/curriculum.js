@@ -4,10 +4,10 @@
 //   { prompt, visual?, input: 'number'|'fraction'|'choice'|'qr', answer, choices?, unit?, explain, explainVisual? }
 // level: 1 = let, 2 = middel, 3 = fuld 4.-klasse-niveau.
 
-import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261008201522';
-import * as V from './visuals.js?v=20261008201522';
-import { attachSay } from './oplaesning.js?v=20261008201522';
-import { ANIMALS, HEAVY, LIGHT, cap } from './animals.js?v=20261008201522';
+import { ri, pick, chance, shuffle, fmt, fmtDec, fmtKr, frac, box, NAMES, gcd, lcm } from './util.js?v=20261008201729';
+import * as V from './visuals.js?v=20261008201729';
+import { attachSay } from './oplaesning.js?v=20261008201729';
+import { ANIMALS, HEAVY, LIGHT, cap } from './animals.js?v=20261008201729';
 
 const pow10 = (p) => 10 ** p;
 const PLACE = ['enernes', 'tiernes', 'hundredernes', 'tusindernes', 'titusindernes'];
