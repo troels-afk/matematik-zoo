@@ -3,7 +3,7 @@
 // dæmpet (under opbygning) → normal (åben) → lys og stjerner (populær, stjerne, guld).
 // Kortet tegner kun data; klik håndteres i app.js via .m-tap og data-area/-task/-baby/-bodil.
 
-import { esc } from './util.js?v=20261009090132';
+import { esc } from './util.js?v=20261009150722';
 
 const MW = 1672, MH = 941; // grundkortets størrelse i pixels (img/map/zoo-map-base.webp)
 const px = (v, of) => `${((100 * v) / of).toFixed(2)}%`;

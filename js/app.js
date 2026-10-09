@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261009090132';
-import * as E from './engine.js?v=20261009090132';
-import * as Z from './zoo.js?v=20261009090132';
-import { zooMap } from './map.js?v=20261009090132';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261009090132';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261009090132';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261009090132';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261009090132';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261009150722';
+import * as E from './engine.js?v=20261009150722';
+import * as Z from './zoo.js?v=20261009150722';
+import { zooMap } from './map.js?v=20261009150722';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261009150722';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261009150722';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261009150722';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261009150722';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -176,13 +176,14 @@ async function showProfiles() {
         <button class="btn big" type="submit">Åbn porten</button>
       </form>
       <footer class="wp-foot"><span>Gratis · ingen login · fremskridtet gemmes kun på denne enhed</span>
-        <span><button class="link small" id="restore">Gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button></span></footer>
+        <span><button class="link small" id="restore">Gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button>${FEEDBACK.url ? ' · <button class="link small" id="feedback-w">Send feedback</button>' : ''}</span></footer>
     </section>
     <small class="welcome-copy">© 2026 Troels Christensen</small>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
   on('#new', 'click', () => { $('#newform').hidden = false; $('#nm').focus(); $('#newform').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
   on('#restore', 'click', pickBackup);
   on('#about-w', 'click', () => showAbout(showProfiles, 'Tilbage'));
+  on('#feedback-w', 'click', () => feedbackSheet('velkomsten'));
   on('#nm', 'input', () => { $('#zn').placeholder = Z.defaultZooName($('#nm').value); });
   on('#newform', 'submit', async (e) => {
     e.preventDefault();
@@ -330,9 +331,63 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
         ${principle(ui('skildpadde'), 'Tid uden pres', 'Tidtagning findes kun i den valgfrie "Slå din rekord" – og kun på gangestykker, der allerede sidder. Træningen tager ca. 15 minutter, og målet er 4 dage om ugen.', 'Kilde: What Works Clearinghouse (2021) om flydende regnefærdighed.')}
         ${principle(ui('foraeldre'), 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
       </div>
+      ${FEEDBACK.url ? `<section class="card fb-card"><span><b>Idéer og feedback</b> – har du en idé, eller virker noget ikke? Skriv direkte til Troels.</span>${feedbackBtn('feedback-a')}</section>` : ''}
       <p class="small muted copyright">© 2026 Troels Christensen. Alle rettigheder forbeholdes.</p>
     </div>`, (e) => { if (e.key === 'Escape') back(); });
   on('#back', 'click', back);
+  on('#feedback-a', 'click', () => feedbackSheet('Om appen'));
+}
+
+// ================= Idéer og feedback til Troels =================
+// Beskeden sendes til et lille Google Apps Script (tools/feedback/Code.gs), der giver den videre til Troels på Telegram –
+// bot-nøglen ligger kun dér, aldrig i appen. Med sendes kun det, der skrives, et valgfrit navn, hvor i appen beskeden
+// er skrevet, og appens version. Uden adresse (url) vises knapperne ikke.
+const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycby2c67sPU_p0nbfMeN8HV6z-eiRzqBli23htCgemn02OGQel84kIy2LSrBuJUtt4fIcaw/exec' };
+const FB_KINDS = [['ide', '💡 En idé'], ['fejl', '🐞 Noget virker ikke'], ['ros', '💚 Ros']];
+const appStamp = () => new URL(import.meta.url).searchParams.get('v') || 'udvikling';
+const feedbackBtn = (id, cls = 'btn ghost') => (FEEDBACK.url ? `<button class="${cls}" id="${id}">Send en idé eller feedback</button>` : '');
+
+function feedbackSheet(from) {
+  let kind = 'ide', busy = false;
+  openSheet(`
+    <div class="fb">
+      <h2 style="margin:0">Send en idé eller feedback</h2>
+      <p class="muted" style="margin:0">Beskeden går direkte til Troels, der har lavet Matematik-Zoo. Han læser alle beskeder.</p>
+      <div class="seg fb-kind" role="radiogroup" aria-label="Hvad handler beskeden om?">${FB_KINDS.map(([k, l]) => `<button type="button" role="radio" data-k="${k}" aria-checked="${k === kind}" class="${k === kind ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <label class="lbl" for="fb-text">Din besked</label>
+      <textarea id="fb-text" class="field fb-text" maxlength="1000" rows="5" placeholder="Skriv her …"></textarea>
+      <label class="lbl" for="fb-name">Dit navn <span class="muted small">(kan udelades)</span></label>
+      <input id="fb-name" class="field" maxlength="40" autocomplete="off" value="${esc(S.state?.name || '')}">
+      <input id="fb-web" class="fb-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="fb-msg small" id="fb-msg" aria-live="polite"></p>
+      <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-close>Annullér</button><button class="btn" id="fb-send">Send</button></div>
+    </div>`, (el) => {
+    const msg = el.querySelector('#fb-msg');
+    el.querySelectorAll('.fb-kind [data-k]').forEach((b) => b.addEventListener('click', () => {
+      kind = b.dataset.k;
+      el.querySelectorAll('.fb-kind [data-k]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); });
+    }));
+    el.querySelector('#fb-send').addEventListener('click', async () => {
+      const text = el.querySelector('#fb-text').value.trim();
+      if (text.length < 2) { msg.textContent = 'Skriv lige et par ord først.'; el.querySelector('#fb-text').focus(); return; }
+      if (busy) return;
+      busy = true;
+      msg.textContent = 'Sender …';
+      try {
+        await sendFeedback({ kind, text, name: el.querySelector('#fb-name').value.trim(), from, version: appStamp(), website: el.querySelector('#fb-web').value });
+        closeSheet();
+        toast('Tak! Beskeden er sendt 💚');
+      } catch {
+        busy = false;
+        msg.textContent = 'Beskeden kunne ikke sendes. Er du på nettet? Prøv igen om lidt.';
+      }
+    });
+  });
+}
+
+// Scriptet svarer fra et andet domæne, så svaret kan ikke læses (no-cors) – men en netværksfejl giver en fejl
+function sendFeedback(payload) {
+  return fetch(FEEDBACK.url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
 }
 
 // ================= Intro: sådan spiller du =================
@@ -637,6 +692,7 @@ function showHome() {
     <section class="map-wrap${st.zoo.party ? ' festive' : ''}">
       <div class="map-scroll">${zooMap(mapData)}</div>
     </section>
+    ${FEEDBACK.url ? `<section class="card fb-card"><span>Har du en idé til Matematik-Zoo – eller er der noget, der ikke virker?</span>${feedbackBtn('feedback')}</section>` : ''}
 `);
 
   const mapEl = $('.zoo-map');
@@ -676,6 +732,7 @@ function showHome() {
   on('#party', 'click', () => { sfx('tap'); showParty(); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
   on('#skjorte', 'click', () => { sfx('tap'); showShirt(); });
+  on('#feedback', 'click', () => { sfx('tap'); feedbackSheet('forsiden'); });
   on('#help', 'click', () => showRules());
   on('#about', 'click', () => showAbout());
   on('#snd', 'click', () => {
@@ -2489,7 +2546,8 @@ function showParent(tab = parentTab) {
       <div class="row"><button class="btn" id="bk-save">Gem backup</button><button class="btn ghost" id="bk-load">Indlæs backup</button></div></section>
     <section class="card stack"><h3>Appen</h3>
       <p class="small muted" style="margin:0">Som app: på iPad Safari → Del → "Føj til hjemmeskærm", på Mac Safari → Arkiv → "Føj til Dock". Appen har sit eget lager, så gem en backup i browseren først og indlæs den i appen bagefter. Appen opdaterer sig selv, når den åbnes.</p>
-      <div class="spread"><span class="small muted" id="app-version">Version fra ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div></section>
+      <div class="spread"><span class="small muted" id="app-version">Version fra ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div>
+      ${FEEDBACK.url ? `<div class="spread"><span class="small muted">Idéer, fejl eller ros – direkte til Troels.</span>${feedbackBtn('feedback-p')}</div>` : ''}</section>
     <section class="card stack pt-danger"><h3>Slet profil</h3>
       <div class="spread"><span class="small muted">Sletter ${esc(st.name)}s profil og alt fremskridt på denne enhed. Tag en backup først.</span><button class="btn ghost" id="del">Slet profil</button></div></section>`;
 
@@ -2526,6 +2584,7 @@ function showParent(tab = parentTab) {
     toast('Navnet er gemt');
   });
   on('#bk-save', 'click', exportBackup);
+  on('#feedback-p', 'click', () => feedbackSheet('forældredelen'));
   on('#bk-load', 'click', pickBackup);
   on('#check-update', 'click', async () => {
     reloadNow = true; // her har hun selv bedt om det
@@ -2788,4 +2847,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, speech, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, speech, babyReact, feedback: FEEDBACK, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
