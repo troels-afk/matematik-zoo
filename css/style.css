@@ -1465,3 +1465,8 @@ details.card[open] > summary { margin-bottom: 12px; }
 .practice-done .pd-more { width: 100%; text-align: left; }
 /* Forældredelen: ugens lektie */
 .hw-pick { width: auto; min-width: min(100%, 300px); max-width: 100%; min-height: 48px; font-size: 1rem; }
+/* Missionens første trin: Babyhuset og hvorfor gangestykkerne er unger i zoo'en */
+.baby-intro .tour-babies .baby { width: 64px; height: 64px; }
+.why { text-align: left; padding: 12px 16px; border-radius: var(--r-sm); background: var(--sun-soft); border: 1px solid var(--line-2); }
+.why summary { cursor: pointer; font: 600 1.02rem var(--font-head); color: var(--ink); }
+.why p { margin: 8px 0 0; line-height: 1.5; color: var(--ink-2); font-weight: 700; }

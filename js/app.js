@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261009083708';
-import * as E from './engine.js?v=20261009083708';
-import * as Z from './zoo.js?v=20261009083708';
-import { zooMap } from './map.js?v=20261009083708';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261009083708';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261009083708';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261009083708';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261009083708';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261009090132';
+import * as E from './engine.js?v=20261009090132';
+import * as Z from './zoo.js?v=20261009090132';
+import { zooMap } from './map.js?v=20261009090132';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261009090132';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261009090132';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261009090132';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261009090132';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1524,7 +1524,7 @@ function goBlock() {
   const run = S.run, block = run.sess.blocks[run.bi];
   if (!block) return finish();
   if (!block.count) { run.bi++; return goBlock(); }
-  if (run.bi === 0) return showTask();
+  if (run.bi === 0) return run.mode === 'daily' && block.kind === 'warm' ? babyIntro(run, block) : showTask();
   const prev = run.sess.blocks[run.bi - 1];
   const z = Z.ZONES[run.sess.area];
   const who = run.mission?.who || z.who;
@@ -1554,6 +1554,32 @@ function goBlock() {
 }
 
 // Reglen for stjernen i den aktivitet, man skal i gang med (vises mellem missionens dele)
+// Missionens første trin: Babyhuset – hvorfor gangestykkerne er unger i zoo'en. Forklaringen er foldet ud de første
+// tre gange og kan derefter åbnes igen ("Hvorfor gangestykker i zoo'en?")
+function babyIntro(run, block) {
+  const st = S.state, seen = st.zoo.whySeen || 0;
+  const babies = block.tasks.slice(0, 8).map((t) => baby(t.fact, 'lg')).join('');
+  // Nye gangestykker er unger, der bliver født i dag (de vises som skygger, til de har fået deres første flaske)
+  const fresh = block.tasks.filter((t) => E.factBox(st, t.fact) < 0).length, fed = block.count - fresh;
+  const line = !fresh ? `${block.count} unger vil have flaske.`
+    : !fed ? `${fresh} nye unger bliver født i dag!`
+    : `${fed} ${fed === 1 ? 'unge vil' : 'unger vil'} have flaske, og ${fresh === 1 ? 'en ny unge' : `${fresh} nye unger`} bliver født.`;
+  view(`
+    <div class="session-top"><button class="icon-btn" id="quit" aria-label="Stop">✕</button>${missionTrack(run, block)}</div>
+    <div class="card sheet center stack baby-intro" style="margin-top:4vh">
+      <div class="tour-babies" aria-hidden="true">${babies}</div>
+      <h1>Først: Babyhuset</h1>
+      <div style="text-align:left">${say('nora', `${line} Hver unge hører til et gangestykke – regner du det rigtigt, får ungen sin flaske.`, 'lg')}</div>
+      <details class="why"${seen < 3 ? ' open' : ''}><summary>Hvorfor gangestykker i zoo'en?</summary>
+        <p>I en zoo bruger man gangetabellen hele tiden: når foderet skal deles ud, når kasserne skal tælles, og når gæsterne køber billetter. Jo bedre gangetabellen sidder, jo lettere bliver alle de andre opgaver i zoo'en. Derfor starter hver mission i Babyhuset – og hver gang du svarer rigtigt og hurtigt, vokser ungen lidt.</p></details>
+      <div><button class="btn big" id="go">Videre</button></div>
+    </div>`, (e) => { if (e.key === 'Enter') showTask(); });
+  st.zoo.whySeen = seen + 1;
+  save();
+  on('#go', 'click', showTask);
+  on('#quit', 'click', quitSession);
+}
+
 function starRule(skillId) {
   const s = ALL_SKILLS[skillId], lv = E.skillState(S.state, skillId).level, status = E.skillStatus(S.state, skillId);
   const dots = [1, 2, 3].map((n) => `<i class="${n <= lv ? 'on' : ''}"></i>`).join('');
