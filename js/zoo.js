@@ -1,10 +1,10 @@
 // Zoo-universet: figurer, dyreunger, områder, niveauer og beskeder.
 // Se univers-zoo.md. Historien vises kun MELLEM opgaverne – aldrig mens der regnes.
 
-import { AREAS, FACTS } from './curriculum.js?v=20261008212453';
-import * as E from './engine.js?v=20261008212453';
-import { today } from './util.js?v=20261008212453';
-import { SEW } from './sewmask.js?v=20261008212453';
+import { AREAS, FACTS } from './curriculum.js?v=20261009083708';
+import * as E from './engine.js?v=20261009083708';
+import { today } from './util.js?v=20261009083708';
+import { SEW } from './sewmask.js?v=20261009083708';
 
 // Figurernes tegninger: ansigt (talebobler og kortet) og helfigur (missionernes scener).
 // Bodil har en buste (introen og kortet). Emojien bruges kun som reserve, hvis en tegning mangler.
@@ -93,7 +93,18 @@ export const ROUND_ENV = ['flamingoer', 'elefanter', 'giraffer', 'aber', 'polar'
 // (øverst i den stående), så sedlen med opgaven kan ligge i den rolige del.
 export const PRACTICE_BG = Object.fromEntries(['tal', 'gange', 'division', 'brok', 'decimal', 'geometri', 'maaling', 'data', 'algebra', 'oevebane']
   .map((k) => [k, { l: `img/bg/${k}-l.webp`, s: `img/bg/${k}-s.webp` }]));
-// Hvilken scene hver disciplin på Øvebanen står i
+// Hvor hvert mærke (disciplin) hører hjemme i zoo'en: når et mærkes øvelse er dagens mission, foregår den i dette
+// område – med områdets figur, scene og billeder
+export const DISC_HOME = {
+  'd-tal': 'tal', 'd-plusminus': 'tal', 'd-regneregler': 'tal', 'd-gange': 'gange', 'd-division': 'division', 'd-brok': 'brok',
+  'd-decimal': 'decimal', 'd-linjer': 'geometri', 'd-figurer': 'geometri', 'd-areal': 'geometri', 'd-tid': 'maaling',
+  'd-maal': 'maaling', 'd-diagrammer': 'data', 'd-chance': 'data', 'd-beskriv': 'data', 'd-koordinater': 'algebra',
+  'd-ligninger': 'algebra', 'd-moenstre': 'algebra',
+};
+// Mærkerne i matematikbogens rækkefølge (KonteXt+ 4, kapitel 1 → 9); mærker uden kapitel står ved deres nabo-emne
+export const BOOK_ORDER = ['d-tal', 'd-plusminus', 'd-gange', 'd-regneregler', 'd-division', 'd-linjer', 'd-figurer', 'd-koordinater',
+  'd-brok', 'd-diagrammer', 'd-chance', 'd-beskriv', 'd-decimal', 'd-maal', 'd-tid', 'd-areal', 'd-ligninger', 'd-moenstre'];
+// Hvilken scene hver disciplin står i, når den øves for sig (stien)
 export const DISC_BG = {
   'd-tal': 'tal', 'd-plusminus': 'tal', 'd-gange': 'gange', 'd-regneregler': 'oevebane', 'd-division': 'division',
   'd-brok': 'brok', 'd-decimal': 'decimal', 'd-ligninger': 'algebra', 'd-moenstre': 'algebra', 'd-linjer': 'geometri',
@@ -275,7 +286,7 @@ export const LEVELS = [
   { name: 'Åben', icon: '🌱', art: 'img/ui/niveau-1.webp' },
   { name: 'Populær', icon: '💚', art: 'img/ui/niveau-2.webp' },
   { name: 'Stjerne-område', icon: '⭐', art: 'img/ui/stjerne.webp' },
-  { name: 'Guld-område', icon: '🌟', art: 'img/ui/niveau-4.webp' },
+  { name: 'Mester-område', icon: '🌟', art: 'img/ui/niveau-4.webp' },
 ];
 
 export function areaLevel(state, areaId) {
@@ -430,7 +441,7 @@ export function homeMessage(state) {
   if (levels.every((l) => l >= 3)) {
     const gold = levels.filter((l) => l >= 4).length;
     return { who: 'bodil', text: state.zoo.party
-      ? `${zoo} er åben, og gæsterne strømmer ind – tak for din hjælp! Næste mål: guld-områder. ${gold} af ${AREAS.length} er allerede guld.`
+      ? `${zoo} er åben, og gæsterne strømmer ind – tak for din hjælp! Næste mål: mester-områder. ${gold} af ${AREAS.length} er allerede mester-områder.`
       : `Alle områder har fået en stjerne! Nu holder vi åbningsfest – og du skal klippe snoren. 🎉` };
   }
   const due = E.factSummary(state).due;
@@ -518,7 +529,7 @@ export function nextGoal(state, area) {
   if (lv === 1) return `Bliv sikker ⭐ i ${more(Math.ceil(p.total / 2) - p.done)} – så stiger ${area.place} til ${up(2)}, og ${animal(1)} flytter ind.`;
   if (lv === 2) return `Bliv sikker ⭐ i ${more(p.total - p.done)} – så stiger ${area.place} til ${up(3)}, og ${animal(2)} flytter ind.`;
   if (lv === 3) return `Bliv sikker i alle aktiviteterne igen på en ny dag – så stiger ${area.place} til ${up(4)}.`;
-  return `${area.place} er et guld-område! Øv gerne videre, så det bliver ved med at sidde.`;
+  return `${area.place} er et mester-område! Øv gerne videre, så det bliver ved med at sidde.`;
 }
 
 // Slutningen på en mission: "Du hjalp Nora med giraffernes foder."

@@ -7,8 +7,8 @@
 //  - Næste færdighed i et område låses op, når den forrige er sikker.
 //  - Gangetabellen kører Leitner-kasser pr. fakta; nye fakta blandes ind blandt kendte.
 
-import { AREAS, SKILLS, ALL_SKILLS, FACTS, factProblem } from './curriculum.js?v=20261008212453';
-import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261008212453';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, FACTS, factProblem } from './curriculum.js?v=20261009083708';
+import { today, addDays, daysBetween, weekStart, shuffle, parseNum } from './util.js?v=20261009083708';
 
 export const STATUS = { NY: 'ny', OEVER: 'øver', SIKKER: 'sikker', MESTRET: 'mestret' };
 const HIST_MAX = 40;
@@ -214,19 +214,21 @@ function makeTask(kind, skillId, state, lvl) {
 }
 
 // Dagens træning: opvarmning (tabel) → dagens sted → blandet repetition
-export function buildSession(state, areaId) {
+export function buildSession(state, areaId, { main: mainSkill = null, disc = null } = {}) {
   const size = SESSION_SIZES[state.settings.length] || SESSION_SIZES.normal;
   const warm = pickFacts(state, size.warm).map((f) => ({ kind: 'warm', fact: f.key, p: factProblem(f) }));
 
-  const main = currentSkill(state, areaId) || reviewSkillIn(state, areaId);
+  // Midterdelen: områdets næste aktivitet – eller en bestemt øvelse (fx fra et mærke), som så foregår i området
+  const main = mainSkill || currentSkill(state, areaId) || reviewSkillIn(state, areaId);
   const review = pickReviewSkills(state, size.review, main);
 
   return {
     area: areaId,
     main,
+    disc,
     blocks: [
       { kind: 'warm', title: 'Babyhuset', sub: 'Gangetabellen – ungerne vil have flaske', count: warm.length, tasks: warm },
-      { kind: 'main', title: AREAS.find((a) => a.id === areaId).place, sub: SKILLS[main].name, count: size.main, skill: main, area: areaId },
+      { kind: 'main', title: AREAS.find((a) => a.id === areaId).place, sub: ALL_SKILLS[main].name, count: size.main, skill: main, area: areaId, disc },
       { kind: 'review', title: 'Zoo-runden', sub: 'Blandede opgaver fra hele zoo\'en', count: review.length, skills: review },
     ],
   };
@@ -264,12 +266,12 @@ function pickReviewSkills(state, n, exclude) {
 export function nextTask(state, block, index) {
   if (block.kind === 'warm') return block.tasks[index];
   if (block.kind === 'main') {
-    // Bliver færdigheden sikker midt i blokken, går vi videre til den næste i området
+    // Bliver færdigheden sikker midt i blokken, går vi videre til den næste i området (eller i mærket)
     const st = skillStatus(state, block.skill);
-    const cur = currentSkill(state, block.area);
+    const cur = block.disc ? discNext(state, DISCIPLINES.find((d) => d.id === block.disc)) : currentSkill(state, block.area);
     if (cur && cur !== block.skill && (st === STATUS.SIKKER || st === STATUS.MESTRET)) {
       block.skill = cur;
-      block.sub = SKILLS[cur].name;
+      block.sub = ALL_SKILLS[cur].name;
     }
     return makeTask('main', block.skill, state);
   }
@@ -288,6 +290,8 @@ export const PATCH = { N: 10, PASS: 9, GOLD_DAYS: 7, TIERS: ['', 'bronze', 'silv
 export const patchOf = (state, discId) => state.patches?.[discId] || null;
 const solid = (state, id) => [STATUS.SIKKER, STATUS.MESTRET].includes(skillStatus(state, id));
 export const discProgress = (state, disc) => ({ done: disc.skills.filter((sk) => solid(state, sk.id)).length, total: disc.skills.length });
+// Den næste øvelse til mærket: den første i disciplinen, der ikke er sikker endnu (null, når alle er sikre)
+export const discNext = (state, disc) => disc.skills.find((sk) => !solid(state, sk.id))?.id || null;
 
 // Bronze kommer af sig selv, når alle øvelserne er sikre – også når de er øvet i zoo'en. Giver de nye mærkers id'er.
 export function awardBronze(state, discs) {

@@ -413,23 +413,6 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .oeve-glass h1 { margin: 0 0 4px; }
 .oeve-glass p { margin: 0; color: var(--ink-2); font-weight: 700; line-height: 1.45; }
 @media (max-width: 640px) { .oeve-hero { min-height: 0; padding: 140px 10px 10px; background-position: 16% 36%; } }
-/* Én flise pr. disciplin: tegningen på en lille scene i disciplinens farve, så navnet og fremgangen.
-   Grupperne har 9, 6 og 3 discipliner – derfor 2, 3 eller 6 kolonner, så rækkerne går op */
-.disc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-@media (min-width: 600px) { .disc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1000px) { .disc-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-.disc-tile { display: flex; flex-direction: column; padding: 0; overflow: hidden; text-align: left; border-radius: var(--r); background: var(--card); border: 1px solid var(--line-2);
-  box-shadow: var(--shadow); transition: transform .15s, box-shadow .15s; }
-.disc-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-.disc-tile:active { transform: scale(.98); }
-.dt-art { display: grid; place-items: center; height: 132px;
-  background: radial-gradient(ellipse 72% 64% at 50% 60%, color-mix(in srgb, var(--ac) 34%, var(--card)), color-mix(in srgb, var(--ac) 10%, var(--card))); }
-.dt-art img { width: 150px; height: 112px; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(31, 51, 70, .14)); transition: transform .2s; }
-.disc-tile:hover .dt-art img { transform: scale(1.06) rotate(-2deg); }
-.dt-body { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 14px; }
-.dt-nm { font-size: 1.08rem; line-height: 1.2; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; } /* "Koordinatsystemet" er bredere end flisen */
-.dt-d { color: var(--ink-2); font-size: .84rem; font-weight: 700; line-height: 1.3; }
-.disc-prog { display: flex; flex-direction: column; gap: 5px; margin-top: auto; padding-top: 6px; font-size: .84rem; font-weight: 700; color: var(--ink-2); }
 .area-hero .disc-art { width: 150px; height: 112px; object-fit: contain; margin: -12px 0; flex: none; filter: drop-shadow(0 6px 8px rgba(31, 51, 70, .14)); }
 /* Gangetabellen: én knap pr. tabel – grøn, når tabellen sidder sikkert */
 .tbl-picks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -535,8 +518,6 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .avatar { width: 54px; height: 54px; }
 }
 .icon-btn.pill { width: auto; padding: 0 14px; gap: 6px; display: inline-flex; align-items: center; font: 600 .95rem var(--font-head); color: var(--ink); }
-/* Øvebanen: "For forældre" (hængelåsen) øverst til højre – fører til Øvebanen i tal bag forældrekoden */
-.oeve-parent { margin-left: auto; }
 @media (max-width: 520px) { .icon-btn.pill span { display: none; } .icon-btn.pill { padding: 0; width: 48px; justify-content: center; } }
 
 /* ---------- Om appen ---------- */
@@ -1356,18 +1337,10 @@ details.card[open] > summary { margin-bottom: 12px; }
 .ps-txt h2 { margin: 2px 0 8px; }
 .ps-txt p { margin: 0 0 10px; line-height: 1.45; }
 
-/* Øvebanen: kortet med skjorten øverst, og mærket på disciplinernes egne sider */
-.shirt-teaser { display: flex; align-items: center; gap: 18px; width: 100%; margin-top: 16px; padding: 12px 20px 12px 12px; text-align: left; border: 1px solid var(--line-2); transition: transform .15s, box-shadow .15s; }
-.shirt-teaser:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+/* Skjorten i lille format (forældredelen), og mærket øverst på et mærkes øvelser */
 .st-mini { flex: none; width: 150px; padding: 6px; border-radius: 16px;
   background: radial-gradient(ellipse 72% 62% at 50% 46%, color-mix(in srgb, #f3d58f 34%, var(--card)), color-mix(in srgb, #7fb46e 26%, var(--card))); }
-.st-txt { flex: 1; min-width: 0; display: grid; gap: 4px; }
-.st-txt b { font-size: 1.25rem; }
-.st-txt span { color: var(--ink-2); font-weight: 700; }
-.st-txt .st-new { color: var(--primary-ink); }
-.st-txt .bar-mini { max-width: 260px; margin-top: 2px; }
-.st-go { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; font: 600 1.2rem var(--font-head); }
-@media (max-width: 480px) { .st-mini { width: 104px; } .st-go { display: none; } }
+@media (max-width: 480px) { .st-mini { width: 104px; } }
 .patch-card { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; margin-top: 14px; padding: 14px 18px; }
 .pc-patch { flex: none; border-radius: 50%; padding: 8px; }
 .pc-txt { flex: 1; min-width: 220px; display: grid; gap: 4px; }
@@ -1385,11 +1358,8 @@ details.card[open] > summary { margin-bottom: 12px; }
 .tl-done .tl-txt { color: var(--ink-3); }
 .patch-sheet .tier-ladder { margin: 4px 0 12px; }
 .pc-txt .bar-mini { max-width: 220px; margin-top: 4px; }
-.dt-badge { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 4px; border-radius: 99px;
-  background: rgba(255, 255, 255, .94); color: #3b2f1a; font: 800 .72rem var(--font-body); box-shadow: 0 2px 6px rgba(0, 0, 0, .15); }
-.dt-badge i { width: 14px; height: 14px; border-radius: 50%; background: var(--thread); box-shadow: inset 0 0 0 2px var(--thread-dk); }
-.disc-tile { position: relative; }
-#oeve { position: relative; }
+#skjorte { position: relative; }
+#skjorte .ui-ic { width: 26px; height: 26px; object-fit: contain; }
 .pill-dot { position: absolute; top: 3px; right: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 2px var(--card); }
 .mixed-done .md-can { background: var(--primary-soft); border-radius: 16px; padding: 12px 16px; text-align: left; line-height: 1.45; }
 .mixed-done .md-can b { display: block; font: 600 1.05rem var(--font-head); color: var(--primary-ink); }
@@ -1403,7 +1373,6 @@ details.card[open] > summary { margin-bottom: 12px; }
 .trail-sign .place-ic { width: 36px; height: 30px; vertical-align: -9px; margin-right: 2px; }
 .rp-ic .place-ic { width: 32px; height: 28px; margin: 0; vertical-align: 0; }
 .tour-icons span .place-ic { width: 50px; height: 46px; margin: 0; vertical-align: 0; }
-.st-txt .place-ic { width: 28px; height: 24px; vertical-align: -6px; margin-right: 4px; }
 .lv-ic { display: block; width: 26px; height: 26px; object-fit: contain; flex: none; -webkit-user-drag: none; user-select: none; }
 .pp-path .lv-ic { width: 32px; height: 32px; margin: -7px -4px; }
 .rule-levels .lv-ic { width: 38px; height: 38px; margin-top: -8px; }
@@ -1466,3 +1435,33 @@ details.card[open] > summary { margin-bottom: 12px; }
 @media (prefers-reduced-motion: reduce) { .pty-art, .rb-snip { animation: none; } .rb-half, .rb-bow { transition: none; } }
 
 .copyright { margin: 10px 0 0; text-align: center; opacity: .75; }
+
+/* ---------- Valgkortene: "Vælg selv" før missionen og "Vil du mere?" bagefter – højst tre, ét tryk starter dem ---------- */
+.offers { display: grid; gap: 10px; }
+.offer { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; width: 100%; padding: 10px 14px 10px 10px;
+  text-align: left; border-radius: var(--r); background: var(--card); border: 2px solid var(--line-2); box-shadow: var(--shadow-sm);
+  transition: transform .15s, border-color .15s, box-shadow .15s; }
+.offer:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--primary) 45%, var(--line-2)); box-shadow: var(--shadow); }
+.offer:active { transform: scale(.98); }
+.of-art { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 16px; background: var(--card-2); }
+.of-art .place-ic, .of-art .ui-ic { width: 46px; height: 46px; margin: 0; vertical-align: 0; object-fit: contain; }
+.of-art .patch { --s: 54px; }
+.of-txt { display: grid; gap: 2px; min-width: 0; }
+.of-tag { justify-self: start; padding: 2px 8px; border-radius: 99px; font: 600 .7rem var(--font-head); text-transform: uppercase; letter-spacing: .8px;
+  background: var(--primary-soft); color: var(--primary-ink); }
+.of-hw .of-tag { background: var(--sun-soft); color: var(--ink); }
+.of-patch .of-tag { background: var(--lav-soft); color: var(--ink); }
+.of-fast .of-tag { background: var(--coral-soft); color: var(--ink); }
+.of-area .of-tag { background: var(--sky-soft); color: var(--ink); }
+.of-title { font: 600 1.06rem/1.25 var(--font-head); color: var(--ink); }
+.of-sub { font-size: .88rem; font-weight: 700; color: var(--ink-2); }
+.of-go { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; font: 600 1.05rem var(--font-head); }
+.more { display: grid; gap: 10px; }
+.more h2 { margin: 2px 0 0; font-size: 1.25rem; }
+.choose-toggle { justify-self: start; }
+.choose-box { display: grid; gap: 10px; }
+.choose-box p { margin: 0; }
+.rec-note { margin: 8px 0 0; font-size: .92rem; font-weight: 700; color: var(--primary-ink); }
+.practice-done .pd-more { width: 100%; text-align: left; }
+/* Forældredelen: ugens lektie */
+.hw-pick { width: auto; min-width: min(100%, 300px); max-width: 100%; min-height: 48px; font-size: 1rem; }

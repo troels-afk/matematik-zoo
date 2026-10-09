@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261008212453';
-import * as E from './engine.js?v=20261008212453';
-import * as Z from './zoo.js?v=20261008212453';
-import { zooMap } from './map.js?v=20261008212453';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261008212453';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261008212453';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261008212453';
-import { esc, fmt, frac, pick, today, addDays, weekStart } from './util.js?v=20261008212453';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261009083708';
+import * as E from './engine.js?v=20261009083708';
+import * as Z from './zoo.js?v=20261009083708';
+import { zooMap } from './map.js?v=20261009083708';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261009083708';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261009083708';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261009083708';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261009083708';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -95,11 +95,11 @@ const say = (who, text, size = '') => `
     <div class="bubble"><span class="who">${Z.CAST[who].name} · ${Z.CAST[who].role}</span><span class="txt">${text}</span></div>
   </div>`;
 
-// Hængelåsen: forældredelen bag koden (på forsiden og på Øvebanen)
+// Hængelåsen: forældredelen bag koden (på forsiden)
 const LOCK_IC = '<svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.6" r="1.4" fill="currentColor"/></svg>';
 const INFO_IC = '<svg class="info-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.5" fill="currentColor"/></svg>';
 
-// Tegnede ikoner i stedet for emoji: de tre missionstrin, Øvebanen, lyd og dagens mission
+// Tegnede ikoner i stedet for emoji: de tre missionstrin, ekstra øvning, lyd og dagens mission
 const UI_ICONS = {
   baby: 'img/ui/babyhuset.webp', area: 'img/ui/zoo-omraade.webp', round: 'img/ui/zoo-runden.webp',
   oeve: 'img/ui/oevebane.webp', lyd: 'img/ui/lyd.webp', opgave: 'img/ui/opgave.webp',
@@ -108,7 +108,7 @@ const UI_ICONS = {
   kalender: 'img/ui/kalender.webp', trin: 'img/ui/trin.webp', vaekst: 'img/ui/vaekst.webp', skildpadde: 'img/ui/skildpadde.webp', foraeldre: 'img/ui/foraeldre.webp',
 };
 const ui = (key) => `<img class="ui-ic" src="${UI_ICONS[key]}" alt="" draggable="false">`;
-// Et sted i zoo'en eller en disciplin på Øvebanen som lille tegning ved navnet (Batch 5 og 7) – i stedet for emoji
+// Et sted i zoo'en eller et mærkes emne (disciplin) som lille tegning ved navnet (Batch 5 og 7) – i stedet for emoji
 const placeIc = (a) => {
   const src = Z.PLACE_ART[a.id] || Z.DISC_ART[a.id];
   return src ? `<img class="place-ic" src="${src}" alt="" draggable="false">` : a.icon;
@@ -243,7 +243,8 @@ function showRules(back = showHome) {
         <ol><li><b>Babyhuset</b> – giv ${size.warm} unger flaske (gangetabellen)</li>
           <li><b>Et område</b> – ${size.main} opgaver, hvor du hjælper Nora, Liv, Yasmin eller Kaj</li>
           <li><b>Zoo-runden</b> – ${size.review} blandede opgaver fra hele zoo'en</li></ol>
-        <p>Når alle tre dele er klaret, er missionen klaret. Det tager cirka ${size.minutes} minutter. Stopper du midtvejs, tæller den ikke som klaret.</p>`,
+        <p>Når alle tre dele er klaret, er missionen klaret. Det tager cirka ${size.minutes} minutter. Stopper du midtvejs, tæller den ikke som klaret.</p>
+        <p>Vil du hellere noget andet i dag? Tryk på <b>Vælg selv</b> under "Start dagens mission" – så kan du vælge mellem tre missioner, fx ugens lektie eller et mærke, du næsten har.</p>`,
       doneToday ? '✓ Dagens mission er klaret' : 'Dagens mission venter på forsiden')}
       ${rule(ui('baby'), 'Ungerne i Babyhuset', `<p>Hvert gangestykke er en dyreunge – der er ${FACTS.length}.</p>
         <p>Svarer du <b>rigtigt og hurtigt</b> (under ${E.FLUENT_MS / 1000} sekunder), vokser ungen: ${Z.STAGES.join(' → ')}.</p>
@@ -256,7 +257,7 @@ function showRules(back = showHome) {
       `Du er sikker i ${sikre} af ${ids.length} aktiviteter`)}
       ${rule(ui('area'), 'Områderne vokser', `<p>Jo flere aktiviteter du er sikker i, jo flottere bliver området:</p>
         <ul class="rule-levels">${Z.LEVELS.map((L, i) => `<li><span aria-hidden="true">${lvIc(i)}</span><span><b>${L.name}</b> – ${levelWhy[i]}${i >= 1 && i <= 3 ? ' · et nyt dyr flytter ind' : ''}</span></li>`).join('')}</ul>`,
-      `${open} åbne · ${stars} stjerne-områder · ${gold} guld-områder`)}
+      `${open} åbne · ${stars} stjerne-områder · ${gold} mester-områder`)}
       ${rule(ui('billet'), 'Gæster', `<p>Gæster pr. dag er zoo'ens point. Tallet vokser, når områderne bliver flottere, og når ungerne i Babyhuset bliver store.</p>`,
       `${fmt(Z.guestsPerDay(st))} gæster om dagen`)}
       ${rule(`<img class="ui-ic face" src="${Z.CAST.kaj.img}" alt="">`, 'Når du svarer forkert', `<p>Det gør ikke noget – sådan lærer man!</p>
@@ -264,12 +265,13 @@ function showRules(back = showHome) {
           <li>Vælger du mellem knapper, får du ét forsøg.</li>
           <li>Bagefter viser Kaj, hvordan man regner det, og der kommer en lignende opgave senere.</li>
           <li>Det er dit første svar, der tæller for stjernerne. 💡 Hjælp viser altid, hvordan man gør.</li></ul>`)}
-      ${rule(ui('oeve'), 'Når du vil øve mere', `<ul><li><b>Fri træning:</b> tryk på et område på kortet, og øv dér – når som helst.</li>
-          <li><b>Øvebanen:</b> altid åben – øv lige det, du vil.</li>
+      ${rule(ui('oeve'), 'Vil du mere?', `<ul><li><b>Efter missionen</b> får du tre forslag – tryk på et, så starter 10 opgaver.</li>
+          <li><b>Et område:</b> tryk på det på kortet. Før missionen kan du tage dagens mission dér – bagefter kan du øve dets næste aktivitet.</li>
+          <li><b>Skjorten</b> øverst: alle mærker – tryk på et for at øve til det.</li>
           <li><b>⚡ Slå din rekord:</b> regn så mange gangestykker, du kan, på 60 sekunder. ${st.settings.sprint ? 'Den kommer, når du kender mindst 6 gangestykker.' : 'Den er slået fra lige nu – en voksen kan slå den til.'}</li></ul>`,
-      !st.settings.sprint ? '🔓 Områderne og Øvebanen er altid åbne' : sprintEligible(st) ? '⚡ Slå din rekord er klar – du finder den i Babyhuset'
+      !st.settings.sprint ? '🔓 Alt kan øves – når som helst' : sprintEligible(st) ? '⚡ Slå din rekord er klar – du finder den i Babyhuset'
         : `⚡ Du kender ${FACTS.filter((f) => E.factBox(st, f.key) >= 2).length} af de 6 gangestykker, der skal til for at slå din rekord`)}
-      ${rule(`<img class="ui-ic" src="${Z.SHIRT.f.src}" alt="">`, 'Ranger-skjorten', `<p>Når du er sikker ⭐ i alle øvelser i en disciplin på Øvebanen, får du et mærke til din ranger-skjorte. Du bestemmer selv, hvor det skal sidde – og du kan altid flytte det.</p>
+      ${rule(`<img class="ui-ic" src="${Z.SHIRT.f.src}" alt="">`, 'Ranger-skjorten', `<p>Der er 18 mærker – ét for hvert emne i din matematikbog. Når du er sikker ⭐ i alle et mærkes øvelser, får du mærket til din ranger-skjorte. Du bestemmer selv, hvor det skal sidde – og du kan altid flytte det. Tryk på <b>Skjorten</b> øverst for at se dem alle.</p>
         <ul><li><b>Bronze</b> – ${TIER_WHY[1]}</li><li><b>Sølv</b> – ${TIER_WHY[2]}</li><li><b>Guld</b> – ${TIER_WHY[3]}</li></ul><p class="small muted">${SIKKER_HOW}</p>`,
       `${patchList(st).filter((x) => x.p).length} af ${patchList(st).length} mærker`)}
       ${rule(ui('gave'), 'Ugens bonus-unge', `<p>Øver du ${E.WEEK_GOAL} dage i én uge, flytter en bonus-unge ind i Babyhuset. Der er ${Z.BONUS.length} at samle.</p>`,
@@ -314,7 +316,7 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
       <div class="section-title"><h2>Pensum</h2><span class="muted small">Fælles Mål · KonteXt+ 4</span></div>
       <p class="about-lead">Indholdet følger de fire kompetenceområder i Fælles Mål for matematik (tal og algebra, geometri og måling, statistik og sandsynlighed samt matematiske kompetencer) og er struktureret som i lærebogssystemet KonteXt+ 4. Det giver ${skillCount} færdigheder fordelt på ${AREAS.length} områder i zoo'en – plus gangetabellen i Babyhuset.</p>
       <ul class="pensum-grid">${places.map(tile).join('')}</ul>
-      <p class="small muted about-note">Hver færdighed har tre niveauer. På Øvebanen kan alt øves frit – delt op i discipliner som i matematikbogen, med flere målrettede øvelser end i zoo'en (fx gangetabellen én tabel ad gangen).</p>
+      <p class="small muted about-note">Hver færdighed har tre niveauer. Ud over zoo'ens aktiviteter er matematikken delt op i 18 mærker til ranger-skjorten – ét for hvert emne i matematikbogen, med flere målrettede øvelser (fx gangetabellen én tabel ad gangen). Hvert mærke hører til et sted i zoo'en.</p>
 
       <div class="section-title"><h2>Det bygger appen på</h2><span class="muted small">Forskningen bag – og de valg, vi har truffet</span></div>
       <div class="rules">
@@ -356,7 +358,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
         <li><span class="n">3</span><div><div class="t">Zoo-runden</div><div class="d">Et par blandede opgaver fra hele zoo'en</div></div><span class="ico">${ui('round')}</span></li>
       </ol>`,
       title: 'Sådan går en dag',
-      body: say('nora', 'Én mission om dagen – det tager cirka 15 minutter. Du kan også altid øve frit i områderne på kortet. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
+      body: say('nora', 'Én mission om dagen – det tager cirka 15 minutter. Vil du mere bagefter, får du tre forslag. Prøv at komme forbi 4 dage om ugen – så vokser zoo\'en hurtigt.'),
     },
     {
       art: `<div class="tour-babies">${someBabies}</div>`,
@@ -444,8 +446,8 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheetEl?
 
 // Dagens missioner: { date, area (den seneste), done: [områder klaret i dag], mission, chips }
 const todayLog = (st) => (st.zoo.today?.date === today() ? st.zoo.today : null);
-// Én mission om dagen: når den er klaret, venter en ny i morgen. Fri træning i områderne og på Øvebanen er altid
-// åben – missionen er hovedvejen (kun den fodrer ungerne i Babyhuset), men den er ikke en lås.
+// Én mission om dagen: når den er klaret, venter en ny i morgen. Grundreglen for knapperne: før dagens mission fører
+// alt til missionen, efter missionen fører alt til ekstra øvning ("Vil du mere?").
 const missionDoneToday = (st) => !!todayLog(st)?.mission;
 
 function isoWeek(d = new Date()) {
@@ -462,14 +464,122 @@ function dailyTasks(st) {
   // Kun missioner, der er gjort færdige i dag – et stop midtvejs lader missionen stå åben
   const log = todayLog(st);
   const doneAreas = new Set(log ? log.done || [log.area] : []);
-  return sugg.map((areaId) => {
-    const z = Z.ZONES[areaId], who = z.who;
-    // opgaver, der nævner en anden hjælper ved navn, passer ikke til figuren
-    const others = ['nora', 'liv', 'yasmin', 'kaj'].filter((w) => w !== who).map((w) => Z.CAST[w].name);
-    const titles = z.tasks.filter((t) => !others.some((n) => t.includes(n)));
-    const title = Z.dayPick(titles.length ? titles : z.tasks, areaId);
-    return { area: areaId, who, title, done: doneAreas.has(areaId) };
-  });
+  return sugg.map((areaId) => ({ ...missionFor(st, areaId), done: doneAreas.has(areaId) }));
+}
+
+// En mission i et bestemt område: områdets egen figur og en af dets opgaver (opgaver, der nævner en anden hjælper ved
+// navn, passer ikke til figuren). Dagens valg er stabilt hele dagen (Z.dayPick).
+function missionFor(st, areaId) {
+  const z = Z.ZONES[areaId], who = z.who;
+  const others = ['nora', 'liv', 'yasmin', 'kaj'].filter((w) => w !== who).map((w) => Z.CAST[w].name);
+  const titles = z.tasks.filter((t) => !others.some((n) => t.includes(n)));
+  return { area: areaId, who, title: Z.dayPick(titles.length ? titles : z.tasks, areaId) };
+}
+
+// En mission med en øvelse fra et mærke: midterdelen er mærkets næste øvelse, og den foregår i mærkets område
+// (Z.DISC_HOME) med områdets figur, scene og billeder
+function discMission(st, d, skill = E.discNext(st, d) || d.skills[0].id) {
+  const area = Z.DISC_HOME[d.id];
+  return { area, who: Z.ZONES[area].who, title: d.name, disc: d.id, skill };
+}
+
+// Områdets næste aktivitet: den første åbne, der ikke er sikker – eller, når alt er sikkert, den der er længst siden
+const areaNext = (st, areaId) => E.currentSkill(st, areaId)
+  || [...areaOf(areaId).skills].sort((x, y) => (st.skills[x.id]?.last || 0) - (st.skills[y.id]?.last || 0))[0].id;
+
+// Ugens lektie: et mærke, som en voksen har valgt i forældredelen. Det gælder en uge fra den dag, det blev valgt.
+const HW_DAYS = 7;
+function homework(st) {
+  const h = st.settings.homework, d = h?.disc && discById(h.disc);
+  return d && daysBetween(h.set, today()) < HW_DAYS ? d : null;
+}
+
+// Mærket, hun er tættest på: en prøve, der er klar (sølv eller guld) – ellers det mærke, hun er i gang med, der mangler
+// færrest sikre øvelser (eller det første i bogen). near = højst 2 øvelser mangler.
+function nearPatch(st, { skip = [], prove = true } = {}) {
+  const list = Z.BOOK_ORDER.map(discById).filter((d) => d?.skills.length && !skip.includes(d.id));
+  const ready = prove && list.find((d) => { const m = E.mixedState(st, d.id); return m.open && m.next; });
+  if (ready) return { d: ready, kind: 'prove', tier: E.mixedState(st, ready.id).next };
+  const open = list.filter((d) => !E.patchOf(st, d.id)).map((d) => ({
+    d, left: d.skills.length - E.discProgress(st, d).done, started: d.skills.some((sk) => st.skills[sk.id]?.hist.length) }));
+  open.sort((a, b) => (b.started - a.started) || a.left - b.left);
+  const best = open[0];
+  return best ? { d: best.d, kind: 'bronze', left: best.left, near: best.started && best.left <= 2, skill: E.discNext(st, best.d) } : null;
+}
+
+// ---------- Valgkortene: højst tre forslag, ét tryk starter dem ----------
+// (Valg motiverer mest med 3–5 muligheder – Patall m.fl. 2008.) Et kort: { tag, kind, title, sub, art, go }
+// Et mærke på et kort: mærket i sin tråd, når hun har det – ellers emnets tegning
+const patchOrGhost = (st, id) => (E.patchOf(st, id) ? patchArt(id, E.patchOf(st, id).tier, { cls: 'sm' }) : `<img class="ui-ic" src="${Z.DISC_ART[id]}" alt="" draggable="false">`);
+const leftTxt = (n) => (n === 1 ? '1 øvelse mangler til bronze' : `${n} øvelser mangler til bronze`);
+function pickCards() {
+  const cards = [], used = new Set();
+  const add = (key, card) => { if (cards.length < 3 && !used.has(key)) { used.add(key); cards.push(card); } };
+  return { cards, add };
+}
+
+// Før missionen ("Vælg selv"): dagens anbefalede mission, ugens lektie og et mærke – hver er en hel mission med
+// Babyhuset og Zoo-runden; kun midterdelen skifter. Mangler der forslag, kommer et andet sted i zoo'en.
+function missionChoices(st) {
+  const { cards, add } = pickCards();
+  const rec = todaysMission(st), ra = areaOf(rec.area), rs = areaNext(st, rec.area);
+  add(rs, { tag: 'Anbefalet', kind: 'rec', title: Z.activityName(SKILLS[rs]), sub: `${ra.place} · ${ra.name}`, art: placeIc(ra), go: () => runSession(rec.area, rec) });
+  const hw = homework(st);
+  if (hw) {
+    const m = discMission(st, hw);
+    add(m.skill, { tag: 'Ugens lektie', kind: 'hw', title: hw.name, sub: `${ALL_SKILLS[m.skill].name} · i ${areaOf(m.area).place}`, art: patchOrGhost(st, hw.id), go: () => runSession(m.area, m) });
+  }
+  const np = nearPatch(st, { skip: hw ? [hw.id] : [], prove: false });
+  if (np?.skill) {
+    const m = discMission(st, np.d, np.skill);
+    add(m.skill, { tag: np.near ? 'Tæt på et mærke' : 'Næste mærke', kind: 'patch', title: np.d.name, sub: leftTxt(np.left), art: patchOrGhost(st, np.d.id), go: () => runSession(m.area, m) });
+  }
+  for (const areaId of E.suggestAreas(st, 4).filter((x) => x !== rec.area)) {
+    const a = areaOf(areaId), sk = areaNext(st, areaId), m = missionFor(st, areaId);
+    add(sk, { tag: 'Et andet sted', kind: 'area', title: Z.activityName(SKILLS[sk]), sub: `${a.place} · ${a.name}`, art: placeIc(a), go: () => runSession(areaId, m) });
+  }
+  return cards;
+}
+
+// Efter missionen og efter en øvelse ("Vil du mere?"): fortsæt der, hvor hun var, et mærke (eller en prøve, der er klar)
+// og ugens lektie – ellers "Slå din rekord" eller et andet sted. Hvert kort er 10 opgaver (rekorden: 60 sekunder).
+// ctx = { area, disc } – hvor hun lige har været
+function moreChoices(st, ctx = {}) {
+  const { cards, add } = pickCards();
+  if (ctx.disc) {
+    const d = discById(ctx.disc), sk = E.discNext(st, d);
+    if (sk) add(sk, { tag: 'Fortsæt', kind: 'rec', title: ALL_SKILLS[sk].name, sub: `${d.name} · 10 opgaver`, art: patchOrGhost(st, d.id), go: () => startPractice(sk, d.id) });
+  } else if (ctx.area && AREAS.some((a) => a.id === ctx.area)) {
+    const a = areaOf(ctx.area), sk = areaNext(st, ctx.area);
+    add(sk, { tag: 'Fortsæt', kind: 'rec', title: Z.activityName(SKILLS[sk]), sub: `${a.place} · 10 opgaver`, art: placeIc(a), go: () => startPractice(sk) });
+  }
+  const np = nearPatch(st, { skip: ctx.disc ? [ctx.disc] : [] });
+  if (np?.kind === 'prove') {
+    add(`prove:${np.d.id}`, { tag: np.tier === 3 ? 'Guldprøve' : 'Sølvprøve', kind: 'patch', title: np.d.name, sub: `10 blandede opgaver · mindst ${E.PATCH.PASS} rigtige`, art: patchOrGhost(st, np.d.id), go: () => startMixed(np.d.id) });
+  } else if (np?.skill) {
+    add(np.skill, { tag: np.near ? 'Tæt på et mærke' : 'Næste mærke', kind: 'patch', title: np.d.name, sub: leftTxt(np.left), art: patchOrGhost(st, np.d.id), go: () => startPractice(np.skill, np.d.id) });
+  }
+  const hw = homework(st);
+  if (hw) {
+    const sk = E.discNext(st, hw) || hw.skills[0].id;
+    add(sk, { tag: 'Ugens lektie', kind: 'hw', title: hw.name, sub: `${ALL_SKILLS[sk].name} · 10 opgaver`, art: patchOrGhost(st, hw.id), go: () => startPractice(sk, hw.id) });
+  }
+  if (sprintEligible(st)) add('sprint', { tag: 'Rekord', kind: 'fast', title: 'Slå din rekord', sub: 'Gangetabellen · 60 sekunder', art: ui('baby'), go: startSprint });
+  for (const areaId of E.suggestAreas(st, 4).filter((x) => x !== ctx.area)) {
+    const a = areaOf(areaId), sk = areaNext(st, areaId);
+    add(sk, { tag: 'Et andet sted', kind: 'area', title: Z.activityName(SKILLS[sk]), sub: `${a.place} · 10 opgaver`, art: placeIc(a), go: () => startPractice(sk) });
+  }
+  return cards;
+}
+
+const choiceList = (cards, id) => `<div class="offers" id="${id}">${cards.map((c, i) => `<button class="offer of-${c.kind}" data-offer="${i}">
+    <span class="of-art" aria-hidden="true">${c.art}</span>
+    <span class="of-txt"><span class="of-tag">${c.tag}</span><b class="of-title">${esc(c.title)}</b><span class="of-sub">${esc(c.sub)}</span></span>
+    <span class="of-go" aria-hidden="true">→</span></button>`).join('')}</div>`;
+// "Vil du mere?" – overskriften og de tre kort
+const moreBlock = (cards) => (cards.length ? `<section class="more" aria-labelledby="more-h"><h2 id="more-h">Vil du mere?</h2>${choiceList(cards, 'more-list')}</section>` : '');
+function bindChoices(cards, listId) {
+  document.querySelectorAll(`#${listId} [data-offer]`).forEach((b) => b.addEventListener('click', () => { sfx('tap'); cards[+b.dataset.offer].go(); }));
 }
 
 // Dagens mission: den anbefalede opgave blandt dagens forslag (S.mission huskes, så den ikke skifter undervejs)
@@ -502,6 +612,9 @@ function showHome() {
     bodil: Z.CAST.bodil.bust,
   };
   const first = mission;
+  // Før missionen: "Vælg selv" (tre missioner). Efter: "Vil du mere?" (tre øvelser)
+  const choices = doneToday ? [] : missionChoices(st);
+  const more = doneToday ? moreChoices(st, { area: log.area, disc: log.mission.disc }) : [];
   const freshBonus = Z.updateBonus(st);
   if (freshBonus.length) save();
 
@@ -509,7 +622,7 @@ function showHome() {
     <div class="home-top">
       <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar has-img">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="row" style="gap:8px">
-        <button class="icon-btn pill" id="oeve" aria-label="Øvebanen${patchNews(st) ? ' – nyt på din ranger-skjorte' : ''}">${ui('oeve')}<span>Øvebanen</span>${patchNews(st) ? '<i class="pill-dot" aria-hidden="true"></i>' : ''}</button>
+        <button class="icon-btn pill" id="skjorte" aria-label="Din ranger-skjorte og alle mærker${patchNews(st) ? ' – nyt på skjorten' : ''}"><img class="ui-ic" src="${Z.SHIRT.f.src}" alt="" draggable="false"><span>Skjorten</span>${patchNews(st) ? '<i class="pill-dot" aria-hidden="true"></i>' : ''}</button>
         <button class="icon-btn pill" id="help" title="Reglerne – sådan spiller du" aria-label="Regler – sådan spiller du"><b class="q" aria-hidden="true">?</b><span>Regler</span></button>
         <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen">${INFO_IC}</button>
         <button class="icon-btn" id="parent" title="Forælder" aria-label="Forælder (kræver kode)">${LOCK_IC}</button>
@@ -518,9 +631,9 @@ function showHome() {
     </div>
 
     ${Z.partyDue(st) ? partyCard() : ''}
-    ${doneToday ? missionDone(log) : missionCard(st, mission)}
+    ${doneToday ? missionDone(st, log, more) : missionCard(st, mission, choices)}
 
-    <div class="section-title"><h2>Din zoo</h2><span class="muted small">Tryk på et område for at øve noget bestemt</span></div>
+    <div class="section-title"><h2>Din zoo</h2><span class="muted small">Tryk på et område for at se, hvordan det går</span></div>
     <section class="map-wrap${st.zoo.party ? ' festive' : ''}">
       <div class="map-scroll">${zooMap(mapData)}</div>
     </section>
@@ -552,10 +665,17 @@ function showHome() {
   const scroller = $('.map-scroll'), who = $('.zm-who');
   if (who && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = who.offsetLeft - scroller.clientWidth / 2;
   on('#start', 'click', () => { sfx('tap'); runSession(mission.area, mission); });
+  on('#choose', 'click', (e) => {
+    sfx('tap');
+    const box = $('#choose-box'), open = box.hidden;
+    box.hidden = !open;
+    e.currentTarget.setAttribute('aria-expanded', open);
+  });
+  bindChoices(choices, 'choose-list');
+  bindChoices(more, 'more-list');
   on('#party', 'click', () => { sfx('tap'); showParty(); });
-  on('#to-map', 'click', () => { sfx('tap'); $('.map-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
-  on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
+  on('#skjorte', 'click', () => { sfx('tap'); showShirt(); });
   on('#help', 'click', () => showRules());
   on('#about', 'click', () => showAbout());
   on('#snd', 'click', () => {
@@ -597,23 +717,25 @@ function missionScene(t, state = 'intro', size = 'hero', opts = {}) {
     </div>`;
 }
 
-// "Girafferne har spist alle bladene. <b>Nora</b> skal regne ud …"
+// "Girafferne har spist alle bladene. <b>Nora</b> skal regne ud …" (en mission med et mærke: mærkets emne i området)
 function missionIntroHtml(t) {
   const name = Z.CAST[t.who]?.name || '';
-  return esc(Z.missionIntroText(t.area, t.title, t.who)).replace(new RegExp(`\\b${name}\\b`), `<b>${name}</b>`);
+  const text = t.disc ? `${name} har brug for din hjælp med ${discById(t.disc).name.toLowerCase()} i ${areaOf(t.area).place}.` : Z.missionIntroText(t.area, t.title, t.who);
+  return esc(text).replace(new RegExp(`\\b${name}\\b`), `<b>${name}</b>`);
 }
 
 // "Du hjalp <b>Nora</b> med giraffernes foder."
 function missionDoneHtml(t) {
   const name = Z.CAST[t.who]?.name || '';
-  return esc(Z.missionDoneText(t.area, t.title, t.who)).replace(new RegExp(`\\b${name}\\b`), `<b>${name}</b>`);
+  const text = t.disc ? `Du hjalp ${name} med ${discById(t.disc).name.toLowerCase()} i ${areaOf(t.area).place}.` : Z.missionDoneText(t.area, t.title, t.who);
+  return esc(text).replace(new RegExp(`\\b${name}\\b`), `<b>${name}</b>`);
 }
 
 // Dagens mission: hvem har brug for hjælp, hvad skal der ske, og én knap
 // Dagens mission: antal opgaver i hver af de tre dele (forældrene vælger kort eller normal)
 const sessionSize = (st) => ({ ...(E.SESSION_SIZES[st.settings.length] || E.SESSION_SIZES.normal), minutes: st.settings.length === 'kort' ? 10 : 15 });
 
-function missionCard(st, t) {
+function missionCard(st, t, choices = []) {
   const a = areaOf(t.area), z = Z.ZONES[t.area], c = Z.CAST[t.who];
   const cur = E.currentSkill(st, t.area), size = sessionSize(st);
   return `
@@ -630,17 +752,21 @@ function missionCard(st, t) {
         </ol>
         <p class="mission-goal">🎯 ${Z.nextGoal(st, a)}</p>
         <div class="mission-go">
-          <button class="btn big" id="start">Start missionen</button>
+          <button class="btn big" id="start">Start dagens mission</button>
           <span class="muted small">ca. ${size.minutes} minutter · klar alle tre dele</span>
         </div>
-
+        ${choices.length > 1 ? `<button class="link choose-toggle" id="choose" aria-expanded="false" aria-controls="choose-box">Vælg selv</button>
+        <div class="choose-box" id="choose-box" hidden>
+          <p class="small muted">Vælg dagens mission. Babyhuset og Zoo-runden er altid med – kun den midterste del skifter.</p>
+          ${choiceList(choices, 'choose-list')}
+        </div>` : ''}
       </div>
     </section>`;
 }
 
 // Efter dagens mission: samme scene som ved starten, nu i "efter"-tilstand
-function missionDone(log) {
-  const t = { area: log.area, who: log.mission.who, title: log.mission.title };
+function missionDone(st, log, more = []) {
+  const t = { area: log.area, who: log.mission.who, title: log.mission.title, disc: log.mission.disc };
   const chips = (log.chips || []).slice(0, 3);
   return `
     <section class="mission card done ${hasScene(t) ? 'has-scene' : ''}">
@@ -650,11 +776,9 @@ function missionDone(log) {
         <h1>Dagens mission er klaret!</h1>
         <p class="mission-need">${missionDoneHtml(t)}</p>
         ${chips.length ? `<ul class="payoff-extras">${chips.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
-        <p class="free-open">En ny mission venter i morgen. Vil du øve mere, så vælg et område på kortet.</p>
-        <div class="mission-go">
-          <button class="btn big" id="to-map">Øv frit på kortet</button>
-          <button class="link" id="see-baby">Se Babyhuset</button>
-        </div>
+        <p class="free-open">En ny mission venter i morgen.</p>
+        ${moreBlock(more)}
+        <div class="mission-go"><button class="link" id="see-baby">Se Babyhuset</button></div>
       </div>
     </section>`;
 }
@@ -666,7 +790,7 @@ function taskSheet(t) {
     <div class="sheet-plan"><span>${ui('baby')}Babyhuset</span><span>→</span><span>${ui('area')}${a.place} · ${Z.ZONES[t.area].step}</span><span>→</span><span>${ui('round')}Zoo-runden</span></div>
     <div class="row" style="justify-content:flex-end">
       <button class="btn ghost" data-close>Senere</button>
-      <button class="btn" id="go-task">Start dagens vagt</button>
+      <button class="btn" id="go-task">Start dagens mission</button>
     </div>`, (el) => el.querySelector('#go-task').addEventListener('click', () => { closeSheet(); runSession(t.area, t); }));
 }
 
@@ -719,7 +843,7 @@ function bodilSheet(levels, first) {
   const st = S.state, msg = Z.homeMessage(st), done = missionDoneToday(st); // én mission om dagen
   const stars = levels.filter((l) => l >= 3).length, gold = levels.filter((l) => l >= 4).length, ready = Z.partyReady(st);
   const goal = st.zoo.party
-    ? `<span>🎉 <b>${esc(Z.zooName(st))} er åben!</b> Næste mål: guld-områder – <b>${gold} af ${AREAS.length}</b> er guld.</span>
+    ? `<span>🎉 <b>${esc(Z.zooName(st))} er åben!</b> Næste mål: mester-områder – <b>${gold} af ${AREAS.length}</b> er mester-områder.</span>
       <div class="goal-bar"><i style="width:${(100 * gold) / AREAS.length}%"></i></div>`
     : `<span>🎯 <b>${stars} af ${AREAS.length}</b> områder har fået en stjerne. ${ready ? 'Festen venter på dig!' : 'Når alle har, holder vi åbningsfest!'}</span>
       <div class="goal-bar"><i style="width:${(100 * levels.reduce((s, l) => s + Math.min(l, 3), 0)) / (3 * AREAS.length)}%"></i></div>`;
@@ -728,7 +852,7 @@ function bodilSheet(levels, first) {
     <div class="goal-line">${goal}</div>
     <div class="row" style="justify-content:flex-end">${ready ? `<button class="btn ghost" id="b-party">${st.zoo.party ? 'Se festen igen' : 'Gå til festen 🎉'}</button>` : ''}${done
       ? '<button class="btn" data-close>Tak, Bodil</button>'
-      : '<button class="btn ghost" data-close>Tak, Bodil</button><button class="btn" id="b-go">Start dagens vagt</button>'}</div>`,
+      : '<button class="btn ghost" data-close>Tak, Bodil</button><button class="btn" id="b-go">Start dagens mission</button>'}</div>`,
   (el) => {
     el.querySelector('#b-go')?.addEventListener('click', () => taskSheet(first));
     el.querySelector('#b-party')?.addEventListener('click', () => { closeSheet(); showParty(); });
@@ -760,25 +884,26 @@ function showPlace(areaId) {
   }).join('');
   const label = { ny: 'Ny', øver: 'I gang', sikker: 'Sikker ⭐', mestret: 'Mester 🌟' };
   const actOf = (sk) => Z.ACTIVITIES[sk.id] || { name: sk.name, desc: sk.desc };
-  // Næste opgave for dig: den første åbne aktivitet, der ikke er sikker endnu – eller, når alt er sikkert,
-  // den der er længst tid siden (samme valg som dagens træning bruger)
-  const recId = E.currentSkill(st, areaId) || [...a.skills].sort((x, y) => (st.skills[x.id]?.last || 0) - (st.skills[y.id]?.last || 0))[0].id;
+  // Næste mål: den første åbne aktivitet, der ikke er sikker endnu – eller, når alt er sikkert, den der er længst tid
+  // siden (samme valg som dagens mission bruger). Før missionen: tag dagens mission her. Bagefter: øv det.
+  const recId = areaNext(st, areaId), before = !missionDoneToday(st);
   const recIdx = a.skills.findIndex((sk) => sk.id === recId), rec = a.skills[recIdx], recStatus = E.skillStatus(st, rec.id);
   const recBlock = `
     <section class="card rec-act">
       <div class="rec-body">
-        <span class="kicker">Næste opgave for dig · aktivitet ${recIdx + 1} af ${a.skills.length}</span>
+        <span class="kicker">Næste mål · aktivitet ${recIdx + 1} af ${a.skills.length}</span>
         <h2>${actOf(rec).name} <span class="st ${recStatus}">${label[recStatus]}</span></h2>
         <p class="rec-desc">${actOf(rec).desc}</p>
         <span class="act-skill">${rec.name}</span>
+        <p class="rec-note">${before ? `Tag dagens mission her: Babyhuset, så ${a.place} og til sidst Zoo-runden.` : '10 opgaver – bagefter kommer du tilbage hertil.'}</p>
       </div>
       <div class="rec-env" aria-hidden="true">${envPic(Z.AREA_ENV[areaId])}</div>
       <div class="rec-go">
-        <button class="btn big" data-practice="${rec.id}">Øv nu</button>
+        ${before ? '<button class="btn big" id="mission-here">Tag dagens mission her</button>' : `<button class="btn big" data-practice="${rec.id}">Øv det</button>`}
         <button class="link" data-intro="${rec.id}">Se hvordan</button>
       </div>
     </section>`;
-  // De andre aktiviteter: åbne kan startes, låste viser kun, hvad der skal til
+  // De andre aktiviteter: fremgang og "Se hvordan" – låste viser kun, hvad der skal til
   const acts = a.skills.map((sk, i) => {
     if (sk.id === recId) return '';
     const status = E.skillStatus(st, sk.id), unlocked = E.isUnlocked(st, sk.id);
@@ -797,7 +922,7 @@ function showPlace(areaId) {
         <span class="act-desc">${act.desc}</span>
         <span class="act-skill">${sk.name}</span>
       </div>
-      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button><button class="btn sm" data-practice="${sk.id}">Øv</button></div>
+      <div class="act-go"><button class="link" data-intro="${sk.id}">Se hvordan</button></div>
     </li>`;
   }).join('');
   view(`
@@ -805,7 +930,7 @@ function showPlace(areaId) {
     <section class="mission card place-hero ${hasScene(t) ? 'has-scene' : ''}">
       ${missionScene(t, 'intro', 'hero', { say: lv ? `Velkommen til ${a.place}!` : `Hjælp med at åbne ${a.place}!`, locked: !lv })}
       <div class="mission-body">
-        <span class="kicker">Fri træning · ${a.name}</span>
+        <span class="kicker">${a.name}</span>
         <h1>${a.place}</h1>
         <p class="mission-need">${story}</p>
         <div class="place-prog">
@@ -819,46 +944,12 @@ function showPlace(areaId) {
     ${acts ? `<div class="section-title"><h2>Andre ting du kan hjælpe med</h2><span class="muted small">Den næste aktivitet åbner, når du er sikker ⭐ i den forrige</span></div>
     <ol class="acts">${acts}</ol>` : ''}`, (e) => { if (e.key === 'Escape') showHome(); });
   on('#back', 'click', showHome);
-  on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice); });
+  on('#mission-here', 'click', () => { sfx('tap'); runSession(areaId, missionFor(st, areaId)); });
+  on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice, null, { kind: 'area', id: areaId }); });
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), { btn: `Tilbage til ${a.place}`, back: `Tilbage til ${a.place}` }));
 }
 
-// ================= Øvebanen: matematikken delt op i discipliner =================
-
-function showPracticeHub() {
-  const st = S.state;
-  checkPatches();
-  const solid = (sk) => ['sikker', 'mestret'].includes(E.skillStatus(st, sk.id));
-  const tile = (d) => {
-    const done = d.skills.filter(solid).length, n = d.skills.length, pt = E.patchOf(st, d.id);
-    return `<button class="disc-tile" data-disc="${d.id}" style="--ac:${d.color}">
-      <span class="dt-art" aria-hidden="true"><img src="${Z.DISC_ART[d.id]}" alt="" width="150" height="112" decoding="async"></span>
-      ${pt ? `<span class="dt-badge" title="Mærket til din ranger-skjorte"><i class="${TIER[pt.tier].cls}"></i>${TIER[pt.tier].name}</span>` : ''}
-      <span class="dt-body"><span class="head dt-nm">${d.name.replace(/(\S{4,})(systemet)/, '$1&shy;$2')}</span>
-        <span class="dt-d">${d.chapter ? `Kapitel ${d.chapter} i bogen` : d.desc}</span>
-        <span class="disc-prog"><span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * done) / n)}%"></i></span>${done} af ${n} sikre ⭐</span></span>
-    </button>`;
-  };
-  view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Zoo'en</span>
-      <button class="icon-btn pill oeve-parent" id="oeve-parent" title="Sådan går det på Øvebanen – for forældre" aria-label="For forældre: sådan går det på Øvebanen (kræver kode)">${LOCK_IC}<span>For forældre</span></button></div>
-    <section class="oeve-hero">
-      <div class="oeve-glass"><h1>Øvebanen</h1>
-        <p>Øv lige det, du vil – alt er åbent. Matematikken er delt op som i din matematikbog, og hver øvelse starter med et eksempel.</p></div>
-    </section>
-    ${shirtTeaser(st)}
-    ${PRACTICE_GROUPS.map((g) => `
-      <div class="section-title"><h2>${g.name}</h2></div>
-      <div class="disc-grid">${DISCIPLINES.filter((d) => d.group === g.id && d.skills.length).map(tile).join('')}</div>`).join('')}`,
-  (e) => { if (e.key === 'Escape') showHome(); });
-  on('#back', 'click', showHome);
-  on('.disc-tile', 'click', (e) => { sfx('tap'); showDiscipline(e.currentTarget.dataset.disc); });
-  on('#shirt', 'click', () => { sfx('tap'); showShirt(); });
-  // Kun Øvebanens tal – bag forældrekoden, og tilbage til Øvebanen bagefter
-  on('#oeve-parent', 'click', () => parentGate(() => showPracticeReport(reportPeriod, 'oeve'), showPracticeHub));
-}
-
-// ================= Øvebanen: en disciplin =================
+// ================= Et mærkes øvelser (disciplinen) – åbnes fra skjorten =================
 
 function showDiscipline(discId) {
   const st = S.state, d = DISCIPLINES.find((x) => x.id === discId);
@@ -890,7 +981,7 @@ function showDiscipline(discId) {
     </div>` : '';
   const rows = tablesRow + d.skills.filter((sk) => !sk.table).map(row).join('');
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">Øvebanen</span></div>
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til skjorten">←</button><span class="muted">Skjorten</span></div>
     <section class="area-hero" style="--ac:${d.color}">
       <img class="disc-art" src="${Z.DISC_ART[d.id]}" alt="" width="150" height="112">
       <div style="flex:1;min-width:200px"><h1 style="margin:0">${d.name}</h1>
@@ -898,15 +989,15 @@ function showDiscipline(discId) {
     </section>
     ${patchCard(st, d)}
     <div style="margin-top:14px">${say('kaj', 'Kig på eksemplet først, hvis du er i tvivl. Opgaverne bliver sværere, efterhånden som du kan dem 🦜')}</div>
-    <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showPracticeHub(); });
-  on('#back', 'click', showPracticeHub);
-  on('#pc-mixed', 'click', () => { sfx('tap'); startMixed(discId); });
+    <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showShirt(); });
+  on('#back', 'click', () => showShirt());
+  on('#pc-mixed', 'click', () => { sfx('tap'); startMixed(discId, { kind: 'disc', id: discId }); });
   on('#pc-shirt', 'click', () => showShirt(discId));
-  on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice, discId); });
+  on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice, discId, { kind: 'disc', id: discId }); });
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showDiscipline(discId), { btn: `Tilbage til ${d.name}`, back: `Tilbage til ${d.name}` }));
 }
 
-// ================= Ranger-skjorten: et mærke for hver disciplin på Øvebanen =================
+// ================= Ranger-skjorten: et mærke for hvert emne (disciplin) i matematikbogen =================
 // Mærket kommer, når alle disciplinens øvelser er sikre ⭐ (E.awardBronze), og får sølv- og guldtråd af de blandede
 // runder (E.recordMixed). Det lander i sykurven, og hun trækker det selv derhen på skjorten, hvor det skal sidde – for
 // eller bag – og kan altid flytte det igen. pos = { side: 'f' | 'b', x, y (mærkets midte i % af billedet), r (hældning), z }
@@ -917,19 +1008,19 @@ const TIER = [
   { cls: 't-silver', name: 'Sølv', thread: 'Sølvtråd', what: 'Kan blande' },
   { cls: 't-gold', name: 'Guld', thread: 'Guldtråd', what: 'Husker det' },
 ];
-// Hvornår man får bronze, sølv og guld – de samme korte sætninger overalt (disciplinen, skjorten, reglerne)
+// Hvornår man får bronze, sølv og guld – de samme korte sætninger overalt (mærket, skjorten, reglerne)
 const TIER_WHY = [
   '',
-  'Alle øvelserne i disciplinen er Sikker ⭐.',
-  `Klar den blandede runde med mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige.`,
-  `Klar den blandede runde igen – tidligst ${E.PATCH.GOLD_DAYS} dage efter sølv.`,
+  'Alle mærkets øvelser er Sikker ⭐.',
+  `Klar sølvprøven: ${E.PATCH.N} blandede opgaver med mindst ${E.PATCH.PASS} rigtige.`,
+  `Klar guldprøven – den samme slags prøve, tidligst ${E.PATCH.GOLD_DAYS} dage efter sølv.`,
 ];
 const SIKKER_HOW = 'En øvelse er Sikker ⭐, når 8 af dine sidste 10 svar på sværeste niveau er rigtige.';
 // De tre trin for én disciplin: ✓ klaret · næste (og hvor langt hun er) · venter
 function tierLadder(st, d) {
   const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id), pr = E.discProgress(st, d), tier = p?.tier || 0;
-  const now = ['', `${pr.done} af ${pr.total} ${pr.total === 1 ? 'øvelse' : 'øvelser'} er Sikker ⭐`, 'Runden er åben – prøv den, når du er klar',
-    m.next === 3 && !m.open ? `Runden åbner igen om ${daysTxt(m.wait)}` : 'Runden er åben igen'];
+  const now = ['', `${pr.done} af ${pr.total} ${pr.total === 1 ? 'øvelse' : 'øvelser'} er Sikker ⭐`, 'Sølvprøven er klar – tag den, når du har lyst',
+    m.next === 3 && !m.open ? `Guldprøven er klar om ${daysTxt(m.wait)}` : 'Guldprøven er klar'];
   return `<ol class="tier-ladder">${[1, 2, 3].map((t) => {
     const at = tier >= t ? 'done' : tier === t - 1 ? 'next' : 'later';
     const why = t === 1 && pr.total === 1 ? 'Øvelsen er Sikker ⭐.' : TIER_WHY[t];
@@ -947,10 +1038,11 @@ const PATCH_NAME = {
 const PATCH_STAR = '<svg class="patch-star" viewBox="-12 -12 24 24" aria-hidden="true"><path d="M0-10l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L0 4.9-5.9 8.2l1.3-6.6L-9.5-3l6.6-.8z"/></svg>';
 const discById = (id) => DISCIPLINES.find((d) => d.id === id);
 const patchName = (d) => PATCH_NAME[d.id] || d.name;
-const patchList = (st) => DISCIPLINES.filter((d) => d.skills.length).map((d) => ({ d, p: E.patchOf(st, d.id) }));
+const patchList = (st) => Z.BOOK_ORDER.map(discById).filter((d) => d?.skills.length).map((d) => ({ d, p: E.patchOf(st, d.id) }));
 const unsewn = (st) => patchList(st).filter((x) => x.p && !x.p.pos);
 const patchNews = (st) => patchList(st).filter((x) => x.p && !x.p.seen).length;
-const mixedLabel = (d) => (d.skills.length > 1 ? 'Start den blandede runde' : 'Start runden på niveau 3');
+// Knappen til prøven: sølv, guld – eller for sjov, når mærket er i guld
+const mixedLabel = (st, d) => { const n = E.mixedState(st, d.id).next; return n === 2 ? 'Tag sølvprøven' : n === 3 ? 'Tag guldprøven' : 'Tag prøven for sjov'; };
 const daysTxt = (n) => `${n} ${n === 1 ? 'dag' : 'dage'}`;
 
 // Ét mærke: disciplinens tegning på rund stofbund med en syet kant i bronze-, sølv- eller guldtråd (tier 0 = mangler endnu)
@@ -971,7 +1063,7 @@ function checkPatches() {
   return fresh;
 }
 
-// Skjorten med de mærker, der sidder på den ene side (senest syede øverst). mini = det lille billede på Øvebanen
+// Skjorten med de mærker, der sidder på den ene side (senest syede øverst). mini = det lille billede i forældredelen
 function shirtStage(st, side, mini = false) {
   const placed = patchList(st).filter((x) => x.p?.pos?.side === side).sort((a, b) => a.p.pos.z - b.p.pos.z);
   return `<div class="shirt-stage${mini ? ' mini' : ''}" data-side="${side}">
@@ -984,25 +1076,10 @@ function shirtStage(st, side, mini = false) {
     </div>`;
 }
 
-// Det lille kort øverst på Øvebanen: skjorten, hvor mange mærker hun har, og om der venter nye i sykurven
-function shirtTeaser(st) {
-  const list = patchList(st), have = list.filter((x) => x.p).length, waiting = unsewn(st).length, news = patchNews(st);
-  const line = waiting ? `${waiting === 1 ? 'Et nyt mærke venter' : `${waiting} nye mærker venter`} i sykurven`
-    : news ? '✨ Et af dine mærker har fået ny tråd' : have ? 'Se, hvilke mærker du mangler' : 'Klar en disciplin, og få dit første mærke';
-  return `<button class="card shirt-teaser" id="shirt">
-      <span class="st-mini">${shirtStage(st, 'f', true)}</span>
-      <span class="st-txt"><b class="head">Min ranger-skjorte</b>
-        <span>${have} af ${list.length} mærker</span>
-        <span class="${waiting || news ? 'st-new' : ''}">${waiting ? `<img class="place-ic" src="${UI_ICONS.sykurv}" alt="">` : ''}${line}</span>
-        <span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * have) / list.length)}%"></i></span></span>
-      <span class="st-go" aria-hidden="true">→</span>
-    </button>`;
-}
-
-// Mærket for disciplinen øverst på dens side: hvor langt hun er, og næste trin (den blandede runde)
+// Mærket øverst på siden med dets øvelser: hvor langt hun er, og næste trin (sølv- eller guldprøven)
 function patchCard(st, d) {
   const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id);
-  const btn = !p ? '' : !m.next ? 'Tag runden for sjov' : m.open ? mixedLabel(d) : '';
+  const btn = !p ? '' : !m.next || m.open ? mixedLabel(st, d) : '';
   return `<section class="card patch-card" style="--ac:${d.color}">
       <button class="pc-patch" id="pc-shirt" aria-label="Se din ranger-skjorte">${patchArt(d.id, p?.tier || 0)}</button>
       <div class="pc-txt"><b>${p?.tier === 3 ? 'Mærket er helt færdigt – guld!' : 'Mærket til din ranger-skjorte'}</b>${tierLadder(st, d)}</div>
@@ -1010,19 +1087,19 @@ function patchCard(st, d) {
     </section>`;
 }
 
-// Min ranger-skjorte: skjorten (for og bag), sykurven med de mærker, der ikke er syet på endnu, og alle mærkerne –
-// også dem, der mangler, med hvor langt hun er. from = disciplinen, hun kom fra (ellers Øvebanen)
+// Min ranger-skjorte (knappen "Skjorten" øverst): skjorten (for og bag), sykurven med de mærker, der ikke er syet på
+// endnu, og alle 18 mærker i matematikbogens rækkefølge – tryk på et for at øve til det, tage prøven eller se øvelserne
 function showShirt(from = null, side = 'f', calm = false) {
   const st = S.state;
   checkPatches();
   const list = patchList(st), have = list.filter((x) => x.p), basket = unsewn(st);
-  const goBack = () => (from ? showDiscipline(from) : showPracticeHub());
+  const goBack = () => (from ? showDiscipline(from) : showHome());
   const count = (s) => have.filter(({ p }) => p.pos?.side === s).length;
   const sample = have[0]?.d.id || 'd-koordinater';
   const hint0 = basket.length ? 'Træk et mærke fra sykurven op på skjorten – eller tryk på mærket og så på skjorten.'
     : have.some(({ p }) => p.pos) ? 'Du kan altid flytte et mærke: træk det et nyt sted hen – eller ned i sykurven.' : '';
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">${from ? esc(discById(from).name) : 'Øvebanen'}</span></div>
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button><span class="muted">${from ? esc(discById(from).name) : "Zoo'en"}</span></div>
     <div class="shirt-head"><h1>Min ranger-skjorte</h1><span class="shirt-count">${have.length} af ${list.length} mærker</span></div>
     <div class="shirt-layout">
       <section class="shirt-col">
@@ -1031,13 +1108,13 @@ function showShirt(from = null, side = 'f', calm = false) {
         <p class="shirt-hint" id="shirt-hint" aria-live="polite">${hint0}</p>
       </section>
       <div class="shirt-aside">
-        ${have.length ? '' : say('liv', 'Her er din ranger-skjorte! Når du er sikker ⭐ i alle øvelser i en disciplin på Øvebanen, får du et mærke til den – og du bestemmer selv, hvor det skal sidde.')}
+        ${have.length ? '' : say('liv', 'Her er din ranger-skjorte! Når du er sikker ⭐ i alle øvelserne til et mærke, får du mærket – og du bestemmer selv, hvor det skal sidde. Tryk på et mærke nedenfor for at øve til det.')}
         <section class="card basket" id="basket" aria-label="Sykurven"><h2 class="with-ic">${ui('sykurv')}Sykurven</h2>
           ${basket.length ? `<div class="basket-items">${basket.map(({ d, p }) => `<button class="basket-item" data-patch="${d.id}" data-from="basket" aria-label="${esc(d.name)}: træk mærket op på skjorten">
               ${patchArt(d.id, p.tier)}<span class="bi-nm">${patchName(d)}</span>${p.seen ? '' : '<b class="new-tag">Nyt!</b>'}</button>`).join('')}</div>`
             : `<p class="muted basket-empty">${have.length ? 'Alle dine mærker er syet på 👏' : 'Her lander dit første mærke.'}</p>`}
         </section>
-        <section class="card all-patches"><div class="spread"><h2>Alle mærker</h2><span class="muted small">Tryk og se, hvad der mangler</span></div>
+        <section class="card all-patches"><div class="spread"><h2>Alle mærker</h2><span class="muted small">I matematikbogens rækkefølge · tryk for at øve</span></div>
           <div class="ap-grid">${list.map(({ d, p }) => {
             const pr = E.discProgress(st, d);
             return `<button class="ap-item" data-info="${d.id}">${patchArt(d.id, p?.tier || 0, { cls: 'sm' })}<span class="ap-nm">${patchName(d)}</span>
@@ -1065,7 +1142,7 @@ function patchSheet(id) {
   const left = d.skills.filter((sk) => !['sikker', 'mestret'].includes(E.skillStatus(st, sk.id)));
   const next = !p ? `Bliv sikker ⭐ i ${left.length === 1 ? 'den sidste øvelse' : `de sidste ${left.length} øvelser`}: ${left.slice(0, 4).map((sk) => esc(sk.name)).join(', ')}${left.length > 4 ? ' …' : ''}.`
     : !m.next ? 'Mærket er helt færdigt – flot!' : '';
-  const go = p && m.open && m.next;
+  const go = p && m.open && m.next, next1 = !p && E.discNext(st, d);
   openSheet(`<div class="patch-sheet">
       ${patchArt(id, p?.tier || 0, { cls: 'lg' })}
       <div class="ps-txt"><span class="kicker">${p ? `${TIER[p.tier].name} · ${TIER[p.tier].what}` : 'Mangler endnu'}</span>
@@ -1073,9 +1150,10 @@ function patchSheet(id) {
         ${p ? `<p><b>Det kan du:</b> ${esc(d.desc)}</p>` : ''}
         ${tierLadder(st, d)}
         ${next ? `<p>${next}</p>` : ''}
-        <div class="row">${go ? `<button class="btn" id="ps-mixed">${mixedLabel(d)}</button>` : ''}<button class="btn${go ? ' ghost' : ''}" id="ps-disc">Gå til ${esc(d.name)}</button></div>
+        <div class="row">${go ? `<button class="btn" id="ps-mixed">${mixedLabel(st, d)}</button>` : ''}${next1 ? '<button class="btn" id="ps-practice">Øv til mærket</button>' : ''}<button class="btn${go || next1 ? ' ghost' : ''}" id="ps-disc">Se alle øvelser</button></div>
       </div></div>`, (el) => {
-    el.querySelector('#ps-mixed')?.addEventListener('click', () => { closeSheet(); startMixed(id); });
+    el.querySelector('#ps-mixed')?.addEventListener('click', () => { closeSheet(); startMixed(id, { kind: 'shirt' }); });
+    el.querySelector('#ps-practice')?.addEventListener('click', () => { closeSheet(); startPractice(next1, id, { kind: 'shirt' }); });
     el.querySelector('#ps-disc').addEventListener('click', () => { closeSheet(); showDiscipline(id); });
   });
 }
@@ -1191,9 +1269,10 @@ function bindShirtDrag(side, redraw) {
 }
 
 // Den blandede runde (sølv- og guldtråd): 10 opgaver på kryds og tværs af disciplinen på sværeste niveau – på stien
-function startMixed(discId) {
-  const d = discById(discId), block = E.mixedBlock(d);
-  S.run = { mode: 'practice', mixed: discId, sess: { area: d.id, main: d.skills[0].id, blocks: [block] }, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
+function startMixed(discId, back = null) {
+  const d = discById(discId), block = E.mixedBlock(d), next = E.mixedState(S.state, discId).next;
+  block.sub = next === 2 ? 'Sølvprøve' : next === 3 ? 'Guldprøve' : 'Prøve for sjov';
+  S.run = { mode: 'practice', mixed: discId, back, sess: { area: d.id, main: d.skills[0].id, blocks: [block] }, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
   goBlock();
 }
 
@@ -1205,24 +1284,24 @@ function showMixedDone(run, wins) {
   const p = E.patchOf(st, d.id), m = E.mixedState(st, d.id);
   const can = tier === 2 ? `At blande opgaverne i ${d.name.toLowerCase()} og selv finde ud af, hvordan hver enkelt skal regnes.` : `At huske ${d.name.toLowerCase()} – også efter en uge.`;
   const msg = tier ? `<div class="md-can"><b>Det kan du nu</b>${can}</div>`
-    : m.next ? `<p>Du skal have mindst ${E.PATCH.PASS} rigtige for ${TIER[m.next].name.toLowerCase()}. Prøv igen, når du har lyst – hver runde gør det lettere at huske.</p>`
+    : m.next ? `<p>Du skal have mindst ${E.PATCH.PASS} rigtige for ${TIER[m.next].name.toLowerCase()}. Prøv igen, når du har lyst – hver prøve gør det lettere at huske.</p>`
     : '<p>Mærket er allerede i guldtråd – flot, at du holder det ved lige!</p>';
   view(`
     <div class="card sheet center stack practice-done mixed-done" style="margin-top:4vh">
       ${patchArt(d.id, p.tier, { cls: `xl${tier ? ' fresh' : ''}` })}
       <div class="kicker">${esc(d.name)} · ${esc(run.sess.blocks[0].sub)}</div>
-      <h1>${tier ? `${TIER[tier].thread} på dit mærke!` : 'Runden er slut'}</h1>
+      <h1>${tier ? `${TIER[tier].thread} på dit mærke!` : 'Prøven er slut'}</h1>
       <p class="pd-count">${ok} af ${n} rigtige</p>
       ${msg}
       ${wins.length ? `<ul class="wins">${wins.map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>` : ''}
       <div class="row" style="justify-content:center">
-        ${tier ? '<button class="btn big" id="md-shirt">Se din skjorte</button>' : m.open && m.next ? '<button class="btn big" id="md-again">Prøv runden igen</button>' : ''}
-        <button class="btn ${tier || (m.open && m.next) ? 'ghost' : 'big'}" id="md-back">← Tilbage til ${esc(d.name)}</button>
+        ${tier ? '<button class="btn big" id="md-shirt">Se din skjorte</button>' : m.open && m.next ? '<button class="btn big" id="md-again">Prøv igen</button>' : ''}
+        <button class="btn ${tier || (m.open && m.next) ? 'ghost' : 'big'}" id="md-back">${run.back ? backText(run.back) : 'Færdig for i dag'}</button>
       </div>
-    </div>`, (e) => { if (e.key === 'Enter') (tier ? showShirt(d.id) : showDiscipline(d.id)); });
-  on('#md-shirt', 'click', () => showShirt(d.id));
-  on('#md-again', 'click', () => startMixed(d.id));
-  on('#md-back', 'click', () => showDiscipline(d.id));
+    </div>`, (e) => { if (e.key === 'Enter') (tier ? showShirt() : goBack(run.back)); });
+  on('#md-shirt', 'click', () => showShirt());
+  on('#md-again', 'click', () => startMixed(d.id, run.back));
+  on('#md-back', 'click', () => goBack(run.back));
   if (tier) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
 }
 
@@ -1231,7 +1310,7 @@ function shirtParent(st) {
   const list = patchList(st), have = list.filter((x) => x.p), n = (t) => have.filter(({ p }) => p.tier === t).length;
   return `<div class="card shirt-parent"><span class="st-mini">${shirtStage(st, 'f', true)}</span>
       <div><h3 style="margin:0 0 4px">Ranger-skjorten · ${have.length} af ${list.length} mærker</h3>
-        <p class="muted small" style="margin:0">${have.length ? `${n(1)} i bronze, ${n(2)} i sølv og ${n(3)} i guld. ` : ''}Et mærke kommer, når alle øvelser i en disciplin er sikre ⭐. Sølvtråd: en blandet runde med mindst ${E.PATCH.PASS} af ${E.PATCH.N} rigtige på sværeste niveau. Guldtråd: den samme runde igen mindst ${E.PATCH.GOLD_DAYS} dage senere.</p></div>
+        <p class="muted small" style="margin:0">${have.length ? `${n(1)} i bronze, ${n(2)} i sølv og ${n(3)} i guld. ` : ''}Et mærke kommer, når alle dets øvelser er sikre ⭐. Sølvtråd: en prøve med ${E.PATCH.N} blandede opgaver på sværeste niveau og mindst ${E.PATCH.PASS} rigtige. Guldtråd: den samme slags prøve igen mindst ${E.PATCH.GOLD_DAYS} dage senere.</p></div>
     </div>`;
 }
 
@@ -1400,9 +1479,9 @@ const blockIcon = (b) => ui(b.kind === 'warm' ? 'baby' : b.kind === 'review' ? '
 
 function runSession(areaId, mission = null) {
   if (missionDoneToday(S.state)) return showHome(); // én mission om dagen
-  const sess = E.buildSession(S.state, areaId);
-  const m = mission ? { who: mission.who, title: mission.title } : null;
-  S.run = { mode: 'daily', sess, mission: m, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
+  const sess = E.buildSession(S.state, areaId, { main: mission?.skill, disc: mission?.disc });
+  const m = mission ? { who: mission.who, title: mission.title, disc: mission.disc || null } : null;
+  S.run = { mode: 'daily', sess, mission: m, disc: mission?.disc || null, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
   preloadScene(areaId);
   goBlock();
 }
@@ -1430,12 +1509,13 @@ function missionTrack(run, block) {
     <div class="mt-main"><div class="mt-title">${ui('opgave')}Mission: <b>${esc(title)}</b></div><ol class="mt-steps">${steps}</ol></div></div>`;
 }
 
-// discId: startet fra en disciplin på Øvebanen – så er det 10 opgaver, og "Øvelse klaret!" fører tilbage dertil
-function startPractice(skillId, discId) {
+// Ekstra øvning: 10 opgaver i én øvelse. discId = øvet til et mærke (på stien med mærkets scene), ellers i øvelsens område.
+// back = hvor "tilbage" fører hen bagefter: { kind: 'area' | 'disc' | 'shirt', id } – uden back er det kun "Vil du mere?"
+function startPractice(skillId, discId = null, back = null) {
   const s = ALL_SKILLS[skillId], a = areaOf(discId || s.area);
   const sub = discId ? s.name : Z.ACTIVITIES[skillId]?.name || s.name;
-  const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub, count: discId || s.practice ? 10 : 8, skill: skillId }] };
-  S.run = { mode: 'practice', sess, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
+  const sess = { area: a.id, main: skillId, blocks: [{ kind: 'practice', title: a.place, sub, count: 10, skill: skillId }] };
+  S.run = { mode: 'practice', sess, back, bi: 0, ti: 0, results: [], before: snapshot(S.state), t0: Date.now(), retried: new Set() };
   preloadScene(s.area);
   goBlock();
 }
@@ -1450,7 +1530,7 @@ function goBlock() {
   const who = run.mission?.who || z.who;
   const line = block.kind === 'review'
     ? say('kaj', `Sidste del: Zoo-runden! ${block.count} blandede opgaver fra hele zoo'en – så er dagens mission klaret 🦜`, 'lg')
-    : say(who, `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${z.step}.`, 'lg');
+    : say(who, `${prev?.kind === 'warm' ? 'Ungerne er mætte! ' : ''}Nu skal vi i gang i ${areaOf(run.sess.area).place}: ${run.disc ? discById(run.disc).name.toLowerCase() : z.step}.`, 'lg');
   const rule = block.kind === 'main' ? starRule(block.skill) : '';
   // Områdets del af missionen: samme scene som på forsiden, nu i gang. Runden i zoo'en: et glimt af et
   // andet sted i zoo'en (skifter fra dag til dag)
@@ -1517,7 +1597,7 @@ function taskScene(task) {
 // Hent kun det aktuelle områdes scene på forhånd
 const preloadScene = (areaId) => { if (Z.TASK_SCENES[areaId]) new Image().src = Z.TASK_SCENES[areaId].src; };
 
-// Øvebanen som en sti: en øvelse fra en disciplin på Øvebanen står på en seddel over disciplinens scene, og de
+// Øvelse til et mærke som en sti: opgaven står på en seddel over mærkets scene (Z.DISC_BG), og de
 // 10 opgaver er trædesten (grøn = rigtigt i første forsøg, orange = ikke, gul = den, hun er ved)
 function trailOf(run) {
   if (run.mode !== 'practice') return null;
@@ -1824,9 +1904,18 @@ async function quitSession() {
   if (run.results.length >= 5) logRun(run);
   save(true);
   S.run = null;
-  // En øvelse fra Øvebanen stopper på Øvebanens oversigt, alt andet i zoo'en
-  if (DISCIPLINES.some((d) => d.id === run.sess.area)) showPracticeHub(); else showHome();
+  goBack(run.back);
 }
+
+// Tilbage dertil, hvor en øvelse blev startet (området, mærkets øvelser eller skjorten) – ellers forsiden
+function goBack(back) {
+  if (back?.kind === 'area') return showPlace(back.id);
+  if (back?.kind === 'disc') return showDiscipline(back.id);
+  if (back?.kind === 'shirt') return showShirt();
+  return showHome();
+}
+const backText = (back) => (back?.kind === 'area' ? `← Tilbage til ${areaOf(back.id).place}` : back?.kind === 'disc' ? `← Tilbage til ${discById(back.id).name}`
+  : back?.kind === 'shirt' ? '← Tilbage til skjorten' : '');
 
 function logRun(run) {
   E.logSession(S.state, {
@@ -1843,7 +1932,7 @@ const LEVEL_WIN = [
   (a) => `${a.place} har åbnet – ${Z.newcomer(a.id, 1)} er flyttet ind`,
   (a) => `${a.place} er blevet populær – ${Z.newcomer(a.id, 2)} er flyttet ind`,
   (a) => `${a.place} har fået en stjerne – ${Z.newcomer(a.id, 3)} er flyttet ind`,
-  (a) => `${a.place} er blevet et guld-område!`,
+  (a) => `${a.place} er blevet et mester-område!`,
 ];
 
 function finish() {
@@ -1883,8 +1972,7 @@ function finish() {
   if (grew.length) wins.push({ e: '🍼', t: `${names(grew)} voksede` });
   bonus.forEach((x) => wins.unshift({ e: '🍼', t: `Ugens unge: ${x.name} (${x.kind}) er flyttet ind i Babyhuset` }));
   const n = run.results.length;
-  const backDisc = DISCIPLINES.find((x) => x.id === run.sess.area);
-  const backArea = !backDisc && run.mode === 'practice' ? AREAS.find((x) => x.id === run.sess.area) : null;
+  const ctxDisc = DISCIPLINES.find((x) => x.id === run.sess.area)?.id || null; // øvet til et mærke
   if (run.mode === 'daily') {
     const res = missionResults(st, run, b, after, born, grew, bonus);
     res.extras = [...(party ? [partyWin] : []), ...fresh.map(patchWin), ...res.extras].slice(0, 3);
@@ -1894,22 +1982,23 @@ function finish() {
     const prev = todayLog(st);
     st.zoo.today = {
       date: today(), area: run.sess.area, done: [...new Set([...(prev ? prev.done || [prev.area] : []), run.sess.area])],
-      mission: { who: res.t.who, title: res.t.title }, chips: [res.mainChip, ...res.extras].slice(0, 3),
+      mission: { who: res.t.who, title: res.t.title, disc: run.disc || null }, chips: [res.mainChip, ...res.extras].slice(0, 3),
     };
     save(true);
     S.run = null;
+    res.more = moreChoices(st, { area: run.sess.area, disc: run.disc });
     return showPayoff(st, res, b, after, bigWin);
   }
   save(true);
   S.run = null;
-  // Øvelse fra et område eller Øvebanen: en kort afslutning og tilbage, hvor hun kom fra (dagens mission har sin egen)
+  // Ekstra øvning: en kort afslutning, "Vil du mere?" og tilbage, hvor hun kom fra (dagens mission har sin egen)
   const diff = after.guests - b.guests;
   if (diff > 0) wins.push({ e: '🎟️', t: `+${fmt(diff)} gæster om dagen` });
   wins.unshift(...(party ? [partyWin] : []), ...fresh.map(patchWin));
   if (run.mixed) return showMixedDone(run, wins);
   const where = areaOf(run.sess.area)?.place || '', act = run.sess.blocks[0]?.sub || ALL_SKILLS[run.sess.main]?.name || '';
-  const back = backDisc ? { id: 'backdisc', text: `← Tilbage til ${backDisc.name}`, go: () => showDiscipline(backDisc.id) }
-    : backArea ? { id: 'backarea', text: `← Tilbage til ${backArea.place}`, go: () => showPlace(backArea.id) } : null;
+  const back = run.back ? { id: `back${run.back.kind}`, text: backText(run.back), go: () => goBack(run.back) } : null;
+  const more = moreChoices(st, { area: ctxDisc ? null : run.sess.area, disc: ctxDisc });
   // Et kort glimt af stedet, man har øvet i (aktivitetens eget miljø, ellers områdets)
   const env = envPic(ALL_SKILLS[run.sess.main]?.intro?.scene || Z.AREA_ENV[run.sess.area]);
   view(`
@@ -1919,16 +2008,20 @@ function finish() {
       <h1>Øvelse klaret!</h1>
       <p class="pd-count">Du øvede ${n} opgaver.</p>
       ${wins.length ? `<ul class="wins">${wins.map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>` : ''}
-      <div class="row" style="justify-content:center">
+      ${party || fresh.length ? `<div class="row" style="justify-content:center">
         ${party ? '<button class="btn big" id="party">Til åbningsfesten 🎉</button>' : ''}
         ${fresh.length ? `<button class="btn ${party ? 'ghost' : 'big'}" id="sew">🧵 Sy mærket på din skjorte</button>` : ''}
-        ${back ? `<button class="btn ${party || fresh.length ? 'ghost' : 'big'}" id="${back.id}">${back.text}</button>` : ''}
-        <button class="btn ${back || fresh.length || party ? 'ghost' : 'big'}" id="home">Til zoo'en</button>
+      </div>` : ''}
+      <div class="pd-more">${moreBlock(more)}</div>
+      <div class="row" style="justify-content:center">
+        ${back ? `<button class="btn ghost" id="${back.id}">${back.text}</button>` : ''}
+        <button class="btn ghost" id="home">Færdig for i dag</button>
       </div>
-    </div>`, (e) => { if (e.key === 'Enter') (party ? showParty() : fresh.length ? showShirt(backDisc?.id) : back ? back.go() : showHome()); });
+    </div>`, (e) => { if (e.key === 'Enter') (party ? showParty() : fresh.length ? showShirt() : back ? back.go() : showHome()); });
   on('#home', 'click', showHome);
   on('#party', 'click', () => showParty());
-  on('#sew', 'click', () => showShirt(backDisc?.id));
+  on('#sew', 'click', () => showShirt());
+  bindChoices(more, 'more-list');
   if (back) on(`#${back.id}`, 'click', back.go);
   if (bigWin || fresh.length || party) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
 }
@@ -1938,14 +2031,14 @@ function finish() {
 function missionResults(st, run, b, after, born, grew, bonus = []) {
   const area = run.sess.area;
   const m = run.mission || Z.taskFor(area);
-  const t = { area, who: m.who, title: m.title };
+  const t = { area, who: m.who, title: m.title, disc: run.disc || null };
   const cap = (s) => s[0].toUpperCase() + s.slice(1);
   const moved = (a, lv) => `${cap(Z.newcomer(a.id, lv))} er flyttet ind`;
   const ups = [];
   AREAS.forEach((a, i) => { for (let lv = b.levels[i] + 1; lv <= after.levels[i]; lv++) ups.push({ a, lv }); });
   ups.sort((x, y) => (y.a.id === area) - (x.a.id === area));
   const upChip = ({ a, lv }) => (lv === 4
-    ? { e: '🌟', t: `${a.place} er blevet et guld-område` }
+    ? { e: '🌟', t: `${a.place} er blevet et mester-område` }
     : { e: Z.LEVELS[lv].icon, t: `${moved(a, lv)} i ${a.place}` });
   const diff = after.guests - b.guests;
   const up = ups.find((u) => u.lv <= 3) || ups[0];
@@ -1961,8 +2054,14 @@ function missionResults(st, run, b, after, born, grew, bonus = []) {
       sub: `${cap(Z.withArticle(nb.kind))} – fordi du har øvet ${E.WEEK_GOAL} dage i denne uge` };
     mainChip = { e: '🍼', t: `${nb.name} er flyttet ind i Babyhuset` };
   } else if (up) {
-    main = { kind: 'level', emoji: '🌟', art: Z.LEVELS[4].art, kicker: 'Nyt niveau!', title: `${up.a.place} er blevet et guld-område`, sub: 'Alt sidder – også dagen efter.' };
+    main = { kind: 'level', emoji: '🌟', art: Z.LEVELS[4].art, kicker: 'Nyt niveau!', title: `${up.a.place} er blevet et mester-område`, sub: 'Alt sidder – også dagen efter.' };
     mainChip = upChip(up);
+  } else if (run.disc) {
+    // Midterdelen var en øvelse fra et mærke: hvor langt hun er med mærket
+    const d = discById(run.disc), pr = E.discProgress(st, d), p = E.patchOf(st, d.id);
+    main = { kind: 'progress', html: patchArt(d.id, p?.tier || 0), kicker: `Mærket ${d.name}`, title: p ? `${TIER[p.tier].name} på din skjorte` : `Sikker ⭐ i ${pr.done} af ${pr.total} øvelser`,
+      sub: p ? '' : 'Når alle øvelserne er sikre, får du mærket til din ranger-skjorte.', pct: p ? null : Math.round((100 * pr.done) / pr.total) };
+    mainChip = { e: '🎽', t: `${d.name}: ${pr.done} af ${pr.total} øvelser er sikre` };
   } else if (diff > 0) {
     main = { kind: 'guests', emoji: '🎟️', art: UI_ICONS.billet, kicker: 'Flere gæster', title: `<span id="gc">${fmt(b.guests)}</span> gæster om dagen`, sub: `+${fmt(diff)} efter dagens vagt` };
     mainChip = { e: '🎟️', t: `+${fmt(diff)} gæster om dagen` };
@@ -1992,7 +2091,7 @@ function missionResults(st, run, b, after, born, grew, bonus = []) {
 // Missionens slutning: samme scene som ved starten, nu i "efter"-tilstand
 function showPayoff(st, res, b, after, bigWin) {
   const { t, main } = res;
-  const art = main.art ? `<img src="${main.art}" alt="">` : main.icon ? ui(main.icon) : `<span aria-hidden="true">${main.emoji}</span>`;
+  const art = main.html || (main.art ? `<img src="${main.art}" alt="">` : main.icon ? ui(main.icon) : `<span aria-hidden="true">${main.emoji}</span>`);
   view(`
     <section class="mission card payoff ${hasScene(t) ? 'has-scene' : ''}">
       ${missionScene(t, 'success')}
@@ -2006,18 +2105,18 @@ function showPayoff(st, res, b, after, bigWin) {
             ${main.sub ? `<span class="pm-sub">${esc(main.sub)}</span>` : ''}${main.pct != null ? `<span class="pm-bar"><i style="width:${main.pct}%"></i></span>` : ''}</div>
         </div>
         ${res.extras.length ? `<ul class="payoff-extras">${res.extras.map((w) => `<li><span class="e">${w.e}</span>${esc(w.t)}</li>`).join('')}</ul>` : ''}
-        <div class="mission-go">
+        ${res.party || res.patches ? `<div class="mission-go">
           ${res.party ? '<button class="btn big" id="party">Til åbningsfesten 🎉</button>' : ''}
-          <button class="btn ${res.party ? 'ghost' : 'big'}" id="home">Se din zoo</button>
-          ${res.patches ? '<button class="btn ghost" id="sew">🧵 Sy mærket på din skjorte</button>' : ''}
-          ${sprintEligible(st) ? '<button class="btn ghost" id="sprint">⚡ Slå din rekord</button>' : ''}
-        </div>
+          ${res.patches ? `<button class="btn ${res.party ? 'ghost' : 'big'}" id="sew">🧵 Sy mærket på din skjorte</button>` : ''}
+        </div>` : ''}
+        ${moreBlock(res.more || [])}
+        <div class="mission-go"><button class="btn ghost" id="home">Færdig for i dag</button></div>
       </div>
     </section>`, (e) => { if (e.key === 'Enter') (res.party ? showParty() : showHome()); });
   on('#home', 'click', showHome);
   on('#party', 'click', () => showParty());
-  on('#sprint', 'click', startSprint);
   on('#sew', 'click', () => showShirt());
+  bindChoices(res.more || [], 'more-list');
   if (main.kind === 'guests') setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 500);
   if (bigWin) { sfx('level'); setTimeout(() => confetti(), 300); } else sfx('finish');
 }
@@ -2077,7 +2176,7 @@ function showParty(back = showHome) {
           <div><b>${fmt(tasks)}</b><span>opgaver på ${days} ${days === 1 ? 'dag' : 'dage'}</span></div>
         </div>
       </section>
-      <section class="card party-next">${say('kaj', `Næste mål: guld-områder! Bliv mester 🌟 i alle aktiviteterne i et område – så bliver det guld. ${gold} af ${AREAS.length} er guld nu. Og hvem har gemt kagen? 🦜`)}</section>
+      <section class="card party-next">${say('kaj', `Næste mål: mester-områder! Bliv mester 🌟 i alle aktiviteterne i et område – så bliver det et mester-område. ${gold} af ${AREAS.length} er det nu. Og hvem har gemt kagen? 🦜`)}</section>
       <div class="row party-go"><button class="btn big" id="home">Se din zoo</button></div>
     </div>`, (e) => {
     if (e.key === 'Escape') back();
@@ -2245,7 +2344,7 @@ function fmtDate(ts) {
   return new Date(ts).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
 }
 
-// Forældredelen i tre faner: Overblik (ugen, nøgletal, hvad der driller), Fremskridt (Øvebanen, gangetabellen,
+// Forældredelen i tre faner: Overblik (ugen, nøgletal, hvad der driller), Fremskridt (mærker og øvelser, gangetabellen,
 // zoo'ens områder) og Indstillinger (træningen, zoo'en, backup, appen, slet profil). Fanen huskes, mens appen er åben
 let parentTab = 'overblik';
 const PARENT_TABS = [['overblik', 'Overblik'], ['fremskridt', 'Fremskridt'], ['indstillinger', 'Indstillinger']];
@@ -2259,6 +2358,9 @@ function showParent(tab = parentTab) {
   const totalSkills = Object.keys(SKILLS).length;
   const sikre = Object.keys(SKILLS).filter((id) => ['sikker', 'mestret'].includes(E.skillStatus(st, id))).length;
   const tile = (label, value, note = '') => `<div class="rp-tile"><span class="rp-tl">${label}</span><span class="rp-tv">${value}</span>${note ? `<span class="rp-tn">${note}</span>` : ''}</div>`;
+  // Ugens lektie: et emne, som barnet får som et af sine tre forslag i 7 dage (før missionen og bagefter)
+  const hw = homework(st);
+  const hwUntil = hw ? new Date(`${addDays(st.settings.homework.set, HW_DAYS - 1)}T12:00`).toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
 
   const overview = () => {
     // Ugen: mandag–søndag med en prik for hver dag, hun har øvet
@@ -2278,6 +2380,7 @@ function showParent(tab = parentTab) {
         <div class="spread"><h3>Denne uge</h3><span class="muted small">${E.fullWeeksStreak(st)} fulde uger i træk</span></div>
         <div class="pt-days">${week}</div>
         <p class="muted small" style="margin:0">${E.weekSessions(st)} af ${E.WEEK_GOAL} øvedage · ${ago == null ? 'ikke øvet endnu' : ago === 0 ? 'øvede i dag' : ago === 1 ? 'øvede i går' : `øvede for ${ago} dage siden`} · ${st.sessions.length} øvetider i alt</p>
+        ${hw ? `<p class="small" style="margin:0">📚 Ugens lektie: <b>${esc(hw.name)}</b> – til og med ${hwUntil}</p>` : ''}
       </section>
       <div class="rp-tiles">
         ${tile('Sikre færdigheder', `${sikre} af ${totalSkills}`, "i zoo'en")}
@@ -2290,14 +2393,14 @@ function showParent(tab = parentTab) {
             ${trouble.skills.map((t) => `<div>🟠 ${SKILLS[t.id].name} <span class="muted small">(${t.acc.pct} % rigtige, ${t.acc.n} svar)</span></div>`).join('')}
             ${trouble.facts.length ? `<div>🟠 Tabeller: ${trouble.facts.map((f) => `${f.a}×${f.b}`).join(', ')}</div>` : ''}`
             : '<div class="muted">Intet driller lige nu 👍 <span class="small">(vises, når noget har under 70 % rigtige over mindst 5 svar)</span></div>'}
-          <div><button class="btn ghost" id="rp-open">Se Øvebanen i tal →</button></div></section>
+          <div><button class="btn ghost" id="rp-open">Se øvelserne i tal →</button></div></section>
         <section class="card stack"><h3>Snak om det i bilen</h3>
           ${talk.map((t) => `<div>💬 ${t}</div>`).join('')}
           <div class="small muted">Ros strategien ("smart at du brugte 7×7 først") frem for "du er klog".</div></section>
       </div>
       <details class="card pt-recent"${recent.length ? '' : ' open'}><summary><h3>Seneste 14 dage</h3><span class="muted small">${recent.length} ${recent.length === 1 ? 'øvetid' : 'øvetider'}</span></summary>
         <div class="table-wrap">${recent.length ? `<table><thead><tr><th>Dato</th><th>Hvad</th><th>Opgaver</th><th>Rigtige</th><th>Tid</th></tr></thead><tbody>
-          ${recent.map((x) => `<tr><td>${fmtDate(x.t)}</td><td>${x.mode === 'practice' ? 'Øvede: ' : ''}${areaOf(x.area)?.place || (x.mode === 'practice' ? 'Øvebanen' : '')}${x.main ? ` · ${ALL_SKILLS[x.main]?.name || ''}` : ''}</td>
+          ${recent.map((x) => `<tr><td>${fmtDate(x.t)}</td><td>${x.mode === 'practice' ? 'Øvede: ' : ''}${areaOf(x.area)?.place || (x.mode === 'practice' ? 'Øvelse' : '')}${x.main ? ` · ${ALL_SKILLS[x.main]?.name || ''}` : ''}</td>
             <td>${x.n}</td><td>${x.correct}</td><td>${Math.round(x.ms / 60000)} min</td></tr>`).join('')}
         </tbody></table>` : '<p class="muted" style="margin:0">Ingen øvetider endnu.</p>'}</div></details>`;
   };
@@ -2328,7 +2431,7 @@ function showParent(tab = parentTab) {
         <div class="table-wrap"><table><thead><tr><th>Færdighed</th><th>Status</th><th>Niv.</th><th>Rigtige 14 d.</th><th>Sidst</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
     }).join('');
     return `
-      <div class="section-title"><h2>Øvebanen</h2></div>
+      <div class="section-title"><h2>Mærker og øvelser</h2></div>
       ${reportTeaser(st)}
       ${shirtParent(st)}
       <div class="section-title"><h2>Gangetabellen</h2><span class="muted small">${fs.solid} af ${fs.total} sidder godt · ${fs.gold} voksne unger · ${Z.bonusOf(st).length} af ${Z.BONUS.length} bonus-unger</span></div>
@@ -2339,6 +2442,11 @@ function showParent(tab = parentTab) {
   };
 
   const settings = () => `
+    <section class="card stack"><h3>Ugens lektie</h3>
+      <p class="small muted" style="margin:0">Vælg det emne, klassen arbejder med. Så får ${esc(st.name)} det som et af sine tre forslag i 7 dage – både når dagens mission vælges, og når den er klaret.</p>
+      <div class="spread"><label for="hw">Emne fra matematikbogen</label>
+        <select id="hw" class="field hw-pick"><option value="">Ingen lektie</option>${Z.BOOK_ORDER.map(discById).map((d) => `<option value="${d.id}"${hw?.id === d.id ? ' selected' : ''}>${d.chapter ? `Kapitel ${d.chapter} · ` : ''}${esc(d.name)}</option>`).join('')}</select></div>
+      ${hw ? `<p class="small" style="margin:0">Gælder til og med ${hwUntil}.</p>` : ''}</section>
     <section class="card stack"><h3>Træningen</h3>
       <div class="spread"><span>Længde på dagens træning</span>
         <div class="seg" id="len"><button data-v="kort">Kort (~10 min)</button><button data-v="normal">Normal (~15 min)</button></div></div>
@@ -2376,6 +2484,13 @@ function showParent(tab = parentTab) {
     $$('#snd button').forEach((x) => x.classList.toggle('on', (x.dataset.v === '1') === st.settings.sound));
   };
   on('#len button', 'click', (e) => { st.settings.length = e.currentTarget.dataset.v; save(); paintSeg(); });
+  on('#hw', 'change', (e) => {
+    const v = e.currentTarget.value;
+    st.settings.homework = v ? { disc: v, set: today() } : null;
+    save();
+    toast(v ? 'Ugens lektie er sat' : 'Ugens lektie er fjernet');
+    showParent('indstillinger');
+  });
   on('#spr button', 'click', (e) => { st.settings.sprint = e.currentTarget.dataset.v === '1'; save(); paintSeg(); });
   on('#snd button', 'click', (e) => { st.settings.sound = e.currentTarget.dataset.v === '1'; setSound(st.settings.sound); save(); paintSeg(); });
   on('#zsave', 'click', () => {
@@ -2404,9 +2519,9 @@ function showParent(tab = parentTab) {
   paintSeg();
 }
 
-// ================= Forældredelen: Øvebanen i tal =================
+// ================= Forældredelen: Øvelserne i tal =================
 // Hvor godt det går i hver disciplin og øvelse: rigtige i første forsøg og typisk tid pr. opgave (median). Tæller alle
-// svar – fra både Øvebanen og zoo'ens missioner – og peger på det, der skal øves mere (E.practiceVerdict).
+// svar – fra både missionerne og den ekstra øvning – og peger på det, der skal øves mere (E.practiceVerdict).
 
 const REPORT_PERIODS = [['14', '14 dage'], ['30', '30 dage'], ['alt', 'Alt']];
 let reportPeriod = '30';
@@ -2471,14 +2586,14 @@ function reportTeaser(st) {
     ${rep.total.n ? `<div>📊 Seneste 30 dage: <b>${rep.total.n}</b> opgaver · <b>${rep.total.pct} %</b> rigtige i første forsøg · typisk <b>${fmtSec(rep.total.med)}</b> pr. opgave</div>
       <div>${rep.flagged.length ? `🎯 Kan øves mere: ${rep.flagged.slice(0, 3).map((r) => r.s.name).join(', ')}` : '👍 Intet skal øves ekstra lige nu'}</div>`
       : '<div class="muted">Ingen svar de seneste 30 dage.</div>'}
-    <div><button class="btn" id="rp-open">Se Øvebanen i tal →</button></div>
+    <div><button class="btn" id="rp-open">Se øvelserne i tal →</button></div>
   </div>`;
 }
 
-// from: 'parent' (forældredelen) eller 'oeve' (knappen på Øvebanen) – tilbage-knappen og Escape fører dertil
+// Åbnes fra forældredelen – tilbage-knappen og Escape fører dertil
 function showPracticeReport(period = reportPeriod, from = 'parent') {
   reportPeriod = period;
-  const back = from === 'oeve' ? showPracticeHub : showParent;
+  const back = () => showParent();
   const st = S.state, rep = practiceReport(st, period), name = st.name;
   const acc = rep.flagged.filter((r) => r.verdict !== 'langsom'), slow = rep.flagged.filter((r) => r.verdict === 'langsom');
   const tile = (label, value, note = '') => `<div class="rp-tile"><span class="rp-tl">${label}</span><span class="rp-tv">${value}</span>${note ? `<span class="rp-tn">${note}</span>` : ''}</div>`;
@@ -2506,8 +2621,8 @@ function showPracticeReport(period = reportPeriod, from = 'parent') {
     </section>`;
   };
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="${from === 'oeve' ? 'Tilbage til Øvebanen' : 'Tilbage til forældreoverblikket'}">←</button>
-      <div style="flex:1"><h1 style="margin:0">Øvebanen i tal</h1><span class="muted">${esc(name)} · rigtige og tid pr. opgave</span></div></div>
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til forældreoverblikket">←</button>
+      <div style="flex:1"><h1 style="margin:0">Øvelserne i tal</h1><span class="muted">${esc(name)} · rigtige og tid pr. opgave</span></div></div>
     <div class="rp-filter"><span class="muted small">Periode</span>
       <div class="seg" id="rp-period">${REPORT_PERIODS.map(([v, l]) => `<button data-v="${v}" class="${v === period ? 'on' : ''}">${l}</button>`).join('')}</div></div>
     ${rep.total.n ? `
@@ -2531,7 +2646,7 @@ function showPracticeReport(period = reportPeriod, from = 'parent') {
     : `<div class="card"><p class="muted" style="margin:0">Ingen svar i perioden endnu. Tallene kommer, når ${esc(name)} har øvet.</p></div>`}
     <div class="card small muted rp-how">
       <b>Sådan måles det.</b> <b>Rigtige</b> = rigtige svar i første forsøg. <b>Tid</b> = typisk tid pr. opgave (medianen), fra opgaven vises, til ${esc(name)} svarer; pauser over 5 min tæller ikke med.
-      Alle svar tæller – både fra Øvebanen og fra zoo'ens missioner (appen gemmer de seneste 40 svar pr. øvelse).
+      Alle svar tæller – både fra missionerne og fra den ekstra øvning (appen gemmer de seneste 40 svar pr. øvelse).
       Vurderingen kræver mindst ${E.REPORT_MIN} svar: under 70 % rigtige = <b>øv mere</b>, under 85 % = <b>næsten</b>.
       <b>Tager lang tid</b>: et gangestykke tager over ${fmtSec(E.FLUENT_MS)}, eller en anden øvelse tager over dobbelt så lang tid som ${esc(genitive(name))} typiske opgave (og over et halvt minut).
     </div>`, (e) => { if (e.key === 'Escape') back(); });
@@ -2647,4 +2762,4 @@ function appVersion() {
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, speech, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, speech, babyReact, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
