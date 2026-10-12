@@ -1,6 +1,6 @@
 // Matematik-Zoo som webapp: appens filer gemmes på enheden, så den starter med det samme
 // og virker uden internet. VERSION og FILES (sti → indholdshash) skrives af tools/deploy.sh.
-const VERSION = '20261009150722';
+const VERSION = '20261012170500';
 const FILES = {
 "LICENSE": "d3629b14cb",
 "css/style.css": "aac55e4d0f",
@@ -532,6 +532,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin === location.origin) {
     if (url.pathname.includes('/api/')) return; // den lokale server: altid netværket
+    if (url.pathname.startsWith('/kryds/') || url.pathname === '/kryds') return; // billedkrydset er en selvstændig side
     if (req.mode === 'navigate') {
       e.respondWith((async () => (await caches.match('./')) || (await caches.match('index.html')) || fetch(req))());
       return;
