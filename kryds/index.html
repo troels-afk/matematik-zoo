@@ -50,7 +50,7 @@ button:focus-visible{outline:3px solid var(--cur);outline-offset:2px}
 <body>
 <div class="wrap">
 <h1>Ikonkrydset</h1>
-<div class="bar"><button id="hint">Hint</button><button id="check">Tjek løsning</button><button class="alt" id="reset">Start forfra</button></div>
+<div class="bar"><button class="alt" id="reset">Start forfra</button></div>
 <div class="now" id="now"><span class="e">👆</span><span class="t">Tryk på et billede eller et felt for at begynde</span></div>
 <div class="gbox"><div class="grid" id="grid"></div></div>
 <div class="msg" id="msg"></div>
@@ -85,9 +85,9 @@ function put(ch){if(!sel)return;clearMarks();cells[sel.r+','+sel.c].val=ch;step(
 kb.addEventListener('input',()=>{const v=kb.value.toUpperCase().replace(/[^A-ZÆØÅ]/g,'');kb.value='';if(v)put(v.slice(-1))});
 kb.addEventListener('keydown',e=>{if(!sel)return;if(e.key=='Backspace'){e.preventDefault();clearMarks();if(!cells[sel.r+','+sel.c].val)step(-1);cells[sel.r+','+sel.c].val='';draw();save()}
  else if(e.key.startsWith('Arrow')){e.preventDefault();const dr={ArrowUp:-1,ArrowDown:1}[e.key]||0,dc={ArrowLeft:-1,ArrowRight:1}[e.key]||0,k=(sel.r+dr)+','+(sel.c+dc);if(cells[k]){const nw=cells[k].words.find(i=>P.words[i].d==(dc?'A':'D'));sel={r:sel.r+dr,c:sel.c+dc,w:nw??cells[k].words[0]};draw()}}});
-document.getElementById('check').onclick=()=>{let bad=0,empty=0;for(const o of Object.values(cells)){o.el.classList.remove('ok','bad');if(!o.val)empty++;else if(o.val==o.ans)o.el.classList.add('ok');else{o.el.classList.add('bad');bad++}}
+(document.getElementById('check')||{}).onclick=()=>{let bad=0,empty=0;for(const o of Object.values(cells)){o.el.classList.remove('ok','bad');if(!o.val)empty++;else if(o.val==o.ans)o.el.classList.add('ok');else{o.el.classList.add('bad');bad++}}
  document.getElementById('msg').textContent=!bad&&!empty?'Hurra! Du har løst hele krydsordet! 🎉':bad?`${bad} bogstaver er forkerte. Prøv igen!`:`Alt er rigtigt indtil nu. ${empty} felter mangler.`};
-document.getElementById('hint').onclick=()=>{const list=sel?wc(P.words[sel.w]):[];const k=list.find(k=>cells[k].val!=cells[k].ans)||Object.keys(cells).find(k=>cells[k].val!=cells[k].ans);if(k){cells[k].val=cells[k].ans;clearMarks();draw();save()}};
+(document.getElementById('hint')||{}).onclick=()=>{const list=sel?wc(P.words[sel.w]):[];const k=list.find(k=>cells[k].val!=cells[k].ans)||Object.keys(cells).find(k=>cells[k].val!=cells[k].ans);if(k){cells[k].val=cells[k].ans;clearMarks();draw();save()}};
 document.getElementById('reset').onclick=()=>{for(const o of Object.values(cells))o.val='';clearMarks();sel=null;document.getElementById('now').innerHTML='<span class="e">👆</span><span class="t">Tryk på et billede eller et felt for at begynde</span>';draw();save()};
 function save(){try{localStorage.setItem('ik1',JSON.stringify(Object.fromEntries(Object.entries(cells).map(([k,o])=>[k,o.val]))))}catch(e){}}
 try{const s=JSON.parse(localStorage.getItem('ik1')||'{}');for(const k in s)if(cells[k])cells[k].val=s[k]}catch(e){}
