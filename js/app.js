@@ -1,14 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015165824';
-import * as E from './engine.js?v=20261015165824';
-import * as Z from './zoo.js?v=20261015165824';
-import { zooMap } from './map.js?v=20261015165824';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015165824';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015165824';
-import { TOUR_SAY } from './oplaesning.js?v=20261015165824';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015165824';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015165824';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015190119';
+import * as E from './engine.js?v=20261015190119';
+import * as Z from './zoo.js?v=20261015190119';
+import { zooMap } from './map.js?v=20261015190119';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015190119';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015190119';
+import { TOUR_SAY } from './oplaesning.js?v=20261015190119';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015190119';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015190119';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -276,7 +276,8 @@ function showRules(back = showHome) {
           <li>Det er dit første svar, der tæller for stjernerne. 💡 Hjælp viser altid, hvordan man gør.</li></ul>`)}
       ${rule(ui('oeve'), 'Vil du mere?', `<ul><li><b>Efter missionen</b> får du tre forslag – tryk på et, så starter 10 opgaver.</li>
           <li><b>Et område:</b> tryk på det på kortet. Før missionen kan du tage dagens mission dér – bagefter kan du øve dets næste aktivitet.</li>
-          <li><b>Skjorten</b> øverst: alle mærker – tryk på et for at øve til det.</li>
+          <li><b>Øvebanen</b> øverst: alle 18 mærker – øv til dem, når du vil, også før dagens mission.</li>
+          <li><b>Skjorten</b> øverst: dine mærker – tryk på et for at øve til det.</li>
           <li><b>⚡ Slå din rekord:</b> regn så mange gangestykker, du kan, på 60 sekunder. ${st.settings.sprint ? 'Den kommer, når du kender mindst 6 gangestykker.' : 'Den er slået fra lige nu – en voksen kan slå den til.'}</li></ul>`,
       !st.settings.sprint ? '🔓 Alt kan øves – når som helst' : sprintEligible(st) ? '⚡ Slå din rekord er klar – du finder den i Babyhuset'
         : `⚡ Du kender ${FACTS.filter((f) => E.factBox(st, f.key) >= 2).length} af de 6 gangestykker, der skal til for at slå din rekord`)}
@@ -693,6 +694,7 @@ function showHome() {
     <div class="home-top">
       <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar has-img">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="row" style="gap:8px">
+        <button class="icon-btn pill" id="oeve" title="Øvebanen – øv til mærkerne, når du vil" aria-label="Øvebanen – øv til mærkerne, når du vil">${ui('oeve')}<span>Øvebanen</span></button>
         <button class="icon-btn pill" id="skjorte" aria-label="Din ranger-skjorte og alle mærker${patchNews(st) ? ' – nyt på skjorten' : ''}"><img class="ui-ic" src="${Z.SHIRT.f.src}" alt="" draggable="false"><span>Skjorten</span>${patchNews(st) ? '<i class="pill-dot" aria-hidden="true"></i>' : ''}</button>
         <button class="icon-btn pill" id="help" title="Reglerne – sådan spiller du" aria-label="Regler – sådan spiller du"><b class="q" aria-hidden="true">?</b><span>Regler</span></button>
         <button class="icon-btn" id="about" title="Om appen" aria-label="Om appen">${INFO_IC}</button>
@@ -748,6 +750,7 @@ function showHome() {
   on('#party', 'click', () => { sfx('tap'); showParty(); });
   on('#see-baby', 'click', () => { sfx('tap'); babySheet(); });
   on('#skjorte', 'click', () => { sfx('tap'); showShirt(); });
+  on('#oeve', 'click', () => { sfx('tap'); showPracticeHub(); });
   on('#feedback', 'click', () => { sfx('tap'); feedbackSheet('forsiden'); });
   on('#help', 'click', () => showRules());
   on('#about', 'click', () => showAbout());
@@ -1023,10 +1026,66 @@ function showPlace(areaId) {
   on('[data-intro]', 'click', (e) => showIntro(e.currentTarget.dataset.intro, () => showPlace(areaId), { btn: `Tilbage til ${a.place}`, back: `Tilbage til ${a.place}` }));
 }
 
-// ================= Et mærkes øvelser (disciplinen) – åbnes fra skjorten =================
+// ================= Øvebanen: alle 18 mærker som fliser – åben hele tiden, også før dagens mission =================
+// Her jagter hun mærker til ranger-skjorten ved siden af dagens mission. Øvelserne her tæller med i zoo'en (samme
+// færdigheder), men dagens mission er stadig sin egen og klares kun på forsiden.
 
-function showDiscipline(discId) {
+function showPracticeHub() {
+  const st = S.state;
+  checkPatches();
+  const solid = (sk) => ['sikker', 'mestret'].includes(E.skillStatus(st, sk.id));
+  const tile = (d) => {
+    const done = d.skills.filter(solid).length, n = d.skills.length, pt = E.patchOf(st, d.id);
+    return `<button class="disc-tile" data-disc="${d.id}" style="--ac:${d.color}">
+      <span class="dt-art" aria-hidden="true"><img src="${Z.DISC_ART[d.id]}" alt="" width="150" height="112" decoding="async"></span>
+      ${pt ? `<span class="dt-badge" title="Mærket til din ranger-skjorte"><i class="${TIER[pt.tier].cls}"></i>${TIER[pt.tier].name}</span>` : ''}
+      <span class="dt-body"><span class="head dt-nm">${d.name.replace(/(\S{4,})(systemet)/, '$1&shy;$2')}</span>
+        <span class="dt-d">${d.chapter ? `Kapitel ${d.chapter} i bogen` : d.desc}</span>
+        <span class="disc-prog"><span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * done) / n)}%"></i></span>${done} af ${n} sikre ⭐</span></span>
+    </button>`;
+  };
+  const mission = missionDoneToday(st) ? '' : `<p class="oeve-mission">Dagens mission venter stadig på forsiden – den kan du tage før eller efter.</p>`;
+  view(`
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til zoo'en">←</button><span class="muted">Zoo'en</span>
+      <button class="icon-btn pill oeve-parent" id="oeve-parent" title="Sådan går det på Øvebanen – for forældre" aria-label="For forældre: sådan går det på Øvebanen (kræver kode)">${LOCK_IC}<span>For forældre</span></button></div>
+    <section class="oeve-hero">
+      <div class="oeve-glass"><h1>Øvebanen</h1>
+        <p>Jag mærker til din ranger-skjorte – når du vil. Alt er åbent, og hver øvelse starter med et eksempel.</p>${mission}</div>
+    </section>
+    ${shirtTeaser(st)}
+    ${PRACTICE_GROUPS.map((g) => `
+      <div class="section-title"><h2>${g.name}</h2></div>
+      <div class="disc-grid">${DISCIPLINES.filter((d) => d.group === g.id && d.skills.length).map(tile).join('')}</div>`).join('')}`,
+  (e) => { if (e.key === 'Escape') showHome(); });
+  on('#back', 'click', showHome);
+  on('.disc-tile', 'click', (e) => { sfx('tap'); showDiscipline(e.currentTarget.dataset.disc, 'oeve'); });
+  on('#shirt', 'click', () => { sfx('tap'); showShirt(); });
+  // Kun Øvebanens tal – bag forældrekoden, og tilbage til Øvebanen bagefter
+  on('#oeve-parent', 'click', () => parentGate(() => showPracticeReport(reportPeriod, 'oeve'), showPracticeHub));
+}
+
+// Kortet med skjorten øverst på Øvebanen
+function shirtTeaser(st) {
+  const list = patchList(st), have = list.filter((x) => x.p).length, waiting = unsewn(st).length, news = patchNews(st);
+  const line = waiting ? `${waiting === 1 ? 'Et nyt mærke venter' : `${waiting} nye mærker venter`} i sykurven`
+    : news ? '✨ Et af dine mærker har fået ny tråd' : have ? 'Se, hvilke mærker du mangler' : 'Bliv sikker ⭐ i et emne, og få dit første mærke';
+  return `<button class="card shirt-teaser" id="shirt">
+      <span class="st-mini">${shirtStage(st, 'f', true)}</span>
+      <span class="st-txt"><b class="head">Min ranger-skjorte</b>
+        <span>${have} af ${list.length} mærker</span>
+        <span class="${waiting || news ? 'st-new' : ''}">${waiting ? `<img class="place-ic" src="${UI_ICONS.sykurv}" alt="">` : ''}${line}</span>
+        <span class="bar-mini" aria-hidden="true"><i style="width:${Math.round((100 * have) / list.length)}%"></i></span></span>
+      <span class="st-go" aria-hidden="true">→</span>
+    </button>`;
+}
+
+// ================= Et mærkes øvelser (disciplinen) – åbnes fra Øvebanen eller skjorten =================
+
+let discFrom = 'oeve'; // hvor ← på et mærkes øvelser fører hen: 'oeve' (Øvebanen) eller 'shirt' (skjorten)
+function showDiscipline(discId, from = discFrom) {
+  discFrom = from;
   const st = S.state, d = DISCIPLINES.find((x) => x.id === discId);
+  const toShirt = from === 'shirt', back = () => (toShirt ? showShirt() : showPracticeHub());
   checkPatches();
   const label = { ny: 'Ny', øver: 'I gang', sikker: 'Sikker ⭐', mestret: 'Mester 🌟' };
   const tables = d.skills.filter((sk) => sk.table);
@@ -1055,7 +1114,7 @@ function showDiscipline(discId) {
     </div>` : '';
   const rows = tablesRow + d.skills.filter((sk) => !sk.table).map(row).join('');
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til skjorten">←</button><span class="muted">Skjorten</span></div>
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til ${toShirt ? 'skjorten' : 'Øvebanen'}">←</button><span class="muted">${toShirt ? 'Skjorten' : 'Øvebanen'}</span></div>
     <section class="area-hero" style="--ac:${d.color}">
       <img class="disc-art" src="${Z.DISC_ART[d.id]}" alt="" width="150" height="112">
       <div style="flex:1;min-width:200px"><h1 style="margin:0">${d.name}</h1>
@@ -1063,8 +1122,8 @@ function showDiscipline(discId) {
     </section>
     ${patchCard(st, d)}
     <div style="margin-top:14px">${say('kaj', 'Kig på eksemplet først, hvis du er i tvivl. Opgaverne bliver sværere, efterhånden som du kan dem 🦜')}</div>
-    <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') showShirt(); });
-  on('#back', 'click', () => showShirt());
+    <div class="stack" style="margin-top:16px">${rows}</div>`, (e) => { if (e.key === 'Escape') back(); });
+  on('#back', 'click', back);
   on('#pc-mixed', 'click', () => { sfx('tap'); startMixed(discId, { kind: 'disc', id: discId }); });
   on('#pc-shirt', 'click', () => showShirt(discId));
   on('[data-practice]', 'click', (e) => { sfx('tap'); startPractice(e.currentTarget.dataset.practice, discId, { kind: 'disc', id: discId }); });
@@ -1228,7 +1287,7 @@ function patchSheet(id) {
       </div></div>`, (el) => {
     el.querySelector('#ps-mixed')?.addEventListener('click', () => { closeSheet(); startMixed(id, { kind: 'shirt' }); });
     el.querySelector('#ps-practice')?.addEventListener('click', () => { closeSheet(); startPractice(next1, id, { kind: 'shirt' }); });
-    el.querySelector('#ps-disc').addEventListener('click', () => { closeSheet(); showDiscipline(id); });
+    el.querySelector('#ps-disc').addEventListener('click', () => { closeSheet(); showDiscipline(id, 'shirt'); });
   });
 }
 
@@ -1370,7 +1429,7 @@ function showMixedDone(run, wins) {
       ${wins.length ? `<ul class="wins">${wins.map((w) => `<li><span class="e">${w.e}</span><span>${w.t}</span></li>`).join('')}</ul>` : ''}
       <div class="row" style="justify-content:center">
         ${tier ? '<button class="btn big" id="md-shirt">Se din skjorte</button>' : m.open && m.next ? '<button class="btn big" id="md-again">Prøv igen</button>' : ''}
-        <button class="btn ${tier || (m.open && m.next) ? 'ghost' : 'big'}" id="md-back">${run.back ? backText(run.back) : 'Færdig for i dag'}</button>
+        <button class="btn ${tier || (m.open && m.next) ? 'ghost' : 'big'}" id="md-back">${run.back ? backText(run.back) : missionDoneToday(S.state) ? 'Færdig for i dag' : 'Til dagens mission'}</button>
       </div>
     </div>`, (e) => { if (e.key === 'Enter') (tier ? showShirt() : goBack(run.back)); });
   on('#md-shirt', 'click', () => showShirt());
@@ -2017,10 +2076,11 @@ function goBack(back) {
   if (back?.kind === 'area') return showPlace(back.id);
   if (back?.kind === 'disc') return showDiscipline(back.id);
   if (back?.kind === 'shirt') return showShirt();
+  if (back?.kind === 'oeve') return showPracticeHub();
   return showHome();
 }
 const backText = (back) => (back?.kind === 'area' ? `← Tilbage til ${areaOf(back.id).place}` : back?.kind === 'disc' ? `← Tilbage til ${discById(back.id).name}`
-  : back?.kind === 'shirt' ? '← Tilbage til skjorten' : '');
+  : back?.kind === 'shirt' ? '← Tilbage til skjorten' : back?.kind === 'oeve' ? '← Tilbage til Øvebanen' : '');
 
 function logRun(run) {
   E.logSession(S.state, {
@@ -2120,7 +2180,7 @@ function finish() {
       <div class="pd-more">${moreBlock(more)}</div>
       <div class="row" style="justify-content:center">
         ${back ? `<button class="btn ghost" id="${back.id}">${back.text}</button>` : ''}
-        <button class="btn ghost" id="home">Færdig for i dag</button>
+        <button class="btn ghost" id="home">${missionDoneToday(st) ? 'Færdig for i dag' : 'Til dagens mission'}</button>
       </div>
     </div>`, (e) => { if (e.key === 'Enter') (party ? showParty() : fresh.length ? showShirt() : back ? back.go() : showHome()); });
   on('#home', 'click', showHome);
@@ -2729,7 +2789,7 @@ function reportTeaser(st) {
 // Åbnes fra forældredelen – tilbage-knappen og Escape fører dertil
 function showPracticeReport(period = reportPeriod, from = 'parent') {
   reportPeriod = period;
-  const back = () => showParent();
+  const back = from === 'oeve' ? showPracticeHub : showParent;
   const st = S.state, rep = practiceReport(st, period), name = st.name;
   const acc = rep.flagged.filter((r) => r.verdict !== 'langsom'), slow = rep.flagged.filter((r) => r.verdict === 'langsom');
   const tile = (label, value, note = '') => `<div class="rp-tile"><span class="rp-tl">${label}</span><span class="rp-tv">${value}</span>${note ? `<span class="rp-tn">${note}</span>` : ''}</div>`;
@@ -2757,7 +2817,7 @@ function showPracticeReport(period = reportPeriod, from = 'parent') {
     </section>`;
   };
   view(`
-    <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage til forældreoverblikket">←</button>
+    <div class="topbar"><button class="icon-btn" id="back" aria-label="${from === 'oeve' ? 'Tilbage til Øvebanen' : 'Tilbage til forældreoverblikket'}">←</button>
       <div style="flex:1"><h1 style="margin:0">Øvelserne i tal</h1><span class="muted">${esc(name)} · rigtige og tid pr. opgave</span></div></div>
     <div class="rp-filter"><span class="muted small">Periode</span>
       <div class="seg" id="rp-period">${REPORT_PERIODS.map(([v, l]) => `<button data-v="${v}" class="${v === period ? 'on' : ''}">${l}</button>`).join('')}</div></div>
@@ -2971,4 +3031,4 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 })();
 
 // Til fejlfinding i konsollen
-window.__mo = { S, E, Z, ALL_SKILLS, speech, babyReact, feedback: FEEDBACK, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { S, E, Z, ALL_SKILLS, speech, babyReact, feedback: FEEDBACK, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
