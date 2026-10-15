@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015144854';
-import * as E from './engine.js?v=20261015144854';
-import * as Z from './zoo.js?v=20261015144854';
-import { zooMap } from './map.js?v=20261015144854';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015144854';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015144854';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015144854';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015144854';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015145457';
+import * as E from './engine.js?v=20261015145457';
+import * as Z from './zoo.js?v=20261015145457';
+import { zooMap } from './map.js?v=20261015145457';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015145457';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015145457';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015145457';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015145457';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -176,12 +176,13 @@ async function showProfiles() {
         <button class="btn big" type="submit">Åbn porten</button>
       </form>
       <footer class="wp-foot"><span>Gratis · ingen login · fremskridtet gemmes kun på denne enhed</span>
-        <span><button class="link small" id="restore">Gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button>${FEEDBACK.url ? ' · <button class="link small" id="feedback-w">Send feedback</button>' : ''}</span></footer>
+        <span><button class="link small" id="restore">For forældre: gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button>${FEEDBACK.url ? ' · <button class="link small" id="feedback-w">Send feedback</button>' : ''}</span></footer>
     </section>
     <small class="welcome-copy">© 2026 Troels Christensen · version fra ${appVersion()}</small>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
   on('#new', 'click', () => { $('#newform').hidden = false; $('#nm').focus(); $('#newform').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
-  on('#restore', 'click', pickBackup);
+  // Kun bag forældrekoden – på en ny enhed er der ingen profil endnu, så forældredelen kan ikke åbnes på anden vis
+  on('#restore', 'click', () => parentGate(() => { pickBackup(); showProfiles(); }, showProfiles));
   on('#about-w', 'click', () => showAbout(showProfiles, 'Tilbage'));
   on('#feedback-w', 'click', () => feedbackSheet('velkomsten'));
   on('#nm', 'input', () => { $('#zn').placeholder = Z.defaultZooName($('#nm').value); });
@@ -2429,6 +2430,42 @@ function fmtDate(ts) {
 
 // Forældredelen i tre faner: Overblik (ugen, nøgletal, hvad der driller), Fremskridt (mærker og øvelser, gangetabellen,
 // zoo'ens områder) og Indstillinger (træningen, zoo'en, backup, appen, slet profil). Fanen huskes, mens appen er åben
+// Forældredelen: alle profiler på enheden med fremskridt og sidste brug – og en knap til at slette hver af dem
+async function paintProfiles() {
+  const box = $('#pt-profiles');
+  if (!box) return;
+  let profiles = [];
+  try { profiles = await listProfiles(); } catch { /* tom liste */ }
+  const rows = await Promise.all(profiles.map(async (p) => {
+    let st = null;
+    try { st = p.id === S.id ? S.state : await loadState(p.id); } catch { /* kun navnet */ }
+    const stars = st ? AREAS.filter((a) => Z.areaLevel(migrate(st), a.id) >= 3).length : 0;
+    const patches = st ? Object.keys(st.patches || {}).length : 0;
+    const last = st?.sessions?.length ? st.sessions[st.sessions.length - 1].t : null;
+    return { ...p, zoo: st?.zoo?.name, stars, patches, last, me: p.id === S.id };
+  }));
+  if (!box.isConnected) return;
+  box.innerHTML = rows.length ? rows.map((r) => `<div class="pt-prof">
+      <span class="avatar has-img">${meAvatar(r.name)}</span>
+      <span class="pp-txt"><b>${esc(r.name)}${r.me ? ' <span class="pp-me">åben nu</span>' : ''}</b>
+        <span class="small muted">${r.zoo ? `${esc(r.zoo)} · ` : ''}⭐ ${r.stars} af ${AREAS.length} · ${r.patches} ${r.patches === 1 ? 'mærke' : 'mærker'} · ${r.last ? `sidst brugt ${fmtDate(r.last)}` : 'ikke brugt endnu'}</span></span>
+      <button class="btn ghost sm" data-del="${esc(r.id)}">Slet</button></div>`).join('')
+    : '<span class="small muted">Der er ingen profiler på enheden.</span>';
+  box.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+    const r = rows.find((x) => x.id === b.dataset.del);
+    const what = `${esc(r.name)}${r.zoo ? ` (${esc(r.zoo)})` : ''} med ${r.stars} ⭐ og ${r.patches} ${r.patches === 1 ? 'mærke' : 'mærker'}`;
+    if (!(await ask(`Slet ${what} og alt fremskridtet på denne enhed?`, 'Slet', 'Annullér'))) return;
+    if (!(await ask('Er du helt sikker? Det kan ikke fortrydes uden en backup.', 'Ja, slet', 'Annullér'))) return;
+    if (r.me) await flush();
+    await deleteProfile(r.id);
+    let last = null;
+    try { last = localStorage.getItem('mr_last'); } catch { /* */ }
+    if (last === r.id) { try { localStorage.removeItem('mr_last'); } catch { /* */ } }
+    toast(`${r.name}s profil er slettet`);
+    if (r.me) { S.id = null; S.state = null; showProfiles(); } else paintProfiles();
+  }));
+}
+
 let parentTab = 'overblik';
 const PARENT_TABS = [['overblik', 'Overblik'], ['fremskridt', 'Fremskridt'], ['indstillinger', 'Indstillinger']];
 function showParent(tab = parentTab) {
@@ -2548,8 +2585,9 @@ function showParent(tab = parentTab) {
       <p class="small muted" style="margin:0">Som app: på iPad Safari → Del → "Føj til hjemmeskærm", på Mac Safari → Arkiv → "Føj til Dock". Appen har sit eget lager, så gem en backup i browseren først og indlæs den i appen bagefter. Appen opdaterer sig selv, når den åbnes.</p>
       <div class="spread"><span class="small muted" id="app-version">Version fra ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div>
       ${FEEDBACK.url ? `<div class="spread"><span class="small muted">Idéer, fejl eller ros – direkte til Troels.</span>${feedbackBtn('feedback-p')}</div>` : ''}</section>
-    <section class="card stack pt-danger"><h3>Slet profil</h3>
-      <div class="spread"><span class="small muted">Sletter ${esc(st.name)}s profil og alt fremskridt på denne enhed. Tag en backup først.</span><button class="btn ghost" id="del">Slet profil</button></div></section>`;
+    <section class="card stack pt-danger"><h3>Profiler på denne enhed</h3>
+      <p class="small muted" style="margin:0">Slet en profil, du ikke bruger – fx en ekstra med samme navn. Alt dens fremskridt forsvinder fra enheden, så tag en backup først, hvis du er i tvivl.</p>
+      <div class="pt-profiles" id="pt-profiles"><span class="small muted">Henter profilerne …</span></div></section>`;
 
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button>
@@ -2592,15 +2630,7 @@ function showParent(tab = parentTab) {
     if (reg?.installing || reg?.waiting) toast('Henter den nye version – appen genstarter om lidt');
     else { reloadNow = false; toast('Du har den nyeste version'); }
   });
-  on('#del', 'click', async () => {
-    if (!(await ask(`Slet ${esc(st.name)}s profil og alt fremskridt?`, 'Slet', 'Annullér'))) return;
-    if (!(await ask('Er du helt sikker?', 'Ja, slet', 'Annullér'))) return;
-    await flush();
-    await deleteProfile(S.id);
-    try { localStorage.removeItem('mr_last'); } catch { /* */ }
-    S.id = null; S.state = null;
-    showProfiles();
-  });
+  if (tab === 'indstillinger') paintProfiles();
   paintSeg();
 }
 
