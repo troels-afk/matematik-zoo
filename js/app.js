@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015144446';
-import * as E from './engine.js?v=20261015144446';
-import * as Z from './zoo.js?v=20261015144446';
-import { zooMap } from './map.js?v=20261015144446';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015144446';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015144446';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015144446';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015144446';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015144854';
+import * as E from './engine.js?v=20261015144854';
+import * as Z from './zoo.js?v=20261015144854';
+import { zooMap } from './map.js?v=20261015144854';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015144854';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015144854';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015144854';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015144854';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -178,7 +178,7 @@ async function showProfiles() {
       <footer class="wp-foot"><span>Gratis · ingen login · fremskridtet gemmes kun på denne enhed</span>
         <span><button class="link small" id="restore">Gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button>${FEEDBACK.url ? ' · <button class="link small" id="feedback-w">Send feedback</button>' : ''}</span></footer>
     </section>
-    <small class="welcome-copy">© 2026 Troels Christensen</small>`);
+    <small class="welcome-copy">© 2026 Troels Christensen · version fra ${appVersion()}</small>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
   on('#new', 'click', () => { $('#newform').hidden = false; $('#nm').focus(); $('#newform').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
   on('#restore', 'click', pickBackup);
@@ -332,7 +332,7 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
         ${principle(ui('foraeldre'), 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
       </div>
       ${FEEDBACK.url ? `<section class="card fb-card"><span><b>Idéer og feedback</b> – har du en idé, eller virker noget ikke? Skriv direkte til Troels.</span>${feedbackBtn('feedback-a')}</section>` : ''}
-      <p class="small muted copyright">© 2026 Troels Christensen. Alle rettigheder forbeholdes.</p>
+      <p class="small muted copyright">© 2026 Troels Christensen. Alle rettigheder forbeholdes. Version fra ${appVersion()}.</p>
     </div>`, (e) => { if (e.key === 'Escape') back(); });
   on('#back', 'click', back);
   on('#feedback-a', 'click', () => feedbackSheet('Om appen'));
