@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015163859';
-import * as E from './engine.js?v=20261015163859';
-import * as Z from './zoo.js?v=20261015163859';
-import { zooMap } from './map.js?v=20261015163859';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015163859';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015163859';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015163859';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015163859';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015164425';
+import * as E from './engine.js?v=20261015164425';
+import * as Z from './zoo.js?v=20261015164425';
+import { zooMap } from './map.js?v=20261015164425';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015164425';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015164425';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015164425';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015164425';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -430,7 +430,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
     {
       art: `<img class="tour-portrait" src="${Z.CAST.kaj.full}" alt="Kaj">`,
       title: 'Bare rolig!',
-      body: say('kaj', 'Regner du forkert, sker der ikke noget. Du får en forklaring, og opgaven kommer igen senere. Og går en division ikke op, så er resten MIN!')
+      body: say('kaj', 'Det er helt i orden at regne forkert – det er sådan, man lærer. Så viser jeg dig, hvordan man kan regne den, og du får opgaven igen lidt senere. Selv papegøjer regner forkert nogle gange!')
         + '<p class="small muted center" style="margin:0">Alle reglerne står under <b>? Regler</b> øverst på forsiden.</p>',
     },
   ];

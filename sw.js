@@ -1,6 +1,6 @@
 // Matematik-Zoo som webapp: appens filer gemmes på enheden, så den starter med det samme
 // og virker uden internet. VERSION og FILES (sti → indholdshash) skrives af tools/deploy.sh.
-const VERSION = '20261015163859';
+const VERSION = '20261015164425';
 const FILES = {
 "LICENSE": "d3629b14cb",
 "css/style.css": "3511206d75",
@@ -251,20 +251,20 @@ const FILES = {
 "img/zoo/klinik.webp": "ee5453bdea",
 "img/zoo/observation.webp": "a5af1f5f9a",
 "img/zoo/polar.webp": "ced82aaafb",
-"index.html": "33f2ac73a6",
+"index.html": "03bae9fd88",
 "js/animals.js": "f46c65e376",
-"js/app.js": "8ca8639250",
-"js/curriculum.js": "69161802ab",
-"js/engine.js": "f19225206c",
+"js/app.js": "d532a922a0",
+"js/curriculum.js": "04559b14eb",
+"js/engine.js": "06743c559e",
 "js/fx.js": "7332367aac",
-"js/map.js": "c8b056f9dd",
+"js/map.js": "439845763a",
 "js/oplaesning.js": "14d7c76e73",
 "js/sewmask.js": "a0cbc0f4d8",
-"js/speak.js": "91ee2e5ffc",
+"js/speak.js": "ccd14cae06",
 "js/store.js": "e60eddfa18",
 "js/util.js": "183e6761c8",
 "js/visuals.js": "34382a5ac2",
-"js/zoo.js": "c64bde8312",
+"js/zoo.js": "ad709ed0b7",
 "lyd/0020ed332014.mp3": "76216a9579",
 "lyd/010d6ee285c4.mp3": "3cf2bc3317",
 "lyd/022aaed11c7d.mp3": "d3911dd9a3",
