@@ -1,14 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015165345';
-import * as E from './engine.js?v=20261015165345';
-import * as Z from './zoo.js?v=20261015165345';
-import { zooMap } from './map.js?v=20261015165345';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015165345';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015165345';
-import { TOUR_SAY } from './oplaesning.js?v=20261015165345';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015165345';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015165345';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015165824';
+import * as E from './engine.js?v=20261015165824';
+import * as Z from './zoo.js?v=20261015165824';
+import { zooMap } from './map.js?v=20261015165824';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015165824';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015165824';
+import { TOUR_SAY } from './oplaesning.js?v=20261015165824';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015165824';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015165824';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -168,7 +168,7 @@ async function showProfiles() {
   const bg = Z.PRACTICE_BG.tal;
   view(`
     <div class="welcome-bg" aria-hidden="true"><picture><source media="(orientation: portrait)" srcset="${bg.s}"><img src="${bg.l}" alt="" decoding="async"></picture></div>
-    <header class="welcome-sign"><span class="ws-paw">${PAW_IC}</span><span><b>Matematik-Zoo</b><small>matzoo.dk · matematik for 4. klasse</small></span></header>
+    <header class="welcome-sign"><span class="ws-paw">${PAW_IC}</span><span><b>IJG Mat Zoo</b><small>matzoo.dk · matematik for 4. klasse</small></span></header>
     <section class="welcome-panel">
       <div class="wp-hello">${avatar('bodil')}<div><h1>Hvem skal passe zoo'en i dag?</h1><p>Bodil holder porten åben for dig.</p></div></div>
       <div class="profiles">
@@ -317,7 +317,7 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
     <button class="back-link" id="back"><span class="icon-btn" aria-hidden="true">←</span>${backLabel}</button>
     <div class="about">
       <section class="oeve-hero about-hero">
-        <div class="oeve-glass"><h1>Om Matematik-Zoo</h1>
+        <div class="oeve-glass"><h1>Om IJG Mat Zoo</h1>
           <p>Appen skal hjælpe en elev i 4. klasse med at komme struktureret igennem <b>hele årets matematikpensum</b> – lidt hver dag, uden pres og uden reklamer. Zoo'en er rammen, der gør det sjovt at komme tilbage, men det er matematikken, der får zoo'en til at vokse.</p>
         </div>
       </section>
@@ -364,7 +364,7 @@ function feedbackSheet(from) {
   openSheet(`
     <div class="fb">
       <h2 style="margin:0">Send en idé eller feedback</h2>
-      <p class="muted" style="margin:0">Beskeden går direkte til Troels, der har lavet Matematik-Zoo. Han læser alle beskeder.</p>
+      <p class="muted" style="margin:0">Beskeden går direkte til Troels, der har lavet IJG Mat Zoo. Han læser alle beskeder.</p>
       <div class="seg fb-kind" role="radiogroup" aria-label="Hvad handler beskeden om?">${FB_KINDS.map(([k, l]) => `<button type="button" role="radio" data-k="${k}" aria-checked="${k === kind}" class="${k === kind ? 'on' : ''}">${l}</button>`).join('')}</div>
       <label class="lbl" for="fb-text">Din besked</label>
       <textarea id="fb-text" class="field fb-text" maxlength="1000" rows="5" placeholder="Skriv her …"></textarea>
@@ -412,7 +412,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
   }).join('');
   const pages = [
     // Første side er en scene som på missionerne og områdesiderne (se renderHero nedenfor)
-    { hero: true, title: 'Velkommen til Matematik-Zoo!', text: "Zoo'en har været lukket hele vinteren. Vil du hjælpe Bodil med at åbne den igen?", cta: 'Kom indenfor' },
+    { hero: true, title: 'Velkommen til IJG Mat Zoo!', text: "Zoo'en har været lukket hele vinteren. Vil du hjælpe Bodil med at åbne den igen?", cta: 'Kom indenfor' },
     {
       art: `<div class="tour-icons">${AREAS.map((a) => `<span style="--ac:${a.color}">${placeIc(a)}</span>`).join('')}</div>`,
       title: 'Målet: den store åbningsdag',
@@ -708,7 +708,7 @@ function showHome() {
     <section class="map-wrap${st.zoo.party ? ' festive' : ''}">
       <div class="map-scroll">${zooMap(mapData)}</div>
     </section>
-    ${FEEDBACK.url ? `<section class="card fb-card"><span>Har du en idé til Matematik-Zoo – eller er der noget, der ikke virker?</span>${feedbackBtn('feedback')}</section>` : ''}
+    ${FEEDBACK.url ? `<section class="card fb-card"><span>Har du en idé til IJG Mat Zoo – eller er der noget, der ikke virker?</span>${feedbackBtn('feedback')}</section>` : ''}
 `);
 
   const mapEl = $('.zoo-map');
@@ -2799,7 +2799,7 @@ async function exportBackup() {
   const file = new File([JSON.stringify(data)], name, { type: 'application/json' });
   // På iPad: del-arket (Gem i Filer, AirDrop, mail). På computer: almindelig download.
   if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: 'Matematik-Zoo backup' }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    try { await navigator.share({ files: [file], title: 'IJG Mat Zoo backup' }); return; } catch (e) { if (e.name === 'AbortError') return; }
   }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(file);
@@ -2823,7 +2823,7 @@ async function importBackup(file) {
   try { data = JSON.parse(await file.text()); } catch { /* håndteres nedenfor */ }
   const st = data?.app === 'matematik-zoo' ? data.state : null;
   if (!st || typeof st.name !== 'string' || !st.facts || !st.skills || !Array.isArray(st.sessions)) {
-    toast('Filen er ikke en backup fra Matematik-Zoo');
+    toast('Filen er ikke en backup fra IJG Mat Zoo');
     return;
   }
   const id = data.id || slug(st.name);

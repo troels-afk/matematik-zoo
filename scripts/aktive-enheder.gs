@@ -49,7 +49,7 @@ function dailyReport() {
   const yesterday = ids(1).length;
   const week = {};
   for (let n = 1; n <= 7; n++) ids(n).forEach((h) => { week[h] = true; });
-  sendTelegram_('📊 Matematik-Zoo\nI går (' + dayStr_(1) + '): ' + yesterday + ' aktive ' + (yesterday === 1 ? 'enhed' : 'enheder')
+  sendTelegram_('📊 IJG Mat Zoo\nI går (' + dayStr_(1) + '): ' + yesterday + ' aktive ' + (yesterday === 1 ? 'enhed' : 'enheder')
     + '\nSidste 7 dage: ' + Object.keys(week).length);
   const oldest = 'akt-' + dayStr_(KEEP_DAYS);
   Object.keys(props.getProperties()).forEach((k) => { if (k.indexOf('akt-') === 0 && k < oldest) props.deleteProperty(k); });
@@ -59,7 +59,7 @@ function dailyReport() {
 function setup() {
   ScriptApp.getProjectTriggers().forEach((t) => { if (t.getHandlerFunction() === 'dailyReport') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('dailyReport').timeBased().everyDays(1).atHour(7).inTimezone(TZ).create();
-  sendTelegram_('✅ Matematik-Zoo: optællingen af aktive enheder er sat op. Du får en besked hver morgen kl. 7.');
+  sendTelegram_('✅ IJG Mat Zoo: optællingen af aktive enheder er sat op. Du får en besked hver morgen kl. 7.');
 }
 
 function sendTelegram_(text) {
