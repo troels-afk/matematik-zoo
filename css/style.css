@@ -976,6 +976,8 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .sb-wave i:nth-child(3) { animation-delay: -.6s; }
 .sb-wave i:nth-child(4) { animation-delay: -.15s; }
 @keyframes sb-wave { 50% { height: 100%; } }
+.tour-speak .sb-ic { font-size: 1.3rem; padding-left: 6px; }
+.th-box .tour-speak { margin: 6px 0; }
 .sb-btn { display: inline-flex; align-items: center; gap: 6px; }
 .sb-btn svg { width: 16px; height: 16px; fill: currentColor; }
 .ex-card, .ex-tip, .walk li, .ex-lead { transition: box-shadow .25s, background-color .25s; }

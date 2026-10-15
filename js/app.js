@@ -1,13 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015164425';
-import * as E from './engine.js?v=20261015164425';
-import * as Z from './zoo.js?v=20261015164425';
-import { zooMap } from './map.js?v=20261015164425';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015164425';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015164425';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015164425';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015164425';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015165223';
+import * as E from './engine.js?v=20261015165223';
+import * as Z from './zoo.js?v=20261015165223';
+import { zooMap } from './map.js?v=20261015165223';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015165223';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015165223';
+import { TOUR_SAY } from './oplaesning.js?v=20261015165223';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015165223';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015165223';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -454,6 +455,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
         <div class="th-box">
           <h1 id="tour-h">${p.title}</h1>
           <p>${p.text}</p>
+          ${tourBar()}
           <div class="th-go"><button class="btn big" id="next">${p.cta}</button>${dots()}</div>
         </div>
       </section>`, keys);
@@ -463,6 +465,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
       renderHero(p);
       on('#next', 'click', next);
       on('#skip', 'click', finish);
+      kajExplains([{ text: TOUR_SAY[i], el: () => $('.th-box p') }], { label: 'Hør teksten' });
       return;
     }
     view(`
@@ -471,6 +474,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
         <div class="tour-visual">${p.art}</div>
         <h1 class="center">${p.title}</h1>
         ${p.body}
+        <div class="row" style="justify-content:center">${tourBar()}</div>
         ${dots()}
         <div class="row" style="justify-content:center">
           ${i ? '<button class="btn ghost big" id="prev">←</button>' : ''}
@@ -480,6 +484,7 @@ function showIntroTour(done = showHome, backLabel = "Tilbage til zoo'en") {
     on('#next', 'click', next);
     on('#prev', 'click', () => { i--; render(); });
     on('#skip', 'click', finish);
+    kajExplains([{ text: TOUR_SAY[i], el: () => $('.tour .bubble') }], { label: 'Hør teksten' });
   };
   const next = () => { sfx('tap'); if (i < pages.length - 1) { i++; render(); } else finish(); };
   render();
@@ -1441,6 +1446,11 @@ const PLAY_IC = {
   pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z"/></svg>',
   again: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6.5 12 11V7.5a5.5 5.5 0 1 1-5.5 5.5H4a8 8 0 1 0 8-8z"/></svg>',
 };
+// Introens lydlinje: Jeppe læser sidens tekst op (vises kun, når klippet findes – ellers fjerner kajExplains den)
+const tourBar = () => `
+  <div class="speak-bar tour-speak" id="speak"><span class="sb-ic" aria-hidden="true">🔊</span>
+    <span class="sb-wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <button class="btn sm ghost sb-btn" id="sb-btn">${PLAY_IC.play}Hør teksten</button></div>`;
 const speakBar = (intro) => (hasSay(intro) ? `
   <div class="speak-bar" id="speak">${avatar('kaj', 'sm')}<span class="sb-txt">Kaj forklarer</span>
     <span class="sb-wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -1448,7 +1458,7 @@ const speakBar = (intro) => (hasSay(intro) ? `
 
 // items: [{ text, el() }] i skærmens rækkefølge. Kaj begynder selv, medmindre lyden er slået fra (så starter ▶ ham).
 // Det stykke, han læser, lyser op, og et tryk på et kort eller trin læser netop det.
-function kajExplains(items, { gap, onItem = () => {} } = {}) {
+function kajExplains(items, { gap, onItem = () => {}, label = 'Hør Kaj' } = {}) {
   const bar = $('#speak');
   if (!bar) return null;
   const card = bar.closest('.card');
@@ -1464,7 +1474,7 @@ function kajExplains(items, { gap, onItem = () => {} } = {}) {
     ctl.state = st;
     if (!bar.isConnected) return;
     bar.classList.toggle('playing', st === 'playing');
-    const [ic, txt] = st === 'playing' ? ['pause', 'Pause'] : st === 'ended' ? ['again', 'Hør igen'] : voice?.started ? ['play', 'Fortsæt'] : ['play', 'Hør Kaj'];
+    const [ic, txt] = st === 'playing' ? ['pause', 'Pause'] : st === 'ended' ? ['again', 'Hør igen'] : voice?.started ? ['play', 'Fortsæt'] : ['play', label];
     $('#sb-btn').innerHTML = `${PLAY_IC[ic]}${txt}`;
     if (st === 'ended') mark(null);
   };

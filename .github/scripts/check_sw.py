@@ -11,7 +11,7 @@ Brug: check_sw.py [forrige-commit]   (uden argument springes punkt 4 over)
 """
 import hashlib, os, re, subprocess, sys
 
-IGNORE_PREFIX = ('kryds/', '.git', '.github/', 'tools/')
+IGNORE_PREFIX = ('kryds/', '.git', '.github/', 'tools/', 'scripts/')
 IGNORE = {'sw.js', 'CNAME', '.gitignore', '.nojekyll'}
 
 

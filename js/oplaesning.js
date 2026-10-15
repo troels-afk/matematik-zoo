@@ -453,3 +453,14 @@ export function attachSay(skills) {
     t.steps?.forEach((say, i) => { if (it.steps?.[i]) it.steps[i].say = say; });
   }
 }
+
+// Introen "Sådan spiller du" (5 sider) læst op med Jeppes stemme. Én tekst pr. side, skrevet til øret.
+// Tallene (9 områder, 36 unger) står som ord-tal her – ret dem, hvis antallet af områder eller unger ændres.
+// Lyden laves på Mac'en med: python3 scripts/lyd_intro.py (se scriptet)
+export const TOUR_SAY = [
+  "Velkommen til Matematik-Zoo! Zoo'en har været lukket hele vinteren. Vil du hjælpe Bodil med at åbne den igen?",
+  "Zoo'en har ni områder. Hvert område bliver bedre, når du bliver god til noget matematik. Så flytter der nye dyr ind, og der kommer flere gæster. Når alle ni områder har fået en stjerne, holder vi åbningsfest!",
+  "Sådan går en dag. Først giver du ungerne i Babyhuset flaske, og der øver du gangetabellen. Så hjælper du Nora, Liv, Yasmin eller Kaj med en opgave i zoo'en. Til sidst kommer Zoo-runden med et par blandede opgaver. En mission tager cirka et kvarter. Prøv at komme forbi fire dage om ugen, så vokser zoo'en hurtigt.",
+  "Hvert gangestykke er en dyreunge. Når du husker gangestykket, også dagen efter, så vokser ungen, til den er voksen. Kan du få alle seksogtredive unger voksne?",
+  "Det er helt i orden at regne forkert. Det er sådan, man lærer. Så viser jeg dig, hvordan man kan regne den, og du får opgaven igen lidt senere. Selv papegøjer regner forkert nogle gange! Alle reglerne står under Regler, øverst på forsiden.",
+];
