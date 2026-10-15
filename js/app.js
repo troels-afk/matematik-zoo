@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015163611';
-import * as E from './engine.js?v=20261015163611';
-import * as Z from './zoo.js?v=20261015163611';
-import { zooMap } from './map.js?v=20261015163611';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015163611';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015163611';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015163611';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015163611';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015163859';
+import * as E from './engine.js?v=20261015163859';
+import * as Z from './zoo.js?v=20261015163859';
+import { zooMap } from './map.js?v=20261015163859';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015163859';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015163859';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015163859';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015163859';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -184,7 +184,7 @@ async function showProfiles() {
       <footer class="wp-foot"><span>Gratis · ingen login · fremskridtet gemmes kun på denne enhed</span>
         <span><button class="link small" id="restore">For forældre: gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button>${FEEDBACK.url ? ' · <button class="link small" id="feedback-w">Send feedback</button>' : ''}</span></footer>
     </section>
-    <small class="welcome-copy">© 2026 Troels Christensen · version fra ${appVersion()}</small>`);
+    <small class="welcome-copy">© 2026 Troels Christensen · version ${appVersion()}</small>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
   on('#new', 'click', () => { $('#newform').hidden = false; $('#nm').focus(); $('#newform').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
   // Kun bag forældrekoden – på en ny enhed er der ingen profil endnu, så forældredelen kan ikke åbnes på anden vis
@@ -339,7 +339,7 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
         ${principle(ui('foraeldre'), 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
       </div>
       ${FEEDBACK.url ? `<section class="card fb-card"><span><b>Idéer og feedback</b> – har du en idé, eller virker noget ikke? Skriv direkte til Troels.</span>${feedbackBtn('feedback-a')}</section>` : ''}
-      <p class="small muted copyright">© 2026 Troels Christensen. Alle rettigheder forbeholdes. Version fra ${appVersion()}.</p>
+      <p class="small muted copyright">© 2026 Troels Christensen. Alle rettigheder forbeholdes. Version ${appVersion()}.</p>
     </div>`, (e) => { if (e.key === 'Escape') back(); });
   on('#back', 'click', back);
   on('#feedback-a', 'click', () => feedbackSheet('Om appen'));
@@ -2590,7 +2590,7 @@ function showParent(tab = parentTab) {
       <div class="row"><button class="btn" id="bk-save">Gem backup</button><button class="btn ghost" id="bk-load">Indlæs backup</button></div></section>
     <section class="card stack"><h3>Appen</h3>
       <p class="small muted" style="margin:0">Som app: på iPad Safari → Del → "Føj til hjemmeskærm", på Mac Safari → Arkiv → "Føj til Dock". Appen har sit eget lager, så gem en backup i browseren først og indlæs den i appen bagefter. Appen opdaterer sig selv, når den åbnes.</p>
-      <div class="spread"><span class="small muted" id="app-version">Version fra ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div>
+      <div class="spread"><span class="small muted" id="app-version">Version ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div>
       ${FEEDBACK.url ? `<div class="spread"><span class="small muted">Idéer, fejl eller ros – direkte til Troels.</span>${feedbackBtn('feedback-p')}</div>` : ''}</section>
     <section class="card stack pt-danger"><h3>Profiler på denne enhed</h3>
       <p class="small muted" style="margin:0">Slet en profil, du ikke bruger – fx en ekstra med samme navn. Alt dens fremskridt forsvinder fra enheden, så tag en backup først, hvis du er i tvivl.</p>
@@ -2920,8 +2920,8 @@ checkForUpdate();
 function appVersion() {
   const v = APP_V;
   if (!/^\d{14}$/.test(v)) return 'udviklingsudgave';
-  const d = new Date(+v.slice(0, 4), +v.slice(4, 6) - 1, +v.slice(6, 8), +v.slice(8, 10), +v.slice(10, 12));
-  return d.toLocaleString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  // Versionsnummer ud fra udgivelsestidspunktet: år.måned.dag.timeminut, fx 2026.10.15.1636 – stiger altid
+  return `${v.slice(0, 4)}.${v.slice(4, 6)}.${v.slice(6, 8)}.${v.slice(8, 12)}`;
 }
 
 // ================= Start =================
