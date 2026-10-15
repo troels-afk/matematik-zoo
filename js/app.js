@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015145457';
-import * as E from './engine.js?v=20261015145457';
-import * as Z from './zoo.js?v=20261015145457';
-import { zooMap } from './map.js?v=20261015145457';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015145457';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015145457';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015145457';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015145457';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015145654';
+import * as E from './engine.js?v=20261015145654';
+import * as Z from './zoo.js?v=20261015145654';
+import { zooMap } from './map.js?v=20261015145654';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015145654';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015145654';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015145654';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015145654';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -2626,9 +2626,9 @@ function showParent(tab = parentTab) {
   on('#bk-load', 'click', pickBackup);
   on('#check-update', 'click', async () => {
     reloadNow = true; // her har hun selv bedt om det
-    const reg = await checkForUpdate(true);
-    if (reg?.installing || reg?.waiting) toast('Henter den nye version – appen genstarter om lidt');
-    else { reloadNow = false; toast('Du har den nyeste version'); }
+    const res = await verifyUpdate();
+    if (res.state !== 'fetching') reloadNow = false;
+    toast(res.msg);
   });
   if (tab === 'indstillinger') paintProfiles();
   paintSeg();
@@ -2855,6 +2855,24 @@ async function checkForUpdate(force = false) {
   return reg;
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
+// Knappen "Søg efter opdatering": siger kun "nyeste", når serverens version faktisk er den, appen kører med.
+// Kan serveren ikke nås (offline, eller en gammel adresse, der viderestiller til matzoo.dk), siges det ærligt.
+async function verifyUpdate() {
+  const reg = await navigator.serviceWorker?.getRegistration?.().catch(() => null);
+  if (!reg) return { state: 'none', msg: 'Appen kører uden offline-lager – genindlæs siden for at få den nyeste version' };
+  let server = null;
+  try {
+    const txt = await (await fetch('sw.js', { cache: 'no-store', redirect: 'error' })).text();
+    server = txt.match(/const VERSION = '(\d{14})'/)?.[1] || null;
+  } catch { /* offline eller viderestillet */ }
+  try { await reg.update(); } catch { /* håndteres herunder */ }
+  if (!server) return { state: 'error', msg: 'Kunne ikke søge efter opdatering. Er du på nettet? Åbner du appen fra et gammelt ikon, så lav et nyt fra matzoo.dk i Safari.' };
+  if (reg.installing || reg.waiting) return { state: 'fetching', msg: 'Henter den nye version – appen genstarter om lidt' };
+  const local = (await caches.keys().catch(() => [])).find((k) => k.startsWith('mz-core-'))?.slice(8);
+  if (local && local !== server) return { state: 'stuck', msg: 'Der findes en nyere version, men den kunne ikke hentes. Luk appen helt og åbn den igen på wifi.' };
+  return { state: 'ok', msg: 'Du har den nyeste version' };
+}
+
 setInterval(() => { if (document.visibilityState === 'visible') checkForUpdate(); }, 60 * 60 * 1000);
 window.addEventListener('pageshow', () => checkForUpdate());
 checkForUpdate();
