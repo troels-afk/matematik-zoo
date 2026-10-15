@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015151108';
-import * as E from './engine.js?v=20261015151108';
-import * as Z from './zoo.js?v=20261015151108';
-import { zooMap } from './map.js?v=20261015151108';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015151108';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015151108';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015151108';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015151108';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015163611';
+import * as E from './engine.js?v=20261015163611';
+import * as Z from './zoo.js?v=20261015163611';
+import { zooMap } from './map.js?v=20261015163611';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015163611';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015163611';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015163611';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015163611';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -33,6 +33,12 @@ function view(html, onKey = null, { calm = false } = {}) {
 const $ = (sel) => app.querySelector(sel);
 const $$ = (sel) => [...app.querySelectorAll(sel)];
 const on = (sel, ev, fn) => $$(sel).forEach((el) => el.addEventListener(ev, fn));
+// Versionen står som ?v=… på <script>-tagget i index.html. import.meta.url kan ikke bruges: når offline-lageret
+// leverer app.js, er filens adresse den gemte uden ?v=, og så stod der "udviklingsudgave" på iPad'en
+const APP_V = (() => {
+  const src = document.querySelector('script[type="module"][src*="app.js"]')?.getAttribute('src') || import.meta.url;
+  return new URL(src, location.href).searchParams.get('v') || '';
+})();
 const save = (now = false) => saveState(S.id, S.state, { now });
 const areaOf = (id) => AREAS.find((a) => a.id === id) || DISCIPLINES.find((a) => a.id === id);
 const ME = ['🦊', '🐼', '🦒', '🐧', '🦁', '🐨', '🦓', '🐢'];
@@ -345,7 +351,7 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
 // er skrevet, og appens version. Uden adresse (url) vises knapperne ikke.
 const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycby2c67sPU_p0nbfMeN8HV6z-eiRzqBli23htCgemn02OGQel84kIy2LSrBuJUtt4fIcaw/exec' };
 const FB_KINDS = [['ide', '💡 En idé'], ['fejl', '🐞 Noget virker ikke'], ['ros', '💚 Ros']];
-const appStamp = () => new URL(import.meta.url).searchParams.get('v') || 'udvikling';
+const appStamp = () => APP_V || 'udvikling';
 const feedbackBtn = (id, cls = 'btn ghost') => (FEEDBACK.url ? `<button class="${cls}" id="${id}">Send en idé eller feedback</button>` : '');
 
 function feedbackSheet(from) {
@@ -2912,7 +2918,7 @@ checkForUpdate();
 
 // Versionen er tidsstemplet af tools/deploy.sh (?v=ÅÅÅÅMMDDTTMMSS på app.js)
 function appVersion() {
-  const v = new URL(import.meta.url).searchParams.get('v') || '';
+  const v = APP_V;
   if (!/^\d{14}$/.test(v)) return 'udviklingsudgave';
   const d = new Date(+v.slice(0, 4), +v.slice(4, 6) - 1, +v.slice(6, 8), +v.slice(8, 10), +v.slice(10, 12));
   return d.toLocaleString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
