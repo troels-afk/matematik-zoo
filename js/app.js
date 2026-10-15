@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015102133';
-import * as E from './engine.js?v=20261015102133';
-import * as Z from './zoo.js?v=20261015102133';
-import { zooMap } from './map.js?v=20261015102133';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015102133';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015102133';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015102133';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015102133';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015144446';
+import * as E from './engine.js?v=20261015144446';
+import * as Z from './zoo.js?v=20261015144446';
+import { zooMap } from './map.js?v=20261015144446';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015144446';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015144446';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015144446';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015144446';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -645,7 +645,7 @@ function todaysMission(st, tasks = dailyTasks(st)) {
 }
 
 function showHome() {
-  if (reloadWhenIdle) { location.reload(); return; }
+  if (reloadWhenIdle) { reloadSafely(); return; }
   closeSheet();
   const st = S.state;
   checkPatches();
@@ -2794,6 +2794,8 @@ async function importBackup(file) {
 // ================= Webapp: offline og hurtig start =================
 
 let reloadWhenIdle = false, reloadNow = false;
+// Genstart til en ny version – men gem først, så det sidste svar eller mærke ikke går tabt (gemningen venter ellers 0,6 sek.)
+function reloadSafely() { Promise.resolve(flush()).catch(() => {}).finally(() => location.reload()); }
 const swOptIn = (() => { try { return localStorage.getItem('mz_sw') === '1'; } catch { return false; } })();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || swOptIn)) {
   const hadController = !!navigator.serviceWorker.controller;
@@ -2804,7 +2806,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || swOptIn))
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!hadController) return;
     const onHome = !S.run && document.querySelector('.home-top') && !document.querySelector('.bsheet.open, .modal');
-    if (reloadNow || onHome) location.reload();
+    if (reloadNow || onHome) reloadSafely();
     else reloadWhenIdle = true;
   });
   navigator.storage?.persist?.().catch(() => { /* ikke understøttet */ });
