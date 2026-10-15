@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015145654';
-import * as E from './engine.js?v=20261015145654';
-import * as Z from './zoo.js?v=20261015145654';
-import { zooMap } from './map.js?v=20261015145654';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015145654';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015145654';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015145654';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015145654';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015151108';
+import * as E from './engine.js?v=20261015151108';
+import * as Z from './zoo.js?v=20261015151108';
+import { zooMap } from './map.js?v=20261015151108';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015151108';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015151108';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015151108';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015151108';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -744,6 +744,7 @@ function showHome() {
     $('#snd').setAttribute('aria-pressed', st.settings.sound);
     sfx('tap');
   });
+  paintUpdWarn();
   on('#switch', 'click', () => { try { localStorage.removeItem('mr_last'); } catch { /* */ } showProfiles(); });
   on('#parent', 'click', () => parentGate());
   if (freshBonus.length) setTimeout(() => bonusSheet(freshBonus), 400);
@@ -2852,7 +2853,39 @@ async function checkForUpdate(force = false) {
   const reg = await navigator.serviceWorker?.getRegistration?.().catch(() => null);
   if (!reg) return null;
   await reg.update().catch(() => { /* offline: prøv igen senere */ });
+  trackUpdates();
   return reg;
+}
+
+// Vagthund: opdager, hvis appen sidder fast på en gammel version – fx et ikon fra en gammel adresse, der viderestiller,
+// eller en ny version, der aldrig bliver hentet. Så viser forsiden en besked til en voksen i stedet for at tie.
+const UPD_KEY = 'mz_upd', DAY = 86400000;
+const updRec = () => { try { return JSON.parse(localStorage.getItem(UPD_KEY)) || {}; } catch { return {}; } };
+const updStuck = (r = updRec()) => (r.failSince && Date.now() - r.failSince > 3 * DAY) || (r.newerSince && Date.now() - r.newerSince > 2 * DAY);
+async function trackUpdates() {
+  const r = updRec(), now = Date.now();
+  let server = null;
+  try {
+    const res = await fetch('sw.js', { cache: 'no-store', redirect: 'error' });
+    if (res.ok) server = (await res.text()).match(/const VERSION = '(\d{14})'/)?.[1] || null;
+  } catch { /* offline eller viderestillet */ }
+  if (server) {
+    r.failSince = null;
+    const local = (await caches.keys().catch(() => [])).find((k) => k.startsWith('mz-core-'))?.slice(8);
+    if (local && local !== server) { if (r.newer !== server) { r.newer = server; r.newerSince = now; } }
+    else { r.newer = null; r.newerSince = null; }
+  } else if (navigator.onLine !== false) {
+    r.failSince ||= now; // kun når enheden mener, den er på nettet
+  }
+  try { localStorage.setItem(UPD_KEY, JSON.stringify(r)); } catch { /* */ }
+  paintUpdWarn();
+}
+function paintUpdWarn() {
+  const top = $('.home-top'), old = $('.upd-warn');
+  if (!updStuck()) { old?.remove(); return; }
+  if (!top || old) return;
+  top.insertAdjacentHTML('afterend', `<section class="card upd-warn" role="status"><b>Appen kan ikke hente nye versioner</b>
+    <span>Bed en voksen om at gemme en backup i forældredelen og så åbne <b>matzoo.dk</b> i Safari → Del → Føj til hjemmeskærm. Indlæs backuppen i det nye ikon.</span></section>`);
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
 // Knappen "Søg efter opdatering": siger kun "nyeste", når serverens version faktisk er den, appen kører med.

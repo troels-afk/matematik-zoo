@@ -1,0 +1,16 @@
+name: Tjek at appen kan opdatere sig
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tjek sw.js (VERSION og FILES)
+        run: python3 .github/scripts/check_sw.py "${{ github.event.before || github.event.pull_request.base.sha }}"
