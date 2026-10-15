@@ -1,13 +1,13 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261009150722';
-import * as E from './engine.js?v=20261009150722';
-import * as Z from './zoo.js?v=20261009150722';
-import { zooMap } from './map.js?v=20261009150722';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261009150722';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261009150722';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261009150722';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261009150722';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015102133';
+import * as E from './engine.js?v=20261015102133';
+import * as Z from './zoo.js?v=20261015102133';
+import { zooMap } from './map.js?v=20261015102133';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015102133';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015102133';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015102133';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015102133';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -2810,11 +2810,12 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || swOptIn))
   navigator.storage?.persist?.().catch(() => { /* ikke understøttet */ });
 }
 
-// Søg efter en ny version, når appen kommer frem igen – fx Mac-appen i Dock'en, der kan stå åben i dagevis
-// (ellers tjekker browseren kun, når siden åbnes). Højst hver halve time; force = knappen i forældredelen.
-let lastUpdateCheck = Date.now();
+// Søg efter en ny version, hver gang appen åbnes eller kommer frem igen – også på iPad'en, hvor appen fra
+// hjemmeskærmen ofte bare vågner i stedet for at starte forfra (og så tjekker browseren ikke selv).
+// Højst hvert minut; force = knappen i forældredelen.
+let lastUpdateCheck = 0;
 async function checkForUpdate(force = false) {
-  if (!force && Date.now() - lastUpdateCheck < 30 * 60 * 1000) return null;
+  if (!force && Date.now() - lastUpdateCheck < 60 * 1000) return null;
   lastUpdateCheck = Date.now();
   const reg = await navigator.serviceWorker?.getRegistration?.().catch(() => null);
   if (!reg) return null;
@@ -2823,6 +2824,8 @@ async function checkForUpdate(force = false) {
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
 setInterval(() => { if (document.visibilityState === 'visible') checkForUpdate(); }, 60 * 60 * 1000);
+window.addEventListener('pageshow', () => checkForUpdate());
+checkForUpdate();
 
 // Versionen er tidsstemplet af tools/deploy.sh (?v=ÅÅÅÅMMDDTTMMSS på app.js)
 function appVersion() {

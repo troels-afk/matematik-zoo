@@ -1,6 +1,6 @@
 // Matematik-Zoo som webapp: appens filer gemmes på enheden, så den starter med det samme
 // og virker uden internet. VERSION og FILES (sti → indholdshash) skrives af tools/deploy.sh.
-const VERSION = '20261012170500';
+const VERSION = '20261015102133';
 const FILES = {
 "LICENSE": "d3629b14cb",
 "css/style.css": "aac55e4d0f",
@@ -251,20 +251,20 @@ const FILES = {
 "img/zoo/klinik.webp": "ee5453bdea",
 "img/zoo/observation.webp": "a5af1f5f9a",
 "img/zoo/polar.webp": "ced82aaafb",
-"index.html": "e3a64c532b",
+"index.html": "aa8f6be4cd",
 "js/animals.js": "f46c65e376",
-"js/app.js": "7b0351568a",
-"js/curriculum.js": "e6de2ca1ca",
-"js/engine.js": "d53e0e1411",
+"js/app.js": "f96d160a98",
+"js/curriculum.js": "1dad57072b",
+"js/engine.js": "8446d54e87",
 "js/fx.js": "7332367aac",
-"js/map.js": "0533dc726b",
+"js/map.js": "65d6d86b7e",
 "js/oplaesning.js": "14d7c76e73",
 "js/sewmask.js": "a0cbc0f4d8",
-"js/speak.js": "5e34f6e7f7",
+"js/speak.js": "d35a990d6b",
 "js/store.js": "e60eddfa18",
 "js/util.js": "183e6761c8",
 "js/visuals.js": "34382a5ac2",
-"js/zoo.js": "d014d02a89",
+"js/zoo.js": "e008acd340",
 "lyd/0020ed332014.mp3": "76216a9579",
 "lyd/010d6ee285c4.mp3": "3cf2bc3317",
 "lyd/022aaed11c7d.mp3": "d3911dd9a3",
@@ -466,7 +466,8 @@ const CORE = `mz-core-${VERSION}`; // html, css og js – udskiftes helt ved hve
 const MEDIA = 'mz-media'; // billeder og skrifttyper – genbruges og hentes kun igen, hvis de er ændret
 const INDEX = 'mz-media-index'; // hvilken udgave (hash) af hvert billede der ligger i MEDIA
 const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;700;800;900&display=swap';
-const isMedia = (p) => /\.(webp|png|jpe?g|gif|svg|woff2?)$/i.test(p);
+// Billeder, lyde og skrifttyper hentes enkeltvis og kun, hvis de er ændret – fejler én, gennemføres opdateringen alligevel
+const isMedia = (p) => /\.(webp|png|jpe?g|gif|svg|woff2?|mp3|m4a)$/i.test(p);
 const abs = (p) => new URL(p, self.registration.scope).href;
 
 async function readIndex(media) {
@@ -488,7 +489,7 @@ self.addEventListener('install', (e) => {
     const paths = Object.keys(FILES);
     const core = await caches.open(CORE);
     await core.addAll(['./', ...paths.filter((p) => !isMedia(p))].map((p) => new Request(p, { cache: 'reload' })));
-    // Billeder: kun nye eller ændrede hentes (6 ad gangen)
+    // Billeder og lyde: kun nye eller ændrede hentes (6 ad gangen)
     const media = await caches.open(MEDIA);
     const idx = await readIndex(media);
     const todo = paths.filter((p) => isMedia(p) && idx[p] !== FILES[p]);
