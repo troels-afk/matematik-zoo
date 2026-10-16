@@ -1,14 +1,14 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261015190119';
-import * as E from './engine.js?v=20261015190119';
-import * as Z from './zoo.js?v=20261015190119';
-import { zooMap } from './map.js?v=20261015190119';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261015190119';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261015190119';
-import { TOUR_SAY } from './oplaesning.js?v=20261015190119';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261015190119';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261015190119';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261016233851';
+import * as E from './engine.js?v=20261016233851';
+import * as Z from './zoo.js?v=20261016233851';
+import { zooMap } from './map.js?v=20261016233851';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261016233851';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261016233851';
+import { TOUR_SAY } from './oplaesning.js?v=20261016233851';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261016233851';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261016233851';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -157,7 +157,9 @@ const levelsOf = (st) => AREAS.map((a) => Z.areaLevel(st, a.id));
 // Velkomsten (matzoo.dk): den malede indgang som baggrund, træskiltet og Bodil i et glaspanel. Hver dyrepasser
 // har en adgangsbillet med sin zoo og hvor langt den er nået
 const PAW_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="5.2" ry="4.4"/><ellipse cx="5.6" cy="10.4" rx="2.2" ry="2.8"/><ellipse cx="9.6" cy="6.4" rx="2.2" ry="2.9"/><ellipse cx="14.4" cy="6.4" rx="2.2" ry="2.9"/><ellipse cx="18.4" cy="10.4" rx="2.2" ry="2.8"/></svg>';
-async function showProfiles() {
+// opts.newKid: åbn formularen til en ny dyrepasser med det samme (fra forældredelen: "Tilføj barn")
+async function showProfiles(opts) {
+  parentStartId = null;
   let profiles = [];
   try { profiles = await listProfiles(); } catch { /* vis tom liste */ }
   const tickets = await Promise.all(profiles.map(async (p) => {
@@ -174,7 +176,7 @@ async function showProfiles() {
       <div class="profiles">
         ${tickets.map((p) => `<button class="profile-btn ticket" data-id="${esc(p.id)}"><span class="avatar has-img">${meAvatar(p.name)}</span>
           <span class="tk-txt"><b>${esc(p.name)}</b>${p.zoo ? `<span>${esc(p.zoo)}</span>` : ''}<span class="tk-prog">⭐ ${p.stars} af ${AREAS.length} områder${p.patches ? ` · ${p.patches} ${p.patches === 1 ? 'mærke' : 'mærker'}` : ''}</span></span></button>`).join('')}
-        <button class="profile-btn ticket new" id="new"><span class="avatar">＋</span><span class="tk-txt"><b>Ny dyrepasser</b><span>Lav din egen zoo</span></span></button>
+        <button class="profile-btn ticket new" id="new"><span class="avatar">＋</span><span class="tk-txt"><b>Ny dyrepasser</b><span>${tickets.length ? 'Søskende? Hver får sin egen zoo' : 'Lav din egen zoo'}</span></span></button>
       </div>
       <form id="newform" class="stack" hidden>
         ${say('bodil', 'Hej! Jeg er Bodil, direktør for zoo\'en. Hvad hedder du?')}
@@ -193,6 +195,7 @@ async function showProfiles() {
   on('#about-w', 'click', () => showAbout(showProfiles, 'Tilbage'));
   on('#feedback-w', 'click', () => feedbackSheet('velkomsten'));
   on('#nm', 'input', () => { $('#zn').placeholder = Z.defaultZooName($('#nm').value); });
+  if (opts?.newKid === true) $('#new').click();
   on('#newform', 'submit', async (e) => {
     e.preventDefault();
     const name = $('#nm').value.trim();
@@ -692,7 +695,7 @@ function showHome() {
 
   view(`
     <div class="home-top">
-      <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar has-img">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="me-chip" id="switch" title="Skift profil" aria-label="${esc(st.name)} – skift profil"><span class="avatar has-img">${meAvatar(st.name)}</span><span class="nm">${esc(st.name)}</span><span class="me-sw">Skift</span><svg class="me-swap" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="row" style="gap:8px">
         <button class="icon-btn pill" id="oeve" title="Øvebanen – øv til mærkerne, når du vil" aria-label="Øvebanen – øv til mærkerne, når du vil">${ui('oeve')}<span>Øvebanen</span></button>
         <button class="icon-btn pill" id="skjorte" aria-label="Din ranger-skjorte og alle mærker${patchNews(st) ? ' – nyt på skjorten' : ''}"><img class="ui-ic" src="${Z.SHIRT.f.src}" alt="" draggable="false"><span>Skjorten</span>${patchNews(st) ? '<i class="pill-dot" aria-hidden="true"></i>' : ''}</button>
@@ -2530,8 +2533,9 @@ async function paintProfiles() {
       <span class="avatar has-img">${meAvatar(r.name)}</span>
       <span class="pp-txt"><b>${esc(r.name)}${r.me ? ' <span class="pp-me">åben nu</span>' : ''}</b>
         <span class="small muted">${r.zoo ? `${esc(r.zoo)} · ` : ''}⭐ ${r.stars} af ${AREAS.length} · ${r.patches} ${r.patches === 1 ? 'mærke' : 'mærker'} · ${r.last ? `sidst brugt ${fmtDate(r.last)}` : 'ikke brugt endnu'}</span></span>
-      <button class="btn ghost sm" data-del="${esc(r.id)}">Slet</button></div>`).join('')
+      ${r.me ? '' : `<button class="btn ghost sm" data-show="${esc(r.id)}">Vis</button>`}<button class="btn ghost sm" data-del="${esc(r.id)}">Slet</button></div>`).join('')
     : '<span class="small muted">Der er ingen profiler på enheden.</span>';
+  box.querySelectorAll('[data-show]').forEach((b) => b.addEventListener('click', () => switchParentKid(b.dataset.show, 'overblik')));
   box.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
     const r = rows.find((x) => x.id === b.dataset.del);
     const what = `${esc(r.name)}${r.zoo ? ` (${esc(r.zoo)})` : ''} med ${r.stars} ⭐ og ${r.patches} ${r.patches === 1 ? 'mærke' : 'mærker'}`;
@@ -2551,6 +2555,7 @@ let parentTab = 'overblik';
 const PARENT_TABS = [['overblik', 'Overblik'], ['fremskridt', 'Fremskridt'], ['indstillinger', 'Indstillinger']];
 function showParent(tab = parentTab) {
   parentTab = tab;
+  parentStartId ||= S.id;
   const st = S.state;
   const fs = E.factSummary(st);
   const trouble = E.troubleSpots(st);
@@ -2666,19 +2671,21 @@ function showParent(tab = parentTab) {
       <p class="small muted" style="margin:0">Som app: på iPad Safari → Del → "Føj til hjemmeskærm", på Mac Safari → Arkiv → "Føj til Dock". Appen har sit eget lager, så gem en backup i browseren først og indlæs den i appen bagefter. Appen opdaterer sig selv, når den åbnes.</p>
       <div class="spread"><span class="small muted" id="app-version">Version ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div>
       ${FEEDBACK.url ? `<div class="spread"><span class="small muted">Idéer, fejl eller ros – direkte til Troels.</span>${feedbackBtn('feedback-p')}</div>` : ''}</section>
-    <section class="card stack pt-danger"><h3>Profiler på denne enhed</h3>
-      <p class="small muted" style="margin:0">Slet en profil, du ikke bruger – fx en ekstra med samme navn. Alt dens fremskridt forsvinder fra enheden, så tag en backup først, hvis du er i tvivl.</p>
+    <section class="card stack pt-danger"><div class="spread"><h3>Børn på denne enhed</h3><button class="btn ghost sm" id="pt-addkid">＋ Tilføj barn</button></div>
+      <p class="small muted" style="margin:0">Hvert barn har sin egen profil med sin egen zoo og sit eget fremskridt. Er der flere profiler, spørger appen "hvem spiller?", når den åbnes. Slet en profil, du ikke bruger – alt dens fremskridt forsvinder fra enheden, så tag en backup først, hvis du er i tvivl.</p>
       <div class="pt-profiles" id="pt-profiles"><span class="small muted">Henter profilerne …</span></div></section>`;
 
   view(`
     <div class="topbar"><button class="icon-btn" id="back" aria-label="Tilbage">←</button>
       <div style="flex:1"><h1 style="margin:0">Forældre</h1><span class="muted">${esc(st.name)} · ${esc(Z.zooName(st))}</span></div>
       <button class="btn ghost" id="about-p" aria-label="Om appen">${INFO_IC}<span class="about-lbl">Om appen</span></button></div>
+    <div class="pt-kids" id="pt-kids" hidden></div>
     <div class="seg parent-tabs" role="tablist" aria-label="Forældredelen">${PARENT_TABS.map(([v, l]) => `<button role="tab" data-tab="${v}" aria-selected="${v === tab}" class="${v === tab ? 'on' : ''}">${l}</button>`).join('')}</div>
-    <div class="parent-body">${tab === 'fremskridt' ? progress() : tab === 'indstillinger' ? settings() : overview()}</div>`, (e) => { if (e.key === 'Escape') showHome(); });
+    <div class="parent-body">${tab === 'fremskridt' ? progress() : tab === 'indstillinger' ? settings() : overview()}</div>`, (e) => { if (e.key === 'Escape') leaveParent(); });
 
   on('.parent-tabs [data-tab]', 'click', (e) => { sfx('tap'); showParent(e.currentTarget.dataset.tab); });
-  on('#back', 'click', showHome);
+  on('#back', 'click', leaveParent);
+  paintKidPicker(tab);
   on('#about-p', 'click', () => showAbout(() => showParent(), 'Tilbage til forældredelen'));
   on('#rp-open', 'click', () => showPracticeReport());
   const paintSeg = () => {
@@ -2712,7 +2719,38 @@ function showParent(tab = parentTab) {
     toast(res.msg);
   });
   if (tab === 'indstillinger') paintProfiles();
+  on('#pt-addkid', 'click', () => { parentStartId = null; showProfiles({ newKid: true }); });
   paintSeg();
+}
+
+// ---- Flere børn i forældredelen ----
+// Forældredelen viser ét barn ad gangen. Har enheden flere profiler, kan man skifte barn øverst.
+// Har man skiftet barn, går "Tilbage" til "hvem spiller?" – så barnet ikke lander i søskendens zoo.
+let parentStartId = null;
+function leaveParent() {
+  const changed = parentStartId && parentStartId !== S.id;
+  parentStartId = null;
+  if (changed) { try { localStorage.removeItem('mr_last'); } catch { /* */ } showProfiles(); } else showHome();
+}
+async function switchParentKid(id, tab = parentTab) {
+  if (id === S.id) return;
+  await flush();
+  const st = await loadState(id).catch(() => null);
+  if (!st) { toast('Profilen kunne ikke åbnes'); return; }
+  S.id = id;
+  S.state = migrate(st);
+  rememberProfile(id);
+  showParent(tab);
+}
+async function paintKidPicker(tab) {
+  const box = $('#pt-kids');
+  if (!box) return;
+  let profiles = [];
+  try { profiles = await listProfiles(); } catch { /* */ }
+  if (!box.isConnected || profiles.length < 2) return;
+  box.innerHTML = `<div class="seg" role="tablist" aria-label="Vælg barn">${profiles.map((p) => `<button role="tab" data-kid="${esc(p.id)}" aria-selected="${p.id === S.id}" class="${p.id === S.id ? 'on' : ''}">${esc(p.name)}</button>`).join('')}</div>`;
+  box.hidden = false;
+  box.querySelectorAll('[data-kid]').forEach((b) => b.addEventListener('click', () => switchParentKid(b.dataset.kid, tab)));
 }
 
 // ================= Forældredelen: Øvelserne i tal =================
@@ -3021,7 +3059,10 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 (async function boot() {
   let last = null;
   try { last = localStorage.getItem('mr_last'); } catch { /* */ }
-  if (last) {
+  // Flere børn på enheden: spørg altid, hvem der spiller – ellers lander barn nr. 2 i søskendens zoo
+  let count = 0;
+  try { count = (await listProfiles()).length; } catch { /* */ }
+  if (last && count < 2) {
     try {
       const st = await loadState(last);
       if (st) { S.id = last; S.state = migrate(st); return startScreen(); }
@@ -3029,6 +3070,19 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
   }
   showProfiles();
 })();
+
+// Appen fra hjemmeskærmen starter sjældent forfra – den vågner bare. Har den ligget i baggrunden i over 15 min,
+// og står den på forsiden, spørger den igen, hvem der spiller (kun når der er flere profiler)
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+  if (!hiddenAt || Date.now() - hiddenAt < 15 * 60 * 1000) return;
+  hiddenAt = 0;
+  if (S.run || !document.querySelector('.home-top') || document.querySelector('.bsheet.open, .modal')) return;
+  let n = 0;
+  try { n = (await listProfiles()).length; } catch { /* */ }
+  if (n >= 2) { await flush(); showProfiles(); }
+});
 
 // Til fejlfinding i konsollen
 window.__mo = { S, E, Z, ALL_SKILLS, speech, babyReact, feedback: FEEDBACK, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

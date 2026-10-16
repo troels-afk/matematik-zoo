@@ -700,6 +700,10 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
 .home-top .me-chip { background: var(--card); box-shadow: var(--shadow); color: var(--ink); border: 0; cursor: pointer; transition: background .15s ease, transform .1s ease; }
 /* Navnet er også knappen til at skifte profil */
 .me-swap { width: 16px; height: 16px; margin-left: 2px; color: var(--ink-3); flex: none; }
+.me-sw { flex: none; margin-left: 2px; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary-ink); font: 700 .78rem var(--font-body); }
+.me-sw + .me-swap { display: none; }
+.pt-kids { margin: -6px 0 14px; }
+.pt-kids .seg { flex-wrap: wrap; }
 @media (hover: hover) { .home-top .me-chip:hover { background: var(--card-2); } .home-top .me-chip:hover .me-swap { color: var(--primary-ink); } }
 .home-top .me-chip:active { transform: scale(.96); }
 .home-top .me-chip { min-width: 0; }
@@ -713,6 +717,8 @@ th { color: var(--ink-2); font: 600 .74rem var(--font-head); text-transform: upp
   .home-top .icon-btn .ui-ic { width: 30px; height: 30px; }
   .home-top .info-ic { width: 21px; height: 21px; }
   .home-top .me-chip { padding-right: 10px; gap: 6px; }
+  .me-sw { display: none; }
+  .me-sw + .me-swap { display: block; }
 }
 /* --art styrer billedets størrelse: figuren i cirklen og dyret, der kigger frem */
 .mission { --art: clamp(260px, 32vw, 340px); display: grid; grid-template-columns: var(--art) minmax(0, 1fr); gap: 32px; align-items: center; padding: 26px 28px;
