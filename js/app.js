@@ -1,16 +1,16 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261017163007';
-import * as E from './engine.js?v=20261017163007';
-import * as Z from './zoo.js?v=20261017163007';
-import { zooMap } from './map.js?v=20261017163007';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261017163007';
-import { celebrate } from './celebrate.js?v=20261017163007';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261017163007';
-import { TOUR_SAY } from './oplaesning.js?v=20261017163007';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261017163007';
-import * as INST from './install.js?v=20261017163007';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261017163007';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261017190312';
+import * as E from './engine.js?v=20261017190312';
+import * as Z from './zoo.js?v=20261017190312';
+import { zooMap } from './map.js?v=20261017190312';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261017190312';
+import { celebrate } from './celebrate.js?v=20261017190312';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261017190312';
+import { TOUR_SAY } from './oplaesning.js?v=20261017190312';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261017190312';
+import * as INST from './install.js?v=20261017190312';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261017190312';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -1471,7 +1471,7 @@ function showMixedDone(run, wins) {
   on('#md-shirt', 'click', () => showShirt());
   on('#md-again', 'click', () => startMixed(d.id, run.back));
   on('#md-back', 'click', () => goBack(run.back));
-  if (tier) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
+  if (tier) { festQueue.push({ kind: 'patch', id: d.id, tier }); playFests(); } else sfx('finish');
 }
 
 // Til forældredelen: skjorten og hvor mange mærker der er i hvilken tråd
@@ -2149,12 +2149,16 @@ function finish() {
 
   const wins = [];
   let bigWin = false;
+  const fests = []; // de store øjeblikke får en jubelscene: en ny stjerne/mester-område og nye mærker
   AREAS.forEach((a, i) => {
     for (let lv = b.levels[i] + 1; lv <= after.levels[i]; lv++) {
       wins.push({ e: Z.LEVELS[lv].icon, t: LEVEL_WIN[lv](a) });
       bigWin = true;
     }
+    if (after.levels[i] >= 3 && after.levels[i] > b.levels[i]) fests.push({ kind: 'star', id: a.id, lv: after.levels[i] }); // kun det højeste niveau pr. sted
   });
+  fresh.forEach((id) => fests.push({ kind: 'patch', id, tier: 1 }));
+  festQueue = fests.slice(0, 3);
   for (const id of Object.keys(ALL_SKILLS)) {
     const s = ALL_SKILLS[id];
     if (after.status[id] === 'mestret' && b.status[id] !== 'mestret') wins.push({ e: '🌟', t: `Du har mestret ${s.name.toLowerCase()}` });
@@ -2224,7 +2228,8 @@ function finish() {
   on('#sew', 'click', () => showShirt());
   bindChoices(more, 'more-list');
   if (back) on(`#${back.id}`, 'click', back.go);
-  if (bigWin || fresh.length || party) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
+  if (festQueue.length) playFests();
+  else if (bigWin || fresh.length || party) { sfx('level'); setTimeout(() => confetti(), 250); } else sfx('finish');
 }
 
 // Hvad kom der ud af missionen? Det vigtigste først: nyt dyr > guld-område > flere gæster >
@@ -2319,7 +2324,8 @@ function showPayoff(st, res, b, after, bigWin) {
   on('#sew', 'click', () => showShirt());
   bindChoices(res.more || [], 'more-list');
   if (main.kind === 'guests') setTimeout(() => countUp($('#gc'), b.guests, after.guests, 1100), 500);
-  if (bigWin) { sfx('level'); setTimeout(() => confetti(), 300); } else sfx('finish');
+  if (festQueue.length) playFests();
+  else if (bigWin) { sfx('level'); setTimeout(() => confetti(), 300); } else sfx('finish');
 }
 
 // ================= Åbningsfesten =================
@@ -3120,31 +3126,36 @@ document.addEventListener('visibilitychange', async () => {
 });
 
 // ---------- Festen: jubelscenen ved et nyt mærke eller en stjerne (celebrate.js) ----------
+// Festerne lægges i en kø, når en vagt eller en prøve slutter, og spilles oven på resultatskærmen (højst 3 ad gangen)
 const FEST_SAY = ['Wauw, hvor er du sej!', 'Det var flot klaret!', 'Hele zoo\'en jubler!', 'Du er en ægte dyrepasser!'];
 const festSay = (name) => `${FEST_SAY[Math.floor(Math.random() * FEST_SAY.length)]}${name ? ` Godt gået, ${name}!` : ''}`;
+let festQueue = [];
 function festPatch(discId, tier = 1, who) {
   const d = discById(discId);
   return celebrate({
-    kind: 'patch', prize: patchArt(discId, tier), kicker: `Nyt mærke · ${TIER[tier].name}`, title: patchName(d),
-    who: who || 'kaj', say: festSay(S.state?.name), btn: '🧵 Sy det på skjorten',
+    kind: 'patch', prize: patchArt(discId, tier), kicker: tier > 1 ? `${TIER[tier].thread} på dit mærke` : 'Nyt mærke · Bronze', title: patchName(d),
+    who: who || Z.ZONES[d.skills[0]?.area]?.who || 'bodil', say: festSay(S.state?.name), btn: 'Videre',
   });
 }
-function festStar(areaId, who) {
-  const a = areaOf(areaId);
+function festStar(areaId, lv = 3, who) {
+  const a = areaOf(areaId), master = lv >= 4;
   return celebrate({
-    kind: 'star', prize: `<span class="fs-place"><img src="${Z.PLACE_ART[areaId]}" alt="" draggable="false"><img class="fs-star" src="${UI_ICONS.stjerne}" alt="" draggable="false"></span>`,
-    kicker: 'Ny stjerne i zoo\'en', title: `${a.place} har fået sin stjerne!`, who: who || Z.ZONES?.[areaId]?.who || 'bodil', say: festSay(S.state?.name), btn: 'Videre',
+    kind: 'star', prize: `<span class="fs-place"><img src="${Z.PLACE_ART[areaId]}" alt="" draggable="false"><img class="fs-star" src="${master ? Z.LEVELS[4].art : UI_ICONS.stjerne}" alt="" draggable="false"></span>`,
+    kicker: master ? 'Nyt mester-område' : 'Ny stjerne i zoo\'en', title: master ? `${a.place} er blevet et mester-område!` : `${a.place} har fået sin stjerne!`,
+    who: who || Z.ZONES[areaId]?.who || 'bodil', say: festSay(S.state?.name), btn: 'Videre',
   });
 }
-// Demo: matzoo.dk/#fest viser et mærke og en stjerne efter hinanden (kun til at se festen – ændrer ikke fremskridtet)
-async function festDemo() {
-  await festPatch('d-gange', 1, 'kaj');
-  await festStar('tal', 'liv');
-  await festPatch('d-brok', 3, 'nora');
-  history.replaceState(null, '', location.pathname);
+let festBusy = false;
+async function playFests() {
+  if (festBusy) return;
+  festBusy = true;
+  await new Promise((r) => setTimeout(r, 350)); // lad resultatskærmen tegne sig færdig bagved
+  while (festQueue.length) {
+    const f = festQueue.shift();
+    try { await (f.kind === 'star' ? festStar(f.id, f.lv) : festPatch(f.id, f.tier)); } catch { /* festen er kun pynt */ }
+  }
+  festBusy = false;
 }
-if (location.hash === '#fest') setTimeout(festDemo, 900);
-window.addEventListener('hashchange', () => { if (location.hash === '#fest') festDemo(); });
 
 // Til fejlfinding i konsollen
-window.__mo = { fest: { patch: festPatch, star: festStar, demo: festDemo }, S, E, Z, ALL_SKILLS, speech, babyReact, feedback: FEEDBACK, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };
+window.__mo = { fest: { patch: festPatch, star: festStar }, finish, snapshot, S, E, Z, ALL_SKILLS, speech, babyReact, feedback: FEEDBACK, scene: missionScene, backup: { exportBackup, importBackup }, show: { home: showHome, parent: showParent, report: showPracticeReport, rules: showRules, shirt: showShirt, mixed: startMixed, party: showParty, book: showBook, profiles: showProfiles, tour: showIntroTour, about: showAbout, oeve: showPracticeHub, disc: showDiscipline, practice: startPractice, intro: (id) => showIntro(id, showHome, { btn: "Til zoo'en", back: "Tilbage til zoo'en" }) } };

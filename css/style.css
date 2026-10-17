@@ -1572,7 +1572,7 @@ details.card[open] > summary { margin-bottom: 12px; }
   padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); -webkit-user-select: none; user-select: none; }
 .fs-bg { position: absolute; inset: 0; opacity: 0; transition: opacity .4s ease;
   background: radial-gradient(circle at 50% 38%, #2f8f72 0%, #1b5a4c 38%, #102f33 75%); }
-.fest.go .fs-bg { opacity: .97; }
+.fest.go .fs-bg { opacity: 1; }
 .fs-rays { position: absolute; left: 50%; top: 38%; width: 190vmax; height: 190vmax; margin: -95vmax 0 0 -95vmax; opacity: 0; transform: scale(.6);
   background: repeating-conic-gradient(from 0deg, rgba(255, 233, 160, .2) 0deg 7deg, transparent 7deg 18deg);
   -webkit-mask: radial-gradient(circle, #000 0, #000 12%, transparent 55%); mask: radial-gradient(circle, #000 0, #000 12%, transparent 55%);
