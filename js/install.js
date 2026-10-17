@@ -125,7 +125,7 @@ export function guideHTML(p, { hasProgress = false } = {}) {
   if (p === 'inapp' || (here === 'inapp' && !p)) {
     return `<div class="ig-wrap"><div class="sheet-head"><span class="sheet-ic">⚠️</span><div><h2 style="margin:0">Åbn appen i Safari</h2>
       <p class="muted" style="margin:0">Du har åbnet IJG Mat Zoo inde i en anden app (fx Messenger eller Facebook). Her bliver fremskridtet ofte ikke gemt.</p></div></div>
-      <ol class="ig-steps"><li>Tryk på <b>···</b> eller <b>⋮</b> og vælg <b>Åbn i Safari</b> / <b>Åbn i browser</b> – eller kopiér linket herunder og sæt det ind i Safari</li></ol>
+      <ol class="ig-steps"><li><span>Tryk på <b>···</b> eller <b>⋮</b> og vælg <b>Åbn i Safari</b> / <b>Åbn i browser</b> – eller kopiér linket herunder og sæt det ind i Safari</span></li></ol>
       <div class="row"><button class="btn" id="ig-copy">Kopiér linket matzoo.dk</button><button class="btn ghost" data-close>Spil her alligevel</button></div></div>`;
   }
   const tabs = ['ipad', 'mac', 'pc'];

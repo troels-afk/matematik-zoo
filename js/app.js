@@ -1,15 +1,15 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261017160543';
-import * as E from './engine.js?v=20261017160543';
-import * as Z from './zoo.js?v=20261017160543';
-import { zooMap } from './map.js?v=20261017160543';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261017160543';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261017160543';
-import { TOUR_SAY } from './oplaesning.js?v=20261017160543';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261017160543';
-import * as INST from './install.js?v=20261017160543';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261017160543';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261017161627';
+import * as E from './engine.js?v=20261017161627';
+import * as Z from './zoo.js?v=20261017161627';
+import { zooMap } from './map.js?v=20261017161627';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261017161627';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261017161627';
+import { TOUR_SAY } from './oplaesning.js?v=20261017161627';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261017161627';
+import * as INST from './install.js?v=20261017161627';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261017161627';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
