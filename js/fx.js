@@ -49,6 +49,19 @@ export function sfx(name) {
       [N.C6, N.E6, N.G5].forEach((f) => tone(t, f, 0.58, 1.2, { type: 'triangle', gain: 0.05 }));
       tone(t, N.C5, 0.58, 1.2, { gain: 0.04 });
       break;
+    case 'fest-drop': { // festen: et stigende sus, mens mærket/stjernen falder ned
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(1040, t + 0.75);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+      o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.85);
+      break;
+    }
+    case 'fest': // festen: fanfare + akkord + funkler, når mærket/stjernen lander
+      [N.G4, N.C5, N.E5].forEach((f, i) => tone(t, f, i * 0.09, 0.16, { type: 'triangle', gain: 0.085 }));
+      [N.C5, N.E5, N.G5, N.C6].forEach((f) => tone(t, f, 0.3, 1.6, { type: 'triangle', gain: 0.045 }));
+      tone(t, N.C5 / 2, 0.3, 1.6, { gain: 0.05 });
+      [N.E6, N.G5 * 2, N.C6 * 2, N.D6, N.E6 * 1.5, N.C6 * 2].forEach((f, i) => tone(t, f, 0.45 + i * 0.13, 0.25, { gain: 0.018 }));
+      break;
     case 'finish':
       [N.C5, N.E5, N.G5].forEach((f) => tone(t, f, 0, 0.7, { gain: 0.045 }));
       tone(t, N.C6, 0.18, 0.8, { type: 'triangle', gain: 0.06 });
@@ -61,17 +74,18 @@ export function sfx(name) {
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const COLORS = ['#2e9e78', '#ffc94d', '#ff8a65', '#8fd3f4', '#b7a6e8', '#7dd6b0'];
 
-export function confetti({ count = 140, duration = 2600 } = {}) {
+export function confetti({ count = 140, duration = 2600, z = null, y = 0.35 } = {}) {
   if (reducedMotion()) return;
   const c = document.createElement('canvas');
   c.className = 'confetti';
+  if (z != null) c.style.zIndex = z;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   c.width = innerWidth * dpr; c.height = innerHeight * dpr;
   document.body.appendChild(c);
   const g = c.getContext('2d');
   g.scale(dpr, dpr);
   const parts = Array.from({ length: count }, () => ({
-    x: innerWidth * (0.2 + Math.random() * 0.6), y: innerHeight * 0.35,
+    x: innerWidth * (0.2 + Math.random() * 0.6), y: innerHeight * y,
     vx: (Math.random() - 0.5) * 9, vy: -6 - Math.random() * 9,
     r: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
     w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, col: COLORS[Math.floor(Math.random() * COLORS.length)],
