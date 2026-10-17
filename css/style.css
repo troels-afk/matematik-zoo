@@ -1527,3 +1527,42 @@ details.card[open] > summary { margin-bottom: 12px; }
 
 /* Vagthunden: appen kan ikke hente nye versioner */
 .upd-warn { display: flex; flex-direction: column; gap: 4px; margin: 0 0 14px; border-color: color-mix(in srgb, var(--coral) 45%, var(--line)); background: color-mix(in srgb, var(--coral) 8%, var(--card)); }
+
+/* ---------- Installér som app: banner på velkomsten og vejledningen med tegninger ---------- */
+.inst-banner { display: grid; gap: 2px; width: 100%; text-align: left; margin-top: 10px; padding: 10px 14px; border-radius: 14px; border: 1.5px dashed color-mix(in srgb, var(--primary) 55%, transparent);
+  background: color-mix(in srgb, var(--primary-soft) 80%, transparent); color: var(--ink); font: 600 .95rem var(--font-head); cursor: pointer; }
+.inst-banner span { font: 700 .8rem var(--font-body); color: var(--ink-2); }
+.inst-banner.warn { border-color: color-mix(in srgb, var(--coral) 70%, transparent); background: color-mix(in srgb, var(--coral-soft) 85%, transparent); }
+.bsheet.ig-sheet-wide { width: min(760px, calc(100% - 24px)); }
+.ig-wrap { display: grid; gap: 14px; }
+.ig-tabs { flex-wrap: wrap; justify-self: start; }
+.ig-steps { list-style: none; counter-reset: ig; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.ig-steps li { counter-increment: ig; display: grid; gap: 8px; align-content: start; font-size: .95rem; line-height: 1.4; }
+.ig-steps li > span::before { content: counter(ig); display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 6px; border-radius: 50%;
+  background: var(--primary); color: #fff; font: 700 .8rem var(--font-body); vertical-align: 1px; }
+.ig-art { border-radius: 14px; background: var(--bg-tint); padding: 8px; }
+.ig { display: block; width: 100%; height: auto; font-family: var(--font-body); }
+.ig .ig-dev { fill: var(--card); stroke: var(--line); stroke-width: 2; }
+.ig .ig-bar { fill: var(--card-2); stroke: var(--line-2); }
+.ig .ig-addr { fill: var(--bg); }
+.ig .ig-page, .ig .ig-home { fill: var(--bg); }
+.ig .ig-home { fill: color-mix(in srgb, var(--sky) 45%, var(--lav-soft)); }
+.ig .ig-app { fill: color-mix(in srgb, var(--card) 70%, transparent); }
+.ig .ig-hometxt { fill: var(--ink); font-size: 10px; font-weight: 700; }
+.ig .ig-sheet { fill: var(--card); stroke: var(--line); stroke-width: 1.5; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .12)); }
+.ig .ig-dock { fill: color-mix(in srgb, var(--ink-3) 25%, transparent); }
+.ig .ig-ln { stroke: var(--line); }
+.ig text { font-size: 11px; }
+.ig .ig-t { fill: var(--ink); }
+.ig .ig-m { fill: var(--ink-3); }
+.ig .ig-b { font-weight: 800; }
+.ig .ig-on { fill: #fff; }
+.ig .ig-ic { fill: none; stroke: var(--sky); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ig .ig-ic { stroke: #3a8fd6; }
+.ig .ig-hlrow { fill: var(--primary-soft); stroke: var(--primary); stroke-width: 1.5; }
+.ig .ig-hlpill, .ig .ig-hlbtn { fill: var(--primary); }
+.ig .ig-ring { fill: none; stroke: var(--coral); stroke-width: 2.5; transform-box: fill-box; transform-origin: center; animation: ig-pulse 1.6s ease-in-out infinite; }
+.ig .ig-tap circle { fill: color-mix(in srgb, var(--coral) 55%, transparent); stroke: #fff; stroke-width: 2; }
+@keyframes ig-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.18); opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .ig .ig-ring { animation: none; } }
+.ig-note { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--sun-soft); }

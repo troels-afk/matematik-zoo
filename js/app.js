@@ -1,14 +1,15 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261016233851';
-import * as E from './engine.js?v=20261016233851';
-import * as Z from './zoo.js?v=20261016233851';
-import { zooMap } from './map.js?v=20261016233851';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261016233851';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261016233851';
-import { TOUR_SAY } from './oplaesning.js?v=20261016233851';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261016233851';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261016233851';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261017160543';
+import * as E from './engine.js?v=20261017160543';
+import * as Z from './zoo.js?v=20261017160543';
+import { zooMap } from './map.js?v=20261017160543';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261017160543';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261017160543';
+import { TOUR_SAY } from './oplaesning.js?v=20261017160543';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261017160543';
+import * as INST from './install.js?v=20261017160543';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261017160543';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -178,6 +179,7 @@ async function showProfiles(opts) {
           <span class="tk-txt"><b>${esc(p.name)}</b>${p.zoo ? `<span>${esc(p.zoo)}</span>` : ''}<span class="tk-prog">⭐ ${p.stars} af ${AREAS.length} områder${p.patches ? ` · ${p.patches} ${p.patches === 1 ? 'mærke' : 'mærker'}` : ''}</span></span></button>`).join('')}
         <button class="profile-btn ticket new" id="new"><span class="avatar">＋</span><span class="tk-txt"><b>Ny dyrepasser</b><span>${tickets.length ? 'Søskende? Hver får sin egen zoo' : 'Lav din egen zoo'}</span></span></button>
       </div>
+      ${instBanner(tickets.length)}
       <form id="newform" class="stack" hidden>
         ${say('bodil', 'Hej! Jeg er Bodil, direktør for zoo\'en. Hvad hedder du?')}
         <div><label class="lbl" for="nm">Dit navn</label><input id="nm" class="field" maxlength="24" autocomplete="off" autocapitalize="words"></div>
@@ -185,7 +187,7 @@ async function showProfiles(opts) {
         <button class="btn big" type="submit">Åbn porten</button>
       </form>
       <footer class="wp-foot"><span>Gratis · ingen login · fremskridtet gemmes kun på denne enhed</span>
-        <span><button class="link small" id="restore">For forældre: gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button>${FEEDBACK.url ? ' · <button class="link small" id="feedback-w">Send feedback</button>' : ''}</span></footer>
+        <span>${INST.isInstalled() ? '' : '<button class="link small" id="inst-w">Læg på hjemmeskærmen</button> · '}<button class="link small" id="restore">For forældre: gendan fra backup</button> · <button class="link small" id="about-w">Om appen</button>${FEEDBACK.url ? ' · <button class="link small" id="feedback-w">Send feedback</button>' : ''}</span></footer>
     </section>
     <small class="welcome-copy">© 2026 Troels Christensen · version ${appVersion()}</small>`);
   on('.profile-btn[data-id]', 'click', (e) => openProfile(e.currentTarget.dataset.id));
@@ -194,6 +196,12 @@ async function showProfiles(opts) {
   on('#restore', 'click', () => parentGate(() => { pickBackup(); showProfiles(); }, showProfiles));
   on('#about-w', 'click', () => showAbout(showProfiles, 'Tilbage'));
   on('#feedback-w', 'click', () => feedbackSheet('velkomsten'));
+  on('#inst-w, #inst-b', 'click', () => showInstallGuide({ hasProgress: tickets.length > 0 }));
+  // Første gang (ingen profiler endnu) eller i en indbygget browser: vis vejledningen med det samme
+  const pl = INST.platform();
+  if (!opts?.newKid && (pl === 'inapp' || (!tickets.length && ['ipad', 'mac', 'pc'].includes(pl) && !INST.skipped()))) {
+    setTimeout(() => { if ($('#new')) showInstallGuide(); }, 700);
+  }
   on('#nm', 'input', () => { $('#zn').placeholder = Z.defaultZooName($('#nm').value); });
   if (opts?.newKid === true) $('#new').click();
   on('#newform', 'submit', async (e) => {
@@ -222,6 +230,30 @@ async function openProfile(id) {
   S.state = migrate(st);
   rememberProfile(id);
   startScreen();
+}
+
+// ---------- Installér som app (vejledning til iPad, Mac og pc – se install.js) ----------
+// Banner på velkomsten, når der allerede er profiler i Safari: her kan de blive slettet efter 7 dage uden brug
+function instBanner(nProfiles) {
+  const pl = INST.platform();
+  if (pl === 'inapp') return '<button class="inst-banner warn" id="inst-b"><b>⚠️ Åbn appen i Safari</b><span>Her inde i en anden app bliver fremskridtet ofte ikke gemt</span></button>';
+  if (!nProfiles || !['ipad', 'mac'].includes(pl)) return '';
+  return '<button class="inst-banner" id="inst-b"><b>📲 Læg appen på hjemmeskærmen</b><span>Så bliver fremskridtet ikke slettet · Vis hvordan</span></button>';
+}
+function showInstallGuide({ p, hasProgress = false } = {}) {
+  const here = INST.platform();
+  const show = p || (['ipad', 'mac', 'pc', 'inapp'].includes(here) ? here : 'pc');
+  openSheet(INST.guideHTML(show, { hasProgress }), (el) => {
+    el.classList.add('ig-sheet-wide');
+    el.querySelectorAll('[data-ig]').forEach((b) => b.addEventListener('click', () => showInstallGuide({ p: b.dataset.ig, hasProgress })));
+    el.querySelector('#ig-skip')?.addEventListener('click', () => { INST.skip(); closeSheet(); });
+    el.querySelector('#ig-install')?.addEventListener('click', async () => {
+      if (await INST.promptInstall()) { closeSheet(); toast('Appen er installeret – start den fra ikonet'); } else showInstallGuide({ p: show, hasProgress });
+    });
+    el.querySelector('#ig-copy')?.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText('https://matzoo.dk'); toast('Linket er kopieret – sæt det ind i Safari'); } catch { toast('Skriv matzoo.dk i Safari'); }
+    });
+  });
 }
 
 // Første gang: vis introen, ellers direkte til zoo'en
@@ -2668,7 +2700,8 @@ function showParent(tab = parentTab) {
         <span class="muted">Data gemmes ${storageMode() === 'api' ? 'på serveren (deles mellem enheder)' : 'kun på denne enhed – tag en backup en gang imellem'}.</span></p>
       <div class="row"><button class="btn" id="bk-save">Gem backup</button><button class="btn ghost" id="bk-load">Indlæs backup</button></div></section>
     <section class="card stack"><h3>Appen</h3>
-      <p class="small muted" style="margin:0">Som app: på iPad Safari → Del → "Føj til hjemmeskærm", på Mac Safari → Arkiv → "Føj til Dock". Appen har sit eget lager, så gem en backup i browseren først og indlæs den i appen bagefter. Appen opdaterer sig selv, når den åbnes.</p>
+      ${INST.isInstalled() ? '<p class="small muted" style="margin:0">✅ Kører som app med sit eget lager. Appen opdaterer sig selv, når den åbnes.</p>'
+        : `<div class="spread"><span class="small muted">Kører i browseren. Som app bliver fremskridtet ikke slettet. Appen har sit eget lager, så gem en backup her først og indlæs den i appen bagefter.</span><button class="btn ghost" id="inst-p">Vis hvordan</button></div>`}
       <div class="spread"><span class="small muted" id="app-version">Version ${appVersion()}</span><button class="btn ghost" id="check-update">Søg efter opdatering</button></div>
       ${FEEDBACK.url ? `<div class="spread"><span class="small muted">Idéer, fejl eller ros – direkte til Troels.</span>${feedbackBtn('feedback-p')}</div>` : ''}</section>
     <section class="card stack pt-danger"><div class="spread"><h3>Børn på denne enhed</h3><button class="btn ghost sm" id="pt-addkid">＋ Tilføj barn</button></div>
@@ -2710,6 +2743,7 @@ function showParent(tab = parentTab) {
     toast('Navnet er gemt');
   });
   on('#bk-save', 'click', exportBackup);
+  on('#inst-p', 'click', () => showInstallGuide({ hasProgress: true }));
   on('#feedback-p', 'click', () => feedbackSheet('forældredelen'));
   on('#bk-load', 'click', pickBackup);
   on('#check-update', 'click', async () => {
