@@ -2,7 +2,7 @@
 // Lag: dæmpet baggrund → drejende lysstråler → præmien falder ned og lander → chokbølge, funkler, konfetti og fanfare
 // → figuren hopper ind og jubler → overskrift og taleboble → knappen. Et tryk efter 1 sek. springer frem til slutningen.
 
-import { sfx, confetti } from './fx.js?v=20261017190312';
+import { sfx, confetti } from './fx.js?v=20261025202708';
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

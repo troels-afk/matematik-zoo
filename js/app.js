@@ -1,16 +1,16 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261017190312';
-import * as E from './engine.js?v=20261017190312';
-import * as Z from './zoo.js?v=20261017190312';
-import { zooMap } from './map.js?v=20261017190312';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261017190312';
-import { celebrate } from './celebrate.js?v=20261017190312';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261017190312';
-import { TOUR_SAY } from './oplaesning.js?v=20261017190312';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261017190312';
-import * as INST from './install.js?v=20261017190312';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261017190312';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261025202708';
+import * as E from './engine.js?v=20261025202708';
+import * as Z from './zoo.js?v=20261025202708';
+import { zooMap } from './map.js?v=20261025202708';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261025202708';
+import { celebrate } from './celebrate.js?v=20261025202708';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261025202708';
+import { TOUR_SAY } from './oplaesning.js?v=20261025202708';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261025202708';
+import * as INST from './install.js?v=20261025202708';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261025202708';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -377,7 +377,6 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
         ${principle(ui('foraeldre'), 'Forældre som medspillere', 'Forældresiden viser, hvad der driller, og foreslår spørgsmål til en snak i bilen. Ros strategien ("smart at du brugte 7 × 7 først") frem for "du er klog".', 'Kilde: Gunderson m.fl. om ros; Berkowitz m.fl. (2015) om fælles matematik derhjemme.')}
       </div>
       ${FEEDBACK.url ? `<section class="card fb-card"><span><b>Idéer og feedback</b> – har du en idé, eller virker noget ikke? Skriv direkte til Troels.</span>${feedbackBtn('feedback-a')}</section>` : ''}
-      ${PING_URL ? '<p class="small muted about-note">Fremskridtet gemmes kun på enheden. Appen tæller anonymt, hvor mange enheder der bruger den hver dag: kun et tilfældigt nummer – ingen navne, ingen fremskridt.</p>' : ''}
       <p class="small muted copyright">© 2026 Troels Christensen. Alle rettigheder forbeholdes. Version ${appVersion()}.</p>
     </div>`, (e) => { if (e.key === 'Escape') back(); });
   on('#back', 'click', back);
@@ -389,9 +388,9 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
 // bot-nøglen ligger kun dér, aldrig i appen. Med sendes kun det, der skrives, et valgfrit navn, hvor i appen beskeden
 // er skrevet, og appens version. Uden adresse (url) vises knapperne ikke.
 const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycby2c67sPU_p0nbfMeN8HV6z-eiRzqBli23htCgemn02OGQel84kIy2LSrBuJUtt4fIcaw/exec' };
-// Anonym optælling af aktive enheder: et separat Google Apps Script (scripts/aktive-enheder.gs), der hver morgen
-// sender gårsdagens antal til Troels på Telegram. Tom = slået fra.
-const PING_URL = '';
+// Anonym optælling af aktive enheder: samme Apps Script som feedbacken (scripts/aktive-enheder.gs er lagt ind dér),
+// der hver morgen sender gårsdagens antal til Troels på Telegram. Tom = slået fra.
+const PING_URL = FEEDBACK.url;
 const FB_KINDS = [['ide', '💡 En idé'], ['fejl', '🐞 Noget virker ikke'], ['ros', '💚 Ros']];
 const appStamp = () => APP_V || 'udvikling';
 const feedbackBtn = (id, cls = 'btn ghost') => (FEEDBACK.url ? `<button class="${cls}" id="${id}">Send en idé eller feedback</button>` : '');

@@ -1,6 +1,10 @@
 /**
  * Matematik-Zoo – anonym optælling af aktive enheder, med en daglig Telegram-besked til Troels.
  *
+ * I brug siden 2026-10-25: koden er lagt ind i det eksisterende feedback-script (samme web-app-adresse som
+ * FEEDBACK.url, så bot-nøglen kun ligger ét sted). Opsætningen nedenfor gælder kun, hvis den skal køre som et
+ * selvstændigt projekt.
+ *
  * Opsætning (én gang, på script.google.com):
  *  1. Nyt projekt, fx "Matzoo aktive enheder". Erstat Code.gs med hele denne fil og gem.
  *  2. Projektindstillinger (tandhjulet) → Tidszone: (GMT+01:00) Copenhagen.
