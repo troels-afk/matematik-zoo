@@ -1,16 +1,16 @@
 // Matematik-Zoo – skærme og interaktion.
 
-import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261025202708';
-import * as E from './engine.js?v=20261025202708';
-import * as Z from './zoo.js?v=20261025202708';
-import { zooMap } from './map.js?v=20261025202708';
-import { sfx, setSound, confetti, countUp } from './fx.js?v=20261025202708';
-import { celebrate } from './celebrate.js?v=20261025202708';
-import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261025202708';
-import { TOUR_SAY } from './oplaesning.js?v=20261025202708';
-import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261025202708';
-import * as INST from './install.js?v=20261025202708';
-import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261025202708';
+import { AREAS, SKILLS, ALL_SKILLS, DISCIPLINES, PRACTICE_GROUPS, FACTS, factProblem } from './curriculum.js?v=20261025203635';
+import * as E from './engine.js?v=20261025203635';
+import * as Z from './zoo.js?v=20261025203635';
+import { zooMap } from './map.js?v=20261025203635';
+import { sfx, setSound, confetti, countUp } from './fx.js?v=20261025203635';
+import { celebrate } from './celebrate.js?v=20261025203635';
+import { loadSpeech, hasClip, preload, narrate, stopSpeech, speech } from './speak.js?v=20261025203635';
+import { TOUR_SAY } from './oplaesning.js?v=20261025203635';
+import { listProfiles, loadState, saveState, deleteProfile, slug, storageMode, flush } from './store.js?v=20261025203635';
+import * as INST from './install.js?v=20261025203635';
+import { esc, fmt, frac, pick, today, addDays, daysBetween, weekStart } from './util.js?v=20261025203635';
 
 const app = document.getElementById('app');
 const S = { id: null, state: null, run: null };
@@ -388,8 +388,8 @@ function showAbout(back = showHome, backLabel = "Tilbage til zoo'en") {
 // bot-nøglen ligger kun dér, aldrig i appen. Med sendes kun det, der skrives, et valgfrit navn, hvor i appen beskeden
 // er skrevet, og appens version. Uden adresse (url) vises knapperne ikke.
 const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycby2c67sPU_p0nbfMeN8HV6z-eiRzqBli23htCgemn02OGQel84kIy2LSrBuJUtt4fIcaw/exec' };
-// Anonym optælling af aktive enheder: samme Apps Script som feedbacken (scripts/aktive-enheder.gs er lagt ind dér),
-// der hver morgen sender gårsdagens antal til Troels på Telegram. Tom = slået fra.
+// Anonym optælling af aktive enheder (der har løst mindst én opgave): samme Apps Script som feedbacken
+// (scripts/aktive-enheder.gs er lagt ind dér), der hver morgen sender gårsdagens antal til Troels på Telegram. Tom = slået fra.
 const PING_URL = FEEDBACK.url;
 const FB_KINDS = [['ide', '💡 En idé'], ['fejl', '🐞 Noget virker ikke'], ['ros', '💚 Ros']];
 const appStamp = () => APP_V || 'udvikling';
@@ -2020,6 +2020,7 @@ function answer(given, choiceIdx) {
     }
     run.results.push({ kind: task.kind, id: task.fact || task.skill, correct });
     save();
+    pingActive();
   }
   if (!correct) again = task.kind === 'warm' ? `${b.name} kommer igen om lidt, så du kan prøve igen.` : 'Du får en lignende opgave igen senere.';
 
@@ -2478,7 +2479,7 @@ function startSprint() {
       </div></div></div>`);
   const submit = () => {
     if (!val || left <= 0) return;
-    if (Number(val) === cur[0] * cur[1]) { score++; sfx('tap'); nextQ(); }
+    if (Number(val) === cur[0] * cur[1]) { score++; sfx('tap'); pingActive(); nextQ(); }
     else { $('#slot').classList.remove('shake'); void $('#slot').offsetWidth; $('#slot').classList.add('shake'); val = ''; render(); }
   };
   const press = (k) => {
@@ -3078,23 +3079,25 @@ function appVersion() {
 
 // ================= Start =================
 
-// Én gang om dagen pr. enhed: "jeg var her" med et tilfældigt nummer, der ligger på enheden. Intet andet sendes.
+// Én gang om dagen pr. enhed, når den første opgave er løst (en iPad, der bare står med appen åben, tæller ikke):
+// "her blev der regnet i dag" med et tilfældigt nummer, der ligger på enheden. Intet andet sendes.
+let pingBusy = false;
 function pingActive() {
-  if (!PING_URL || location.hostname !== 'matzoo.dk') return;
+  if (!PING_URL || pingBusy || location.hostname !== 'matzoo.dk') return;
   let id = null, last = null;
   try {
     id = localStorage.getItem('mz_dev');
     if (!id) { id = crypto.randomUUID?.() || `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`; localStorage.setItem('mz_dev', id); }
-    last = localStorage.getItem('mz_ping');
+    last = localStorage.getItem('mz_akt');
   } catch { return; }
   const day = today();
   if (last === day) return;
-  fetch(PING_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'ping', id }) })
-    .then(() => { try { localStorage.setItem('mz_ping', day); } catch { /* */ } })
-    .catch(() => { /* offline: prøv igen næste gang */ });
+  pingBusy = true;
+  fetch(PING_URL, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'ping', id }) })
+    .then(() => { try { localStorage.setItem('mz_akt', day); } catch { /* */ } })
+    .catch(() => { /* offline: prøv igen ved næste svar */ })
+    .finally(() => { pingBusy = false; });
 }
-pingActive();
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pingActive(); });
 
 (async function boot() {
   let last = null;

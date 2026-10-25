@@ -53,8 +53,8 @@ function dailyReport() {
   const yesterday = ids(1).length;
   const week = {};
   for (let n = 1; n <= 7; n++) ids(n).forEach((h) => { week[h] = true; });
-  sendTelegram_('📊 IJG Mat Zoo\nI går (' + dayStr_(1) + '): ' + yesterday + ' aktive ' + (yesterday === 1 ? 'enhed' : 'enheder')
-    + '\nSidste 7 dage: ' + Object.keys(week).length);
+  sendTelegram_('📊 IJG Mat Zoo\nI går (' + dayStr_(1) + '): ' + yesterday + ' ' + (yesterday === 1 ? 'enhed' : 'enheder') + ' løste opgaver'
+    + '\nSidste 7 dage: ' + Object.keys(week).length + ' forskellige');
   const oldest = 'akt-' + dayStr_(KEEP_DAYS);
   Object.keys(props.getProperties()).forEach((k) => { if (k.indexOf('akt-') === 0 && k < oldest) props.deleteProperty(k); });
 }
